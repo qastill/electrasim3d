@@ -602,3 +602,97 @@ Object.assign(REAL,{
   'Tren-kan parameter di log digital — kimia air adalah permainan tren, bukan snapshot',
   'Kelola stok & alarm level bahan kimia — kerusakan jutaan dolar bisa berawal dari tangki kosong'],
 });
+
+/* =====================================================================
+   MISI 7 — KONDENSOR & VAKUM: PEMBUNUH EFISIENSI SENYAP
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ kondensor:{lvl:'JALUR 07 · PEMBANGKITAN · MISI 7',icon:'🌬️',title:'Kondensor & Vakum: Pembunuh Efisiensi Senyap',strict:false,
+  loc:'📍 PLTU unit 2 · Heat rate naik misterius',
+  story:'Laporan bulanan mengganjal: heat rate unit naik 2,3% — bahan bakar lebih banyak untuk MW yang sama, miliaran rupiah setahun. Boiler sehat, turbin halus... tersangka tersisa bersembunyi di ruang paling sunyi: KONDENSOR. Vakumnya memburuk pelan — dan setiap milibar vakum yang hilang adalah uap yang pulang bekerja setengah hati.',
+  goal:'Akar penurunan vakum terdiagnosis sistematis (air masuk? tube kotor? ejector?), dikoreksi, dan heat rate kembali — dengan angka rupiah yang bisa dilaporkan.',
+  obj:['Baca penurunan vakum & dampak heat rate','Diagnosa sistematis: kebocoran udara vs fouling','Koreksi & verifikasi pemulihan kinerja'],
+  learn:['Vakum kondensor menentukan "punggung" turbin: makin dalam vakum, makin besar energi yang bisa diperas dari uap — vakum buruk = uap pensiun dini','Dua musuh utama vakum: UDARA bocor masuk (gland, sambungan) yang menyelimuti tube, dan FOULING tube (lumut/kerak air pendingin) yang menghalangi perpindahan panas','Diagnosanya elegan: udara bocor → ejector kewalahan & subcooling naik; fouling → TTD (terminal temperature difference) membesar — dua sidik jari yang berbeda','Helium leak test menemukan bocor udara seperti hidung anjing pelacak: semprot helium di luar, detektor mengendus di ejector'],
+  next:['Pelajari kurva koreksi heat rate vs tekanan kondensor','Dalami online tube cleaning (sistem bola sponge)','Eksplorasi monitoring TTD & subcooling sebagai KPI harian']},
+});
+let mkd={};
+function buildKondensor(){
+  freshScene(0x8aa0b8,0x10181f);
+  cam={theta:.05,phi:1.17,r:8.5,target:new THREE.Vector3(0,1.6,-.8)};
+  const Z=room(0x55606a,0xc4cdd6,16,11);
+  /* kondensor besar di bawah "turbin" */
+  const turb=cyl(.5,.6,1.8,0x9aa7b4);turb.rotation.z=Math.PI/2;turb.position.set(-2.6,2.6,-1.8);scene.add(turb);
+  scene.add(label('TURBIN (exhaust ke bawah)',.6).translateX(-2.6).translateY(3.4).translateZ(-1.8));
+  mkd.kond=boxT(2.8,1.4,1.3,TEX.metal(),{metalness:.3});mkd.kond.position.set(-2.6,1.0,-1.8);scene.add(mkd.kond);
+  actMesh(mkd.kond,'BACA');
+  scene.add(label('KONDENSOR',.75).translateX(-2.6).translateY(.2).translateZ(-1.1));
+  /* layar kinerja */
+  mkd.D=makeDisplay(2.4,1.4,460,270);
+  mkd.D.mesh.position.set(1.2,2.4,Z+.1);scene.add(mkd.D.mesh);
+  actMesh(mkd.D.mesh,'DIAG');
+  scene.add(label('KINERJA VAKUM',.75,'#5fd4ff').translateX(1.2).translateY(3.3).translateZ(Z+.1));
+  function layar(mode){
+    const g=mkd.D.g,W=460,H=270;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.font='600 16px Consolas';g.textAlign='left';
+    if(mode===0){g.fillStyle='#ff5a5a';g.font='700 19px Consolas';
+      g.fillText('vakum: 92 → 86 kPa (3 bulan)',16,44);
+      g.fillStyle='#ffd23f';g.font='600 15px Consolas';
+      g.fillText('heat rate +2,3% ≈ Rp 2,1 M/tahun',16,80);
+      g.fillStyle='#8aa3bd';
+      g.fillText('TTD: 8,4°C (desain 4) ⚠',16,124);
+      g.fillText('subcooling: 1,1°C (normal)',16,156);
+      g.fillText('ejector load: normal',16,188);}
+    else{g.fillStyle='#46ff8e';g.font='700 19px Consolas';
+      g.fillText('vakum pulih: 91,6 kPa ✓',16,44);
+      g.font='600 15px Consolas';
+      g.fillText('TTD: 4,3°C ✓ · heat rate −2,1%',16,80);
+      g.fillText('pemulihan ≈ Rp 1,9 M/tahun',16,116);}
+    mkd.D.tex.needsUpdate=true;}
+  layar(0);
+  /* helium kit + tube cleaner */
+  mkd.he=cyl(.14,.14,.5,0xd8b020);mkd.he.position.set(3.6,.95,-.6);scene.add(mkd.he);
+  actMesh(mkd.he,'HELIUM');
+  const tbl=boxT(1.4,.07,.7,TEX.wood());tbl.position.set(3.9,.82,-.6);scene.add(tbl);
+  const tleg=boxT(.08,.82,.08,TEX.wood());tleg.position.set(3.9,.41,-.6);scene.add(tleg);
+  scene.add(label('HELIUM LEAK KIT',.55,'#5fd4ff').translateX(3.5).translateY(1.35).translateZ(-.6));
+  mkd.bola=new THREE.Mesh(new THREE.SphereGeometry(.12,12,10),
+    new THREE.MeshStandardMaterial({color:0x46a06a,roughness:.8}));
+  mkd.bola.position.set(4.3,.95,-.6);scene.add(mkd.bola);
+  actMesh(mkd.bola,'BERSIH');
+  scene.add(label('SPONGE BALL CLEANING',.55,'#5fd4ff').translateX(4.5).translateY(1.3).translateZ(-.4));
+  startSeq([
+   {type:'act',aid:'BACA',done:false,targets:()=>[mkd.kond],
+    desc:'Baca gejala: vakum memburuk & berapa harganya (klik kondensor).',
+    why:'Vakum merosot 92→86 kPa dalam tiga bulan — turbin kehilangan "tarikan punggung"-nya: heat rate naik 2,3% ≈ Rp 2,1 miliar setahun terbakar diam-diam. Pembunuh efisiensi paling senyap di pembangkit selalu bersembunyi di tempat yang paling tak bergerak.',
+    fx(){toast('📉 Vakum −6 kPa = Rp 2,1 M/thn menguap senyap.','bad',3000);}},
+   {type:'act',aid:'DIAG',done:false,targets:()=>[mkd.D.mesh],
+    desc:'Diagnosa sidik jari: udara bocor atau tube kotor? (klik layar)',
+    why:'Baca tiga saksi: subcooling normal & ejector santai (bukan udara bocor) — tapi TTD membengkak 8,4°C dari desain 4°C: panas tertahan tak bisa menyeberang dinding tube. Vonis: FOULING — air pendingin musim ini membawa lumut & lumpur lebih dari biasanya.',
+    fx(){toast('🔍 TTD 8,4°C + ejector normal = fouling tube, bukan bocor.','ok',3000);}},
+   {type:'act',aid:'HELIUM',done:false,targets:()=>[mkd.he],
+    desc:'Tetap tuntaskan: HELIUM TEST memastikan tak ada bocor ganda (klik kit).',
+    why:'Diagnosa baik tak berhenti di tersangka pertama: helium disemprot ke sambungan & gland sementara detektor mengendus di ejector — satu bocor KECIL ketemu di gasket manhole, dicatat untuk dikencangkan. Bukan akar utama, tapi musuh tak diberi tempat bersembunyi.',
+    fx(){toast('🎈 1 bocor kecil ketemu (gasket) — dikencangkan sekalian.','ok',2800);}},
+   {type:'act',aid:'BERSIH',done:false,targets:()=>[mkd.bola],
+    desc:'Eksekusi: ONLINE TUBE CLEANING dengan bola sponge (klik bola).',
+    why:'Ribuan bola sponge sedikit lebih besar dari diameter tube disirkulasikan bersama air pendingin: tiap bola menggosok dinding tube dari dalam — UNIT TETAP BEROPERASI. Dua hari sirkulasi + perbaikan klorinasi air masuk: lumut kehilangan rumahnya.',
+    fx(){toast('🟢 Bola sponge bersirkulasi — tube digosok tanpa shutdown.','ok',3000);}},
+   {type:'act',aid:'VERIF',done:false,targets:()=>[mkd.D.mesh],
+    desc:'Verifikasi pemulihan: baca ulang kinerja (klik layar).',
+    why:'TTD turun ke 4,3°C, vakum merangkak pulih 91,6 kPa, heat rate kembali −2,1%: Rp 1,9 miliar setahun pulang ke neraca — dan TTD kini resmi jadi KPI harian operator: pembunuh senyap hanya bisa dilawan oleh pengawasan yang tak pernah tidur.',
+    fx(){layar(1);toast('✅ Vakum pulih · Rp 1,9 M/thn kembali — TTD jadi KPI harian.','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Pembunuh senyap tertangkap!</b> Sidik jari TTD membedakan kotor dari bocor, helium menuntaskan keraguan, bola sponge menggosok tanpa padam. Efisiensi pembangkit dijaga di tempat yang paling jarang ditengok.');
+    setTimeout(()=>showWin('kondensor'),2200);});
+  const s1k=seq.steps[1],of1k=s1k.fx;s1k.fx=()=>{of1k();mkd.D.mesh.userData.aid='VERIF';};
+  say('VOLTA di sini 🌬️ Heat rate naik misterius — boiler & turbin tak bersalah. Tersangka terakhir bersembunyi di ruang paling sunyi: <b>kondensor</b>. Dua kemungkinan, dua sidik jari berbeda. Mulai membaca gejalanya!');
+  $('#modTitle').textContent='J07·M7 — Kondensor & Vakum';
+  $('#taskHead').textContent='TTD: SIDIK JARI SANG PEMBUNUH';}
+MISSIONS.kondensor.build=buildKondensor;
+Object.assign(REAL,{
+ kondensor:[
+  'Pantau TTD, subcooling & beban ejector sebagai trio harian — diagnosa dini dari pola, bukan krisis',
+  'Helium/ultrasonic leak test dilakukan berkala terjadwal, bukan hanya saat vakum sudah jatuh',
+  'Kualitas air pendingin (klorinasi, side-stream filter) adalah pertahanan pertama melawan fouling',
+  'Hitung dampak rupiah tiap kPa vakum untuk justifikasi investasi perbaikan'],
+});

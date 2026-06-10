@@ -606,3 +606,106 @@ Object.assign(REAL,{
   'Uji 10 detik ke orang awam: bila pesan utama tak tertangkap, ulangi desainnya',
   'Otomasikan refresh data — dashboard yang basi sekali saja akan diabaikan selamanya'],
 });
+
+/* =====================================================================
+   MISI 7 — CLUSTERING: SEGMENTASI PROFIL PELANGGAN
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ cluster:{lvl:'JALUR 05 · ENERGY ANALYST · MISI 7',icon:'🧩',title:'Clustering: Segmentasi Profil Pelanggan',strict:false,
+  loc:'📍 Command center AMI · Proyek program hemat puncak',
+  story:'Manajemen ingin program demand-side: mengajak pelanggan menggeser beban dari jam puncak. Tapi "pelanggan" bukan satu makhluk — 50.000 smart meter berisi ribuan kepribadian energi yang berbeda. Mengirim satu tawaran ke semua = spam yang gagal. Hari ini kamu memakai unsupervised learning: biarkan DATA mengelompokkan dirinya sendiri, lalu rancang program per kepribadian.',
+  goal:'Pelanggan tersegmentasi dari profil beban AMI dengan k-means yang dipilih benar, tiap klaster bermakna bisnis, dan program tertarget per segmen terbit.',
+  obj:['Siapkan fitur profil beban harian per pelanggan','Pilih jumlah klaster yang tepat & jalankan k-means','Maknai tiap klaster & rancang program tertarget'],
+  learn:['Clustering = belajar tanpa guru: tak ada label benar-salah — algoritma mencari pola pengelompokan alami dari kemiripan profil','Fitur menentukan hasil: profil dinormalisasi terhadap total konsumsi — kita mengelompokkan BENTUK kebiasaan, bukan besar tagihan','Jumlah klaster dipilih dengan elbow method + akal sehat bisnis: 4 klaster bermakna mengalahkan 9 klaster yang membingungkan','Klaster baru bernilai setelah DIMAKNAI: "puncak malam", "siang industri", "datar 24 jam" — nama yang dipahami tim pemasaran, bukan centroid matematika'],
+  next:['Pelajari DBSCAN & hierarchical untuk bentuk klaster non-bola','Validasi segmen dengan respons program nyata (uplift per klaster)','Eksplorasi fitur tambahan: cuaca, hari libur, musiman']},
+});
+let mcl={};
+function buildCluster(){
+  freshScene(0x1d2a3a,0x0a121c);
+  cam={theta:0,phi:1.16,r:8,target:new THREE.Vector3(0,2.1,-1)};
+  const floor=boxT(16,.1,10,TEX.concrete());floor.position.y=-.05;scene.add(floor);
+  const wall=boxT(14,4.6,.2,TEX.metal(),{metalness:.2});wall.position.set(0,2.3,-3.3);scene.add(wall);
+  const frame=boxT(5.4,2.9,.16,TEX.metal(),{metalness:.4});frame.position.set(-1.2,2.4,-3.2);scene.add(frame);
+  mcl.D=makeDisplay(5.0,2.5,660,360);
+  mcl.D.mesh.position.set(-1.2,2.4,-3.1);scene.add(mcl.D.mesh);
+  actMesh(mcl.D.mesh,'FITUR');
+  scene.add(label('NOTEBOOK ANALITIK — 50.000 PROFIL',.9).translateX(-1.2).translateY(4.05).translateZ(-3.1));
+  mcl.mode=0;
+  function layar(){
+    const g=mcl.D.g,W=660,H=360;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.font='600 15px Consolas';g.textAlign='left';
+    if(mcl.mode===0){ /* spaghetti profil */
+      for(let p=0;p<40;p++){
+        g.strokeStyle='rgba(95,212,255,.25)';g.lineWidth=1.5;g.beginPath();
+        for(let h=0;h<=24;h++){
+          const v=.2+.3*Math.abs(Math.sin(h/24*Math.PI*2+p))+(p%3===0&&h>17&&h<22?.3:0);
+          g.lineTo(40+h/24*(W-80),H-40-v*(H-90));}
+        g.stroke();}
+      g.fillStyle='#5fd4ff';g.font='700 17px Consolas';
+      g.fillText('40 dari 50.000 profil — benang kusut tanpa makna',40,30);}
+    else if(mcl.mode===1){ /* elbow */
+      g.strokeStyle='#ffd23f';g.lineWidth=3;g.beginPath();
+      [[1,.95],[2,.62],[3,.42],[4,.30],[5,.27],[6,.25],[7,.24]].forEach((p,i)=>{
+        const x=60+p[0]*72,y=H-50-(.95-p[1])*-1*(H-110)*-1;
+        const yy=H-50-( (0.95-p[1])/0.71 )*(H-110);
+        i===0?g.moveTo(x,yy):g.lineTo(x,yy);
+        g.fillStyle='#ffd23f';g.fillRect(x-4,yy-4,8,8);});
+      g.stroke();
+      g.strokeStyle='#46ff8e';g.lineWidth=2;g.setLineDash([6,5]);
+      g.beginPath();g.moveTo(60+4*72,40);g.lineTo(60+4*72,H-40);g.stroke();g.setLineDash([]);
+      g.fillStyle='#46ff8e';g.font='700 17px Consolas';
+      g.fillText('ELBOW di k=4 — setelahnya perbaikan melandai',60,30);}
+    else{ /* 4 centroid */
+      const cfg=[['#ffd23f','PUNCAK MALAM 46%',h=>.25+(h>17&&h<22?.6:0)+(h<5?.05:0)],
+        ['#46ff8e','SIANG KOMERSIAL 27%',h=>.15+(h>8&&h<17?.55:0)],
+        ['#5fd4ff','DATAR 24 JAM 18%',h=>.5],
+        ['#d85ad8','DINI HARI 9%',h=>.2+(h<6?.5:0)]];
+      cfg.forEach((c,ci)=>{
+        g.strokeStyle=c[0];g.lineWidth=3;g.beginPath();
+        for(let h=0;h<=24;h++)g.lineTo(40+h/24*(W-80),H-40-c[2](h)*(H-130));
+        g.stroke();
+        g.fillStyle=c[0];g.fillText(c[1],44,30+ci*24);});}
+    mcl.D.tex.needsUpdate=true;}
+  layar();
+  /* kartu langkah */
+  mcl.cards=[];
+  [['ELBOW k=?','ELBOW',2.6],['JALANKAN','KMEANS',3.7],['MAKNAI','MAKNA',2.6],['PROGRAM','PROG',3.7]].forEach((o,i)=>{
+    const y=i<2?2.9:1.8;
+    const c=box(.95,.5,.08,0x2b3a4a);c.position.set(o[2],y,-3.15);scene.add(c);
+    actMesh(c,o[1]);mcl.cards.push(c);
+    scene.add(label(o[0],.48,'#5fd4ff').translateX(o[2]).translateY(y+.4).translateZ(-3.1));});
+  startSeq([
+   {type:'act',aid:'FITUR',done:false,targets:()=>[mcl.D.mesh],
+    desc:'Siapkan FITUR: normalisasi 50.000 profil harian (klik layar).',
+    why:'Profil 24 jam tiap pelanggan dinormalisasi terhadap total hariannya: rumah 900 VA dan pabrik 200 kVA yang sama-sama "puncak malam" harus jatuh sekelompok. Tanpa normalisasi, k-means hanya akan mengelompokkan kaya vs miskin — bukan kebiasaan.',
+    fx(){toast('🧮 50.000 profil ternormalisasi — bentuk, bukan besar.','ok',3000);}},
+   {type:'act',aid:'ELBOW',done:false,targets:()=>[mcl.cards[0]],
+    desc:'Berapa klaster? Jalankan ELBOW METHOD (klik kartu).',
+    why:'k-means dijalankan untuk k=1..7, inersia diplot: kurva menukik tajam lalu MELANDAI di k=4 — siku itulah jawabannya. Lebih dari 4: matematika sedikit membaik, kebermaknaan bisnis memburuk. Statistik mengusulkan, akal sehat mengetuk palu.',
+    fx(){mcl.mode=1;layar();toast('📐 Elbow menunjuk k=4 — pas matematika & bisnis.','ok',3000);}},
+   {type:'act',aid:'KMEANS',done:false,targets:()=>[mcl.cards[1]],
+    desc:'JALANKAN k-means final k=4 (klik kartu).',
+    why:'Sentroid acak → assign → geser → ulang... konvergen di iterasi ke-14. Benang kusut 50.000 profil kini terurai menjadi EMPAT kurva khas yang berdiri tegas. Tanpa satu label pun dari manusia — pola itu selalu ada di sana, menunggu ditanya dengan benar.',
+    fx(){mcl.mode=2;layar();toast('🧩 Konvergen: 4 kepribadian energi terurai dari kekusutan.','ok',3000);}},
+   {type:'act',aid:'MAKNA',done:false,targets:()=>[mcl.cards[2]],
+    desc:'MAKNAI tiap klaster: beri nama yang dipahami bisnis (klik kartu).',
+    why:'K1 (46%): puncak malam tajam — rumah tangga pekerja. K2 (27%): siang komersial — toko & kantor. K3 (18%): datar 24 jam — industri kontinu & basis terbaik sistem. K4 (9%): dini hari — misterius… ternyata pelanggan tarif malam & usaha bakery! Centroid menjadi cerita; cerita menjadi strategi.',
+    fx(){toast('🏷️ 4 segmen bernama — tim pemasaran langsung paham.','ok',3000);}},
+   {type:'act',aid:'PROG',done:false,targets:()=>[mcl.cards[3]],
+    desc:'Rancang PROGRAM per segmen — bukan satu untuk semua (klik kartu).',
+    why:'K1 dapat program geser-beban berinsentif (target utama — 46% × puncak tajam!), K2 ditawari PLTS atap (bebannya siang persis produksi surya), K3 dijaga kualitas pasokannya, K4 dibiarkan — mereka SUDAH membantu sistem. Empat pesan berbeda, satu tujuan: puncak sistem melandai tanpa memaksa siapa pun.',
+    fx(){toast('🎯 4 program tertarget terbit — proyeksi puncak sistem −6%!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>50.000 pelanggan, empat kepribadian, empat program!</b> Data mengelompokkan dirinya, kamu memberinya nama & strategi. Unsupervised learning paling berguna justru saat hasilnya bisa dijelaskan ke orang pemasaran dalam satu kalimat.');
+    setTimeout(()=>showWin('cluster'),2200);});
+  say('VOLTA di sini 🧩 Misi analis paling elegan: <b>biarkan 50.000 pelanggan mengelompokkan dirinya sendiri</b>. k-means alatnya, elbow penunjuknya, dan akal sehat bisnismu palunya. Mulai dari fitur!');
+  $('#modTitle').textContent='J05·M7 — Clustering Pelanggan';
+  $('#taskHead').textContent='BENTUK, BUKAN BESAR';}
+MISSIONS.cluster.build=buildCluster;
+Object.assign(REAL,{
+ cluster:[
+  'Bersihkan profil cacat (meter rusak, nol panjang) sebelum clustering — sampah membentuk klaster sampah',
+  'Uji stabilitas klaster antar bulan — segmen yang berpindah-pindah belum layak jadi dasar program',
+  'Lindungi privasi: analisis pada agregat/anonim, akses data individu berjenjang',
+  'Ukur keberhasilan program per segmen (uplift) dan umpankan kembali ke segmentasi berikutnya'],
+});

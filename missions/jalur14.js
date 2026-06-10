@@ -568,3 +568,85 @@ Object.assign(REAL,{
   'Simpan kurva polarisasi tahunan per stack — sidik jari degradasi untuk klaim garansi',
   'Kontrak recycling stack sejak pembelian: logam grup platinum wajib pulang ke rantai pasok'],
 });
+
+/* =====================================================================
+   MISI 7 — AMONIA HIJAU: HIDROGEN YANG BISA BERLAYAR
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ amonia:{lvl:'JALUR 14 · HYDROGEN ENERGY · MISI 7',icon:'🚢',title:'Amonia Hijau: Hidrogen yang Bisa Berlayar',strict:true,
+  loc:'📍 Plant H₂ · Modul Haber-Bosch mini, produksi perdana',
+  story:'Pembeli dari Jepang tertarik hidrogen hijaumu — tapi mengirim H₂ menyeberangi laut itu mimpi mahal: terlalu ringan, terlalu liar. Solusi industri dunia: kemas hidrogen sebagai AMONIA (NH₃) — tiga hidrogen menumpang satu nitrogen, cair di suhu wajar, dan kapal pengangkutnya sudah berlayar sejak puluhan tahun. Hari ini modul Haber-Bosch mini-mu produksi perdana.',
+  goal:'Amonia hijau perdana terproduksi aman: nitrogen dipisahkan dari udara, sintesis berjalan pada rasio & kondisi benar, dan produk tersimpan dengan disiplin toksisitasnya.',
+  obj:['Siapkan nitrogen dari air separation & rasio umpan','Jalankan reaktor sintesis pada kondisi operasi','Kondensasikan, simpan & terapkan disiplin NH₃'],
+  learn:['Amonia = kurir hidrogen: energi per m³ jauh lebih padat dari H₂ terkompresi, cair di −33°C (atau bertekanan moderat) — logistik kapal sudah matang puluhan tahun','Haber-Bosch menjodohkan N₂ + 3H₂ → 2NH₃ pada tekanan tinggi & katalis besi: reaksi bolak-balik — gas tak bereaksi diputar kembali (recycle loop), bukan dibuang','Nitrogen diambil dari udara (78% gratis!) lewat air separation/PSA — kemurnian penting: oksigen yang lolos meracuni katalis','H₂ mudah terbakar; NH₃ menambah dimensi TOKSIK: bau menusuk justru alarm alami — deteksi, ventilasi & APD berbeda kelas dengan plant H₂ biasa'],
+  next:['Pelajari cracking: mengubah amonia kembali jadi H₂ di pelabuhan tujuan','Dalami amonia sebagai bahan bakar kapal langsung (dual-fuel engine)','Eksplorasi sertifikasi hijau rantai NH₃ untuk pasar ekspor']},
+});
+let mna={};
+function buildAmonia(){
+  freshScene(0xa8c4d8,0x0e1a22);
+  cam={theta:.1,phi:1.16,r:10,target:new THREE.Vector3(0,1.8,-.8)};
+  const ground=boxT(24,.1,13,TEX.concrete());ground.position.y=-.05;scene.add(ground);
+  /* PSA nitrogen */
+  mna.psa=boxT(1.4,1.8,1.0,TEX.metal(),{metalness:.35});mna.psa.position.set(-6.2,.95,-2);scene.add(mna.psa);
+  actMesh(mna.psa,'N2');
+  scene.add(label('PSA — NITROGEN DARI UDARA',.65,'#5fd4ff').translateX(-6.2).translateY(2.2).translateZ(-2));
+  /* mixer rasio */
+  mna.mix=box(.8,.8,.6,0x2a5a8a);mna.mix.position.set(-3.6,.85,-2);scene.add(mna.mix);
+  actMesh(mna.mix,'RASIO');
+  scene.add(label('MIXER N₂:H₂',.6,'#5fd4ff').translateX(-3.6).translateY(1.6).translateZ(-2));
+  /* reaktor sintesis */
+  mna.reak=cyl(.7,.7,2.6,0x8a6a4a,20,{metalness:.3});mna.reak.position.set(-.8,1.4,-2);scene.add(mna.reak);
+  actMesh(mna.reak,'SINTESIS');
+  scene.add(label('REAKTOR HABER-BOSCH',.75).translateX(-.8).translateY(3.0).translateZ(-2));
+  mna.D=makeDisplay(1.2,.7,300,170);
+  mna.D.mesh.position.set(-.8,1.5,-1.28);scene.add(mna.D.mesh);
+  dispText(mna.D,['STANDBY','—'],['#7d8f84','#7d8f84']);
+  /* kondensor + tangki NH3 */
+  mna.kond=box(.9,.7,.6,0x6a8aa8);mna.kond.position.set(1.8,.75,-2);scene.add(mna.kond);
+  mna.tank=new THREE.Mesh(new THREE.SphereGeometry(1.1,22,16),
+    new THREE.MeshStandardMaterial({color:0xe8edf2,roughness:.35,metalness:.3}));
+  mna.tank.position.set(4.6,1.15,-2);scene.add(mna.tank);
+  actMesh(mna.tank,'SIMPAN');
+  scene.add(label('TANGKI NH₃ −33°C',.7).translateX(4.6).translateY(2.6).translateZ(-2));
+  /* deteksi & shower darurat */
+  mna.det=box(.2,.3,.1,0x46a06a);mna.det.position.set(3.2,2.2,-1.2);scene.add(mna.det);
+  scene.add(label('DETEKTOR NH₃ + SHOWER DARURAT',.55,'#8df0b8').translateX(3.4).translateY(2.65).translateZ(-1.1));
+  mna.run=false;
+  moduleTick=(dt)=>{if(mna.run){
+    dispText(mna.D,['185 bar · 450°C','konversi 16%/pass ↻'],['#46ff8e','#8aa3bd']);}};
+  startSeq([
+   {type:'act',aid:'N2',done:false,targets:()=>[mna.psa],
+    desc:'Nyalakan PSA: panen NITROGEN dari udara (klik unit).',
+    why:'Udara = 78% nitrogen gratis — PSA memisahkannya dengan ayakan molekul: N₂ 99,99% mengalir ke buffer. Kemurnian bukan kemewahan: oksigen yang menyusup akan MERACUNI katalis besi di reaktor — pembunuh senyap bernilai miliaran.',
+    fx(){toast('🌬️ N₂ 99,99% mengalir — oksigen tertahan di ayakan.','ok',2800);}},
+   {type:'act',aid:'RASIO',done:false,targets:()=>[mna.mix],
+    desc:'Atur RASIO umpan N₂:H₂ = 1:3 presisi (klik mixer).',
+    why:'Stoikiometri adalah resepnya: satu nitrogen menggandeng tiga hidrogen. Flow controller mengunci 1:3,02 (sedikit kelebihan H₂ disengaja) — rasio meleset membuat gas inert menumpuk di loop dan konversi anjlok. Kimia industri dimenangkan di angka desimal.',
+    fx(){toast('⚖️ Rasio terkunci 1:3 — resep stoikiometri sah.','ok',2800);}},
+   {type:'act',aid:'SINTESIS',done:false,targets:()=>[mna.reak],
+    desc:'Panaskan & tekan: jalankan REAKTOR sintesis (klik reaktor).',
+    why:'185 bar, 450°C, katalis besi — kondisi yang memaksa dua gas pemalu itu menikah. Konversi hanya ±16% sekali lewat: sisanya TIDAK dibuang melainkan diputar kembali (recycle loop) sampai habis bereaksi. Haber-Bosch: reaksi yang memberi makan separuh umat manusia, kini bekerja untuk energi.',
+    fx(){mna.run=true;beep(140,.8,'sine',.08);
+      toast('⚗️ Sintesis berjalan: 185 bar · 450°C · loop berputar.','ok',3000);}},
+   {type:'act',aid:'SIMPAN',done:false,targets:()=>[mna.tank],
+    desc:'Kondensasikan & SIMPAN: amonia cair perdana (klik tangki).',
+    why:'Gas keluaran didinginkan — NH₃ mengembun di −33°C menjadi cairan jernih, masuk tangki berinsulasi. Disiplin barunya: NH₃ TOKSIK — detektor ambang ketat, shower darurat teruji, APD respirator untuk pekerjaan sambungan. Bau menusuknya adalah alarm alami: jauh sebelum berbahaya, hidung sudah protes.',
+    fx(){toast('🧊 NH₃ cair mengalir ke tangki — disiplin toksik aktif.','ok',3000);}},
+   {type:'act',aid:'EKSPOR',done:false,targets:()=>[mna.tank],
+    desc:'Tutup hari bersejarah: sampel uji & kontrak EKSPOR (klik tangki).',
+    why:'Analisis sampel: NH₃ 99,8%, air <0,2%, jejak hijau terdokumentasi dari PLTS → elektroliser → Haber-Bosch — paspor karbon lengkap. Pembeli Jepang menandatangani LOI: hidrogenmu kini punya kapal untuk berlayar. Dari molekul paling ringan, lahir komoditas ekspor energi baru Indonesia.',
+    fx(){toast('🚢 NH₃ 99,8% hijau tersertifikasi — LOI ekspor diteken!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Hidrogen kini bisa berlayar!</b> Nitrogen dipanen dari udara, rasio dijaga desimalnya, loop tak membuang apa pun, dan toksisitas dihormati selayaknya. Amonia hijau: jembatan antara elektrolisermu dan pelabuhan dunia.');
+    setTimeout(()=>showWin('amonia'),2200);});
+  const s3n=seq.steps[3],of3n=s3n.fx;s3n.fx=()=>{of3n();mna.tank.userData.aid='EKSPOR';};
+  say('VOLTA di sini 🚢 Pembeli Jepang mau hidrogenmu — tapi H₂ tak bisa berlayar murah. Solusinya dikemas jadi <b>amonia: 3 hidrogen menumpang 1 nitrogen</b>. Hari ini Haber-Bosch mini produksi perdana. Mulai dari memanen udara!');
+  $('#modTitle').textContent='J14·M7 — Amonia Hijau';
+  $('#taskHead').textContent='KEMAS H₂, LAYARKAN ENERGI';}
+MISSIONS.amonia.build=buildAmonia;
+Object.assign(REAL,{
+ amonia:[
+  'NH₃ adalah B3 toksik: pelajari IDLH, jarak aman & skenario pelepasan sebelum desain plant',
+  'Katalis diaktivasi mengikuti prosedur vendor — oksigen & belerang adalah racunnya seumur hidup',
+  'Tangki & perpipaan NH₃ punya kode material sendiri (tembaga DILARANG — korosi amonia)',
+  'Drill kebocoran NH₃ dengan komunitas sekitar — bau menusuk akan memicu kepanikan publik'],
+});

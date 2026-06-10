@@ -729,3 +729,107 @@ Object.assign(REAL,{
   'Catat parameter akhir + alasan di dokumentasi loop — penala berikutnya mewarisi konteks, bukan angka misterius',
   'Waspadai integral windup saat aktuator jenuh — aktifkan anti-windup di blok PID'],
 });
+
+/* =====================================================================
+   MISI 7 — ROBOT PALLETIZER: LENGAN YANG BELAJAR
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ robot:{lvl:'JALUR 16 · KONTROL & OTOMASI · MISI 7',icon:'🦾',title:'Robot Palletizer: Lengan yang Belajar',strict:true,
+  loc:'📍 Gudang distribusi · Ujung line sortir, robot baru tiba',
+  story:'Line sortirmu kini menumpuk masalah baru yang menyenangkan: kotak tersortir menggunung lebih cepat dari tenaga manusia menyusunnya ke palet. Solusinya baru saja diturunkan dari truk: ROBOT PALLETIZER 4-axis. Tapi robot industri bukan mainan — ia lengan 300 kg yang bergerak secepat kilat tanpa menoleh. Hari ini kamu mengajarinya menyusun... dan mengajari semua orang menghormatinya.',
+  goal:'Robot beroperasi terintegrasi line: safety zone terpasang & teruji DULU, teach points presisi, pola palet tersusun, dan handshake dengan PLC sortir berjalan mulus.',
+  obj:['Pasang & uji safety: pagar, kurtain, e-stop','Teach pendant: ajari titik pick & place','Susun pola palet & integrasi handshake PLC'],
+  learn:['Keselamatan robot ditegakkan SEBELUM gerakan pertama: pagar + light curtain + e-stop teruji — lengan industri tak bisa melihatmu, jadi sistemlah yang harus','Teach pendant adalah sekolah robot: mode manual kecepatan rendah, titik demi titik (pick, lintasan aman, place) disimpan presisi — dan zona kerjanya dibatasi software (soft limit)','Pola palet adalah matematika: susunan interlock antar lapis membuat tumpukan saling mengunci — robot menghitung ofset tiap kotak dari satu pola master','Robot & PLC berjabat tangan via handshake I/O: "kotak siap" → "robot ambil" → "selesai" — dua otak yang sopan saling menunggu, tak pernah saling menabrak'],
+  next:['Pelajari koordinat sistem robot (joint, world, tool) lebih dalam','Dalami collaborative robot (cobot): kapan pagar boleh hilang','Eksplorasi vision system: robot yang akhirnya bisa melihat']},
+});
+let mrb={};
+function buildRobot(){
+  freshScene(0xb8c4cc,0x10181e);
+  cam={theta:.3,phi:1.12,r:9,target:new THREE.Vector3(0,1.4,-.6)};
+  const floor=boxT(22,.1,13,TEX.concrete());floor.position.y=-.05;scene.add(floor);
+  /* ujung konveyor sortir */
+  const belt=box(5,.22,1.1,0x222a31,{roughness:.85});belt.position.set(-4.5,.85,-1.5);scene.add(belt);
+  [-6,-4.5,-3].forEach(x=>{const leg=boxT(.12,.78,.9,TEX.metal(),{metalness:.4});
+    leg.position.set(x,.39,-1.5);scene.add(leg);});
+  scene.add(label('DARI LINE SORTIR',.65).translateX(-4.5).translateY(1.6).translateZ(-1.5));
+  mrb.kotak=box(.5,.4,.5,0xc8893a,{roughness:.8});mrb.kotak.position.set(-2.6,1.16,-1.5);scene.add(mrb.kotak);
+  /* robot 4-axis */
+  mrb.robot=new THREE.Group();
+  const base=cyl(.45,.55,.4,0xd87a20);base.position.y=.2;mrb.robot.add(base);
+  mrb.arm1=box(.3,1.4,.3,0xd87a20);mrb.arm1.position.y=1.0;mrb.robot.add(mrb.arm1);
+  mrb.arm2=box(1.6,.26,.26,0xe8923a);mrb.arm2.position.set(.7,1.7,0);mrb.robot.add(mrb.arm2);
+  mrb.grip=box(.3,.3,.3,0x444b55);mrb.grip.position.set(1.5,1.5,0);mrb.robot.add(mrb.grip);
+  mrb.robot.position.set(-.6,0,-1.5);scene.add(mrb.robot);
+  actMesh(mrb.arm2,'TEACH');
+  scene.add(label('ROBOT PALLETIZER 4-AXIS',.8).translateX(-.6).translateY(2.6).translateZ(-1.5));
+  /* palet */
+  const palet=boxT(1.4,.14,1.4,TEX.wood());palet.position.set(1.8,.07,-1.5);scene.add(palet);
+  mrb.tumpuk=[];
+  scene.add(label('PALET',.6).translateX(1.8).translateY(.55).translateZ(-1.5));
+  /* pagar + light curtain */
+  mrb.pagar=[];
+  [[-.6,-3.2,3.6,0],[1.8,-3.2,3.6,0],[-2.4,-1.5,0,3.4],[3.4,-1.5,0,3.4]].forEach(o=>{
+    const p=box(o[2]||.06,1.4,o[3]||.06,0xd8b020,{transparent:true,opacity:.5});
+    p.position.set(o[0],.7,o[1]);p.visible=false;scene.add(p);mrb.pagar.push(p);});
+  mrb.pagarBtn=box(.5,.4,.3,0xd8b020);mrb.pagarBtn.position.set(3.8,.3,.8);scene.add(mrb.pagarBtn);
+  actMesh(mrb.pagarBtn,'SAFETY');
+  scene.add(label('PAKET SAFETY (pagar+kurtain+e-stop)',.6,'#ffd23f').translateX(3.8).translateY(.85).translateZ(.8));
+  /* teach pendant */
+  mrb.pend=box(.3,.42,.08,0x2b3a4a);mrb.pend.position.set(-2.6,1.0,.8);scene.add(mrb.pend);
+  scene.add(label('TEACH PENDANT',.55,'#5fd4ff').translateX(-2.6).translateY(1.45).translateZ(.8));
+  /* layar pola + PLC */
+  mrb.D=makeDisplay(1.8,1.1,400,230);
+  mrb.D.mesh.position.set(5.4,2.1,-2.2);scene.add(mrb.D.mesh);
+  dispText(mrb.D,['POLA PALET','belum tersusun'],['#5fd4ff','#7d8f84']);
+  actMesh(mrb.D.mesh,'POLA');
+  const pole=cyl(.04,.04,1.6,0x666666);pole.position.set(5.4,.75,-2.2);scene.add(pole);
+  mrb.running=false;mrb.t=0;mrb.n=0;
+  moduleTick=(dt)=>{
+    if(!mrb.running)return;
+    mrb.t+=dt;
+    const ph=mrb.t%3;
+    mrb.robot.rotation.y=ph<1.5?(-.6+ph*.8):(0.6-(ph-1.5)*.8);
+    if(ph<.1&&mrb.n<6&&mrb.t>1){
+      const k=box(.5,.4,.5,0xc8893a,{roughness:.8});
+      const col=mrb.n%2,row=Math.floor(mrb.n/2);
+      k.position.set(1.55+col*.52,.35+Math.floor(mrb.n/4)*.42,-1.75+(row%2)*.52);
+      scene.add(k);mrb.tumpuk.push(k);mrb.n++;}};
+  startSeq([
+   {type:'act',aid:'SAFETY',done:false,targets:()=>[mrb.pagarBtn],
+    desc:'HUKUM PERTAMA: pasang & uji safety SEBELUM robot bergerak (klik paket).',
+    why:'Pagar mengelilingi zona, light curtain menjaga bukaan konveyor (tangan masuk = robot membeku <0,2 detik — diuji dengan tongkat ✓), tiga e-stop teruji semua. Lengan 300 kg ini tak punya mata & tak punya ampun: sistemlah yang melihat untuknya. Tanpa langkah ini, langkah berikutnya tidak ada.',
+    fx(){mrb.pagar.forEach(p=>p.visible=true);
+      toast('🛡️ Pagar + kurtain (0,18 dtk) + 3 e-stop — zona steril.','ok',3200);}},
+   {type:'act',aid:'TEACH',done:false,targets:()=>[mrb.arm2],
+    desc:'Sekolah robot: TEACH titik pick, lintasan & place (klik lengan).',
+    why:'Mode teach: kecepatan 10%, deadman switch tertekan, lengan dituntun titik demi titik — PICK di ujung konveyor, WAYPOINT aman (melengkung tinggi, menjauhi pagar), PLACE presisi di sudut palet. Soft limit dikunci: di luar amplop ini, software menolak bergerak. Robot kini hafal koreografinya — selamanya, tanpa bosan.',
+    fx(){toast('🎓 9 titik tersimpan + soft limit terkunci.','ok',3000);}},
+   {type:'act',aid:'POLA',done:false,targets:()=>[mrb.D.mesh],
+    desc:'Susun POLA PALET interlock di layar (klik layar).',
+    why:'Lapis ganjil & genap disusun saling silang (interlock) — tiap kotak mengunci sambungan lapis bawahnya, tumpukan kokoh tanpa lem & wrapping berlebih. Robot cukup diberi SATU pola master; ofset tiap kotak ia hitung sendiri. Matematika menyusun lebih rapi dari lengan terlatih mana pun.',
+    fx(){dispText(mrb.D,['POLA INTERLOCK ✓','2x2 × 2 lapis · silang'],['#46ff8e','#eaf2fb']);
+      toast('🧮 Pola interlock terkunci — tumpukan saling mengunci.','ok',3000);}},
+   {type:'act',aid:'SHAKE',done:false,targets:()=>[mrb.D.mesh],
+    desc:'Integrasi: HANDSHAKE robot ↔ PLC line sortir (klik layar).',
+    why:'Dua otak diajari sopan santun: PLC sortir mengangkat sinyal "kotak siap di posisi" → robot menjawab "mengambil" (konveyor menahan kotak berikutnya) → "selesai, kirim lagi". Tanpa handshake, robot mencengkeram udara atau konveyor menabrakkan kotak ke lengan — dua mesin pintar yang tak saling bicara adalah dua mesin bodoh.',
+    fx(){toast('🤝 Handshake I/O teruji 20 siklus — dua otak satu bahasa.','ok',3000);}},
+   {type:'act',aid:'RUN',done:false,targets:()=>[mrb.arm2],
+    desc:'Produksi perdana: RUN otomatis — saksikan lengan menyusun (klik lengan).',
+    why:'Kecepatan dinaikkan bertahap 10→50→100%: kotak demi kotak terangkat dari konveyor, melayang di lintasan aman, mendarat presisi milimeter di pola silangnya — 8 detik per kotak, sepanjang shift, tanpa punggung yang pegal. Dua penyusun manual? Kini operator robot & QC — naik kelas bersama mesinnya.',
+    fx(){mrb.running=true;
+      toast('🦾 RUN! Lengan menyusun palet — presisi & tak kenal lelah.','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Lengan itu kini bekerja untukmu!</b> Safety ditegakkan sebelum gerakan pertama, sembilan titik diajarkan dengan sabar, pola interlock terkunci, dan dua otak berjabat tangan. Line-mu kini lengkap: sensor melihat, PLC berpikir, robot bekerja — dan manusia memimpin.');
+    setTimeout(()=>showWin('robot'),2200);});
+  const s1r=seq.steps[1],of1r=s1r.fx;s1r.fx=()=>{of1r();mrb.arm2.userData.aid='RUN';};
+  const s2r=seq.steps[2],of2r=s2r.fx;s2r.fx=()=>{of2r();mrb.D.mesh.userData.aid='SHAKE';};
+  say('VOLTA di sini 🦾 Anggota tim terbaru line-mu: <b>robot palletizer 300 kg</b> yang bergerak secepat kilat tanpa menoleh. Hukum pertamanya bukan program — tapi PAGAR. Safety dulu, baru sekolah. Mulai!');
+  $('#modTitle').textContent='J16·M7 — Robot Palletizer';
+  $('#taskHead').textContent='PAGAR DULU, PROGRAM KEMUDIAN';}
+MISSIONS.robot.build=buildRobot;
+Object.assign(REAL,{
+ robot:[
+  'Risk assessment robot sesuai standar keselamatan mesin SEBELUM instalasi — safety dirancang, bukan ditambal',
+  'Hanya personel terlatih memegang teach pendant; mode manual = kecepatan terbatasi & deadman aktif',
+  'Validasi pola palet dengan uji transport nyata (getaran truk) — rapi di gudang belum tentu utuh di jalan',
+  'Audit berkala fungsi safety (kurtain, e-stop) terjadwal — perangkat keselamatan juga bisa menua'],
+});

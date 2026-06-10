@@ -571,3 +571,88 @@ Object.assign(REAL,{
   'Catat penyesuaian non-rutin (mesin baru, shift berubah) dengan bukti — bukan dikira-kira',
   'Untuk kontrak ESCO: pihak ketiga independen melakukan M&V — pembayar dan penghitung dipisah'],
 });
+
+/* =====================================================================
+   MISI 7 — ISO 50001: MEMBANGUN SISTEM MANAJEMEN ENERGI
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ iso:{lvl:'JALUR 06 · ENERGY AUDITOR · MISI 7',icon:'🏛️',title:'ISO 50001: Membangun Sistem Manajemen Energi',strict:false,
+  loc:'📍 PT Maju Plastik · Persiapan sertifikasi EnMS',
+  story:'Semua kemenanganmu di pabrik ini — audit, logger, tarif, boiler, M&V — selama ini bertumpu pada SATU orang: kamu. Direktur sadar risikonya: "Kalau auditor kita pergi, apakah hematnya ikut pergi?" Jawabannya ISO 50001: mengubah keahlian perorangan menjadi SISTEM yang hidup sendiri — kebijakan, baseline, indikator, audit internal, dan siklus yang tak pernah berhenti.',
+  goal:'EnMS berdiri & teruji: kebijakan energi terbit, EnPI & baseline terdefinisi, audit internal menemukan ketidaksesuaian yang ditindak, dan management review menutup siklus PDCA pertama.',
+  obj:['Susun kebijakan, tim & significant energy uses','Tetapkan EnPI & baseline per area','Audit internal, tindak temuan, management review'],
+  learn:['ISO 50001 memindahkan hemat energi dari pahlawan ke SISTEM: kebijakan, peran, prosedur — perusahaan tetap hemat walau pahlawannya pindah','SEU (significant energy uses) memfokuskan sistem: 4-6 pengguna terbesar dipantau ketat — bukan birokrasi merata untuk semua colokan','EnPI (indikator kinerja energi) harus ternormalisasi (kWh/ton, kW/TR) — ilmu M&V-mu kini jadi bahasa rutin manajemen','Audit internal mencari ketidaksesuaian SISTEM (prosedur tak dijalankan), bukan mencari orang salah — dan management review adalah jantung PDCA: pimpinan memutuskan, siklus berputar lagi'],
+  next:['Pelajari proses sertifikasi & surveilans tahunan badan sertifikasi','Integrasi EnMS dengan ISO 9001/14001 (sistem terpadu)','Bangun karier lead auditor ISO 50001 tersertifikasi']},
+});
+let mio={};
+function buildISO(){
+  freshScene(0xb8c6d4,0x141d28);
+  cam={theta:0,phi:1.17,r:7.5,target:new THREE.Vector3(0,1.8,-.8)};
+  const Z=room(0x6b5a45,0xd8d2c4,16,11);
+  /* papan kebijakan */
+  mio.pol=box(.7,.9,.05,0xe8e4d8);mio.pol.position.set(-4.4,2.3,Z+.06);scene.add(mio.pol);
+  actMesh(mio.pol,'POLICY');
+  scene.add(label('KEBIJAKAN ENERGI',.6,'#5fd4ff').translateX(-4.4).translateY(3.0).translateZ(Z+.1));
+  /* layar EnPI */
+  const frame=boxT(3.6,2.2,.16,TEX.metal(),{metalness:.4});frame.position.set(-.8,2.4,Z+.05);scene.add(frame);
+  frame.add(label('PAPAN EnPI PABRIK',.8).translateY(1.35));
+  mio.D=makeDisplay(3.3,1.9,520,310);
+  mio.D.mesh.position.set(-.8,2.4,Z+.15);scene.add(mio.D.mesh);
+  actMesh(mio.D.mesh,'ENPI');
+  function papan(mode){
+    const g=mio.D.g,W=520,H=310;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.font='700 17px Consolas';g.textAlign='left';
+    g.fillStyle='#5fd4ff';g.fillText('SEU & EnPI',16,30);
+    g.font='600 15px Consolas';
+    const rows=[['Extruder','kWh/ton','9,2 → target 8,8'],['Boiler','efisiensi','83,5% → ≥83%'],
+      ['Chiller','kW/TR','0,64 → ≤0,68'],['Kompresor','kWh/m³','0,11 → ≤0,12']];
+    rows.forEach((r,i)=>{const y=70+i*40;
+      g.fillStyle='#8aa3bd';g.fillText(r[0],16,y);
+      g.fillStyle='#eaf2fb';g.fillText(r[1],160,y);
+      g.fillStyle='#46ff8e';g.fillText(r[2],280,y);});
+    if(mode>=1){g.fillStyle='#ffd23f';g.font='700 15px Consolas';
+      g.fillText('semua ternormalisasi & ber-baseline (ilmu M&V)',16,H-18);}
+    mio.D.tex.needsUpdate=true;}
+  papan(0);
+  /* meja audit internal */
+  mio.audit=box(.55,.7,.05,0xffe8c0);mio.audit.position.set(2.4,2.3,Z+.06);scene.add(mio.audit);
+  actMesh(mio.audit,'AUDIT');
+  scene.add(label('AUDIT INTERNAL',.55,'#ffd23f').translateX(2.4).translateY(2.9).translateZ(Z+.1));
+  /* ruang management review */
+  const desk=boxT(2.8,.08,1.3,TEX.wood());desk.position.set(3.6,1.0,-.4);scene.add(desk);
+  [[-1.2,-1.0],[1.2,-1.0],[-1.2,.1],[1.2,.1]].forEach(p=>{
+    const l=boxT(.08,1,.08,TEX.wood());l.position.set(3.6+p[0],.5,p[1]-.4+.4);scene.add(l);});
+  mio.mr=box(.5,.66,.04,0xd8e8d8);mio.mr.position.set(3.6,1.06,-.4);mio.mr.rotation.x=-Math.PI/2;scene.add(mio.mr);
+  actMesh(mio.mr,'REVIEW');
+  scene.add(label('MANAGEMENT REVIEW',.6,'#8df0b8').translateX(3.6).translateY(1.5).translateZ(-.4));
+  startSeq([
+   {type:'act',aid:'POLICY',done:false,targets:()=>[mio.pol],
+    desc:'Susun fondasi: KEBIJAKAN energi, tim, & tetapkan SEU (klik papan).',
+    why:'Kebijakan ditandatangani direktur (komitmen pimpinan = pasal pertama ISO), tim energi lintas-departemen dibentuk, dan dari data logger-mu SEU dipilih: extruder, boiler, chiller, kompresor = 81% konsumsi. Sistem yang fokus pada yang besar — bukan birokrasi untuk semua colokan.',
+    fx(){toast('🏛️ Kebijakan terbit · tim terbentuk · 4 SEU terkunci (81%).','ok',3000);}},
+   {type:'act',aid:'ENPI',done:false,targets:()=>[mio.D.mesh],
+    desc:'Tetapkan EnPI & BASELINE tiap SEU (klik papan EnPI).',
+    why:'Tiap SEU diberi indikator ternormalisasi: kWh/ton extruder, kW/TR chiller — plus baseline & target tahunan. Ilmu M&V-mu kini bukan proyek sesekali: ia metabolisme bulanan yang dibaca manajemen seperti laporan keuangan.',
+    fx(){papan(1);toast('📐 4 EnPI ber-baseline & target — metabolisme terpasang.','ok',3000);}},
+   {type:'act',aid:'AUDIT',done:false,targets:()=>[mio.audit],
+    desc:'Jalankan AUDIT INTERNAL pertama — cari celah sistem (klik lembar).',
+    why:'Auditor internal (yang kamu latih) menemukan dua ketidaksesuaian: log boiler tak diisi 2 minggu (prosedur ada, eksekusi bolong) & satu sensor EnPI belum terkalibrasi. Temuan = hadiah: sistem yang menemukan celahnya sendiri sebelum badan sertifikasi datang.',
+    fx(){toast('🔎 2 temuan internal → tindakan korektif ber-tenggat.','ok',3000);}},
+   {type:'act',aid:'REVIEW',done:false,targets:()=>[mio.mr],
+    desc:'Tutup siklus: MANAGEMENT REVIEW dengan direksi (klik dokumen).',
+    why:'Direksi membaca: EnPI tercapai 3 dari 4, temuan audit tertutup, dan memutuskan: anggaran metering line baru + target lebih ambisius tahun depan. PDCA berputar penuh — dan inilah jawabannya: bila kamu pergi besok, sistem ini tetap berdetak. Itulah warisan auditor sejati.',
+    fx(){toast('🔄 PDCA siklus 1 tertutup — sistem hidup tanpa pahlawan. SIAP SERTIFIKASI!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Dari pahlawan menjadi sistem!</b> Kebijakan, SEU, EnPI, audit internal, management review — hemat energi kini DNA perusahaan, bukan jasa perorangan. ISO 50001: cara pensiun yang anggun bagi seorang auditor.');
+    setTimeout(()=>showWin('iso'),2200);});
+  say('VOLTA di sini 🏛️ Pertanyaan direktur menohok: <b>"kalau kamu pergi, hematnya ikut pergi?"</b> Jawabannya ISO 50001 — mengubah keahlianmu menjadi sistem yang berdetak sendiri. Bangun dari kebijakan!');
+  $('#modTitle').textContent='J06·M7 — ISO 50001 EnMS';
+  $('#taskHead').textContent='SISTEM, BUKAN PAHLAWAN';}
+MISSIONS.iso.build=buildISO;
+Object.assign(REAL,{
+ iso:[
+  'Komitmen pimpinan adalah pasal hidup-mati EnMS — tanpa direksi, ISO 50001 hanya map di lemari',
+  'Mulai dari SEU & data yang sudah ada — sistem yang terlalu ambisius di awal mati oleh beratnya sendiri',
+  'Auditor internal dilatih & independen dari area yang diauditnya',
+  'Siapkan bukti objektif (log, kalibrasi, notulen) — sertifikasi menilai jejak, bukan niat'],
+});

@@ -540,3 +540,91 @@ Object.assign(REAL,{
   'H₂S wajib desulfurisasi sebelum genset — korosi mesin biogas itu cepat dan mahal',
   'Digestate diuji & diizinkan sebagai pupuk sesuai regulasi sebelum diedarkan ke petani'],
 });
+
+/* =====================================================================
+   MISI 7 — OVERHAUL INSINERATOR: REFRACTORY & GRATE
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ overhaul:{lvl:'JALUR 13 · WASTE TO ENERGY · MISI 7',icon:'🧱',title:'Overhaul Insinerator: Refractory & Grate',strict:true,
+  loc:'📍 PLTSa · Annual shutdown 14 hari',
+  story:'Setahun penuh ruang bakar itu menelan 850°C tanpa mengeluh — kini giliran ia dirawat. Annual shutdown: 14 hari, satu insinerator dingin, dan daftar pekerjaan yang tak menerima molor (sampah kota tak ikut libur!). Dua pasien utama: REFRACTORY — dinding bata tahan api yang mulai terkikis, dan GRATE — lantai besi bergerak tempat sampah terbakar sambil berjalan.',
+  goal:'Overhaul tuntas tepat waktu: pendinginan terkendali, inspeksi menyeluruh terdokumentasi, refractory & grate diperbaiki dengan benar, dan curing dijalani tanpa tergesa.',
+  obj:['Cooling down terkendali & isolasi energi total','Inspeksi: petakan kerusakan refractory & keausan grate','Perbaiki, lalu curing pemanasan bertahap'],
+  learn:['Pendinginan insinerator diatur gradiennya seperti pemanasannya: refractory yang didinginkan tergesa retak oleh kejut termal — kesabaran dua arah','Masuk ruang bakar = ruang terbatas PLUS: gas sisa, debu abu, suhu — semua izin ruang terbatasmu berlaku ganda di sini','Refractory diperbaiki sesuai peta kerusakan: terkikis tipis cukup patching, area kritis dibongkar-pasang — dan material baru WAJIB curing (pemanasan bertahap mengusir air) sebelum kerja penuh','Grate bar yang aus mengubah aliran udara primer — pembakaran tak rata: penggantian per zona dengan clearance yang diukur, bukan dikira'],
+  next:['Pelajari thermal imaging dinding luar untuk deteksi dini refractory tipis','Dalami manajemen shutdown: critical path & koordinasi puluhan pekerjaan','Eksplorasi material refractory generasi baru (umur lebih panjang)']},
+});
+let mov={};
+function buildOverhaul(){
+  freshScene(0xa8b8a8,0x101a14);
+  cam={theta:.1,phi:1.16,r:9,target:new THREE.Vector3(0,1.7,-.8)};
+  const ground=boxT(22,.1,13,TEX.concrete());ground.position.y=-.05;scene.add(ground);
+  /* insinerator terbuka (manhole) */
+  mov.furn=boxT(3.2,2.8,2.4,TEX.metal(),{metalness:.2});mov.furn.position.set(-2.4,1.4,-2);scene.add(mov.furn);
+  const manhole=cyl(.5,.5,.1,0x1a1410,20);manhole.rotation.x=Math.PI/2;
+  manhole.position.set(-2.4,1.2,-.78);scene.add(manhole);
+  scene.add(label('INSINERATOR — shutdown H-1',.85).translateX(-2.4).translateY(3.1).translateZ(-2));
+  actMesh(mov.furn,'COOL');
+  /* display suhu */
+  mov.D=makeDisplay(1.3,.7,300,170);
+  mov.D.mesh.position.set(-2.4,2.2,-.76);scene.add(mov.D.mesh);
+  dispText(mov.D,['612 °C','cooling…'],['#ffd23f','#8aa3bd']);
+  /* peta kerusakan */
+  const frame=boxT(2.8,1.9,.16,TEX.metal(),{metalness:.4});frame.position.set(2.0,2.3,-2.9);scene.add(frame);
+  frame.add(label('PETA INSPEKSI',.75).translateY(1.2));
+  mov.M=makeDisplay(2.5,1.6,440,280);
+  mov.M.mesh.position.set(2.0,2.3,-2.8);scene.add(mov.M.mesh);
+  actMesh(mov.M.mesh,'INSPEKSI');
+  function petaKerusakan(mode){
+    const g=mov.M.g,W=440,H=280;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.strokeStyle='#2a3a4c';g.lineWidth=2;g.strokeRect(40,30,W-80,H-90);
+    g.font='600 14px Consolas';g.textAlign='left';
+    if(mode>=1){
+      g.fillStyle='#ffd23f';g.fillRect(70,60,90,60);g.fillText('aus 30%',74,96);
+      g.fillStyle='#ff5a5a';g.fillRect(220,120,110,70);g.fillText('KRITIS 70%',226,160);
+      g.fillStyle='#46ff8e';g.fillText('sisa: sehat',60,H-26);
+      g.fillStyle='#8aa3bd';g.fillText('grate: 14 bar aus zona pembakaran',150,H-26);}
+    else{g.fillStyle='#5d748c';g.fillText('menunggu inspeksi…',60,H/2);}
+    mov.M.tex.needsUpdate=true;}
+  petaKerusakan(0);
+  /* bata & grate bar baru */
+  mov.bata=box(.7,.4,.4,0xb86a4a);mov.bata.position.set(5.0,.95,-.8);scene.add(mov.bata);
+  actMesh(mov.bata,'PERBAIKI');
+  const tbl=boxT(1.6,.07,.8,TEX.wood());tbl.position.set(5.2,.82,-.8);scene.add(tbl);
+  const tleg=boxT(.08,.82,.08,TEX.wood());tleg.position.set(5.2,.41,-.8);scene.add(tleg);
+  mov.bar=box(.9,.12,.18,0x6a7682,{metalness:.5});mov.bar.position.set(5.7,.95,-.8);scene.add(mov.bar);
+  scene.add(label('REFRACTORY + GRATE BAR BARU',.6,'#5fd4ff').translateX(5.3).translateY(1.4).translateZ(-.8));
+  startSeq([
+   {type:'act',aid:'COOL',done:false,targets:()=>[mov.furn],
+    desc:'Mulai COOLING DOWN terkendali + isolasi energi total (klik insinerator).',
+    why:'Umpan berhenti, suhu dituntun turun mengikuti kurva — dinding yang setahun hidup di 850°C tak boleh dikagetkan udara dingin: kejut termal meretakkan refractory yang justru mau diselamatkan. Sambil menunggu 3 hari: LOTO total — burner, crane, fan, hidrolik grate: semua energi dikunci.',
+    fx(){dispText(mov.D,['82 °C ✓','LOTO 12 titik'],['#46ff8e','#8aa3bd']);
+      toast('❄️ 3 hari cooling terkendali + 12 titik LOTO — siap masuk.','ok',3200);}},
+   {type:'act',aid:'INSPEKSI',done:false,targets:()=>[mov.M.mesh],
+    desc:'Masuk (izin ruang terbatas!) & PETAKAN kerusakan (klik peta).',
+    why:'Gas test, ventilasi, attendant — ritual ruang terbatasmu berlaku penuh. Di dalam: dinding dipetakan jengkal demi jengkal dengan palu inspeksi & meteran tebal — satu zona terkikis 30%, satu zona KRITIS tinggal 30% tebal (di seberang burner — selalu di sana), dan 14 grate bar zona pembakaran aus melewati batas. Peta ini adalah seluruh rencana 10 hari ke depan.',
+    fx(){petaKerusakan(1);
+      toast('🗺️ Terpetakan: 1 zona kritis + 14 grate bar — rencana terkunci.','ok',3200);}},
+   {type:'act',aid:'PERBAIKI',done:false,targets:()=>[mov.bata],
+    desc:'Eksekusi PERBAIKAN: bongkar-pasang zona kritis & ganti grate (klik bata).',
+    why:'Zona kritis dibongkar sampai anchor, dipasang ulang bata demi bata dengan mortar yang tepat & expansion joint yang dihormati (refractory perlu ruang memuai!); zona 30% cukup patching. Grate: 14 bar diganti dengan clearance diukur feeler gauge — celah terlalu rapat macet saat memuai, terlalu longgar membocorkan udara primer.',
+    fx(){toast('🧱 Zona kritis terpasang ulang + 14 bar ber-clearance ukur.','ok',3200);}},
+   {type:'act',aid:'CURING',done:false,targets:()=>[mov.furn],
+    desc:'Pekerjaan terakhir & paling diuji kesabarannya: CURING (klik insinerator).',
+    why:'Refractory baru menyimpan air — dipanaskan tergesa, air itu menjadi uap yang MELEDAKKAN bata dari dalam. Kurva curing: 50°C/jam, tahan di 150°C, tahan di 350°C, baru merangkak ke operasi — dua hari penuh menahan diri. Hari ke-14: insinerator menyala kembali, dindingnya muda lagi, dan jadwal ditepati tanpa satu hari molor.',
+    fx(){dispText(mov.D,['850 °C ✓','curing tuntas · ONLINE'],['#46ff8e','#46ff8e']);
+      toast('🔥 Curing 2 hari tuntas — ONLINE tepat hari ke-14!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Overhaul tepat waktu, tanpa cedera, tanpa retak!</b> Didinginkan dengan sabar, dipetakan dengan teliti, diperbaiki dengan ukuran, dan di-curing dengan menahan diri. Insinerator siap menelan 850°C setahun lagi — karena dua minggu ini tak ada yang tergesa.');
+    setTimeout(()=>showWin('overhaul'),2200);});
+  const s0o=seq.steps[0],of0o=s0o.fx;s0o.fx=()=>{of0o();mov.furn.userData.aid='CURING';};
+  say('VOLTA di sini 🧱 Setahun menelan 850°C — kini giliran insinerator dirawat: <b>annual shutdown 14 hari</b>. Dua pasien: dinding refractory & lantai grate. Dan satu musuh dua arah: kejut termal. Mulai dari pendinginan!');
+  $('#modTitle').textContent='J13·M7 — Overhaul Insinerator';
+  $('#taskHead').textContent='SABAR DUA ARAH: DINGIN & PANAS';}
+MISSIONS.overhaul.build=buildOverhaul;
+Object.assign(REAL,{
+ overhaul:[
+  'Susun critical path shutdown: pekerjaan refractory (curing!) hampir selalu jadi jalur kritisnya',
+  'Foto & ukur tebal refractory tiap zona jadi baseline — tren tahunan memprediksi overhaul berikutnya',
+  'Material refractory disimpan kering & dipasang oleh aplikator tersertifikasi',
+  'Jangan pernah memotong kurva curing demi jadwal — bata meledak menulis ulang seluruh jadwalmu'],
+});

@@ -612,3 +612,104 @@ Object.assign(REAL,{
   'Jointer wajib sertifikasi & joint difoto tiap lapisan sebagai dokumentasi mutu',
   'Update GIS dengan posisi joint & temuan — kabel yang terdokumentasi adalah kabel yang cepat sembuh'],
 });
+
+/* =====================================================================
+   MISI 7 — STUDI ALIRAN DAYA & REKONFIGURASI
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ loadflow:{lvl:'JALUR 03 · DISTRIBUSI · MISI 7',icon:'🧭',title:'Studi Aliran Daya & Rekonfigurasi Jaringan',strict:false,
+  loc:'📍 Kantor perencanaan UP3 · Software simulasi jaringan',
+  story:'Naik satu meja lagi: kini kamu PERENCANA. Penyulang Karang yang sudah kau selamatkan berkali-kali kini dibedah di software aliran daya — dunia digital tempat jaringan boleh dicoba-coba tanpa satu pelanggan pun berkedip. Misi: temukan konfigurasi normal BARU yang memangkas losses & memperbaiki tegangan ujung, lalu buktikan sebelum dieksekusi nyata.',
+  goal:'Konfigurasi jaringan baru tervalidasi simulasi: losses turun, tegangan ujung membaik, pembebanan seimbang — dan rencana eksekusi manuver tersusun.',
+  obj:['Bangun & validasi model jaringan terhadap pengukuran','Simulasikan skenario pemindahan titik buka (open point)','Pilih konfigurasi terbaik & susun rencana eksekusi'],
+  learn:['Jaringan distribusi radial punya titik buka (open point) antar penyulang — MEMINDAHKANNYA mengubah siapa melayani apa: rekonfigurasi tanpa membangun apa pun','Model harus DIVALIDASI dulu: hasil simulasi dibandingkan pengukuran nyata — model yang melenceng 10% akan merekomendasikan kesalahan dengan percaya diri','Losses jaringan ∝ I²R: memindah beban ke jalur yang lebih pendek/gemuk menurunkan arus di segmen panjang — matematika sederhana, dampak permanen','Konfigurasi terbaik bukan hanya losses terkecil: cek juga tegangan ujung, pembebanan tiap segmen, dan kesiapan proteksi di topologi baru'],
+  next:['Pelajari optimal network reconfiguration dengan algoritma','Dalami kontingensi N-1: bagaimana topologi baru saat gangguan','Eksplorasi penempatan kapasitor & PLTS tersebar dalam simulasi']},
+});
+let mlf={};
+function buildLoadflow(){
+  freshScene(0x9fb8d0,0x121e2c);
+  cam={theta:0,phi:1.16,r:8,target:new THREE.Vector3(0,2,-1)};
+  const floor=boxT(16,.1,10,TEX.concrete());floor.position.y=-.05;scene.add(floor);
+  const wall=boxT(14,4.6,.2,TEX.plaster());wall.position.set(0,2.3,-3.2);scene.add(wall);
+  /* layar simulasi besar */
+  const frame=boxT(5.6,3.0,.16,TEX.metal(),{metalness:.4});frame.position.set(-.8,2.4,-3.1);scene.add(frame);
+  mlf.D=makeDisplay(5.2,2.6,680,360);
+  mlf.D.mesh.position.set(-.8,2.4,-3.0);scene.add(mlf.D.mesh);
+  actMesh(mlf.D.mesh,'MODEL');
+  scene.add(label('SOFTWARE ALIRAN DAYA',.9).translateX(-.8).translateY(4.1).translateZ(-3.0));
+  mlf.skenario=0; /* 0 existing, 1 alternatif A, 2 final */
+  function peta(){
+    const g=mlf.D.g,W=680,H=360;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.font='600 15px Consolas';g.textAlign='left';
+    /* dua penyulang dgn open point */
+    function jalur(y,nama,beban,warna){
+      g.strokeStyle=warna;g.lineWidth=6;
+      g.beginPath();g.moveTo(60,y);g.lineTo(520,y);g.stroke();
+      g.fillStyle='#13202f';g.fillRect(20,y-16,36,32);
+      g.fillStyle='#8aa3bd';g.fillText(nama,20,y-24);
+      g.fillText(beban,540,y+6);}
+    const opShift=mlf.skenario>=1;
+    jalur(110,'KARANG',opShift?'62%':'84%',opShift?'#46ff8e':'#ff8d3a');
+    jalur(230,'CENDANA',opShift?'58%':'38%','#46ff8e');
+    /* open point */
+    const opX=opShift?330:470;
+    g.strokeStyle='#ffd23f';g.lineWidth=4;g.setLineDash([8,6]);
+    g.beginPath();g.moveTo(opX,110);g.lineTo(opX,230);g.stroke();g.setLineDash([]);
+    g.fillStyle='#ffd23f';g.fillText('OPEN POINT'+(opShift?' (baru)':''),opX-40,178);
+    g.font='700 17px Consolas';
+    if(mlf.skenario===0){g.fillStyle='#ff8d3a';
+      g.fillText('losses 6,7% · ujung Karang 198V ⚠ · timpang',60,310);}
+    else if(mlf.skenario===1){g.fillStyle='#46ff8e';
+      g.fillText('SKEN-B: losses 5,1% · ujung 207V ✓ · seimbang',60,310);}
+    else{g.fillStyle='#46ff8e';
+      g.fillText('TERVALIDASI — siap eksekusi manuver nyata',60,310);}
+    mlf.D.tex.needsUpdate=true;}
+  peta();
+  /* kartu skenario */
+  mlf.cards=[];
+  [['SKEN-A','SA',3.2],['SKEN-B','SB',4.3]].forEach((o,i)=>{
+    const c=box(.9,.5,.08,0x2b3a4a);c.position.set(o[2],2.9,-3.05);scene.add(c);
+    actMesh(c,o[1]);mlf.cards.push(c);
+    scene.add(label(o[0],.5,'#5fd4ff').translateX(o[2]).translateY(3.3).translateZ(-3.0));});
+  /* lembar rencana manuver */
+  mlf.plan=box(.6,.7,.05,0xe8e4d8);mlf.plan.position.set(3.8,1.7,-3.07);scene.add(mlf.plan);
+  actMesh(mlf.plan,'PLAN');
+  scene.add(label('RENCANA MANUVER',.55,'#5fd4ff').translateX(3.8).translateY(2.25).translateZ(-3.0));
+  startSeq([
+   {type:'act',aid:'MODEL',done:false,targets:()=>[mlf.D.mesh],
+    desc:'Bangun model & VALIDASI terhadap pengukuran nyata (klik layar).',
+    why:'Topologi, panjang & jenis kawat, beban per gardu dimasukkan — lalu ujian kejujuran: simulasi vs pengukuran SCADA di 5 titik. Selisih <3% ✓: model boleh dipercaya. Simulasi tanpa validasi adalah fiksi yang berpakaian seperti sains.',
+    fx(){toast('🧮 Model tervalidasi: selisih vs ukur <3% di 5 titik.','ok',3000);}},
+   {type:'act',aid:'SA',done:false,targets:()=>[mlf.cards[0]],
+    desc:'Coba SKENARIO A: pindah open point satu seksi (klik kartu).',
+    why:'Open point digeser satu seksi ke barat: Karang melepas 1 gardu ke Cendana. Hasil: losses 6,7→6,1%, ujung 201 V — membaik tapi tanggung, dan satu segmen Cendana naik ke 71%. Simulasi gratis mengajarkan: perbaikan kecil kadang hanya memindah masalah.',
+    fx(){toast('📐 SKEN-A: nanggung (6,1% · 201V) — coba lebih berani.','info',3000);}},
+   {type:'act',aid:'SB',done:false,targets:()=>[mlf.cards[1]],
+    desc:'Coba SKENARIO B: pindah open point dua seksi + tutup tie alternatif.',
+    why:'Lebih berani: dua seksi berpindah, tie alternatif jadi jalur normal baru. Hasil: losses 5,1% (turun 1,6 poin ≈ 38 MWh/bulan), ujung Karang 207 V ✓, pembebanan 62%-58% nyaris kembar. Di dunia digital, keberanian tidak menyakiti siapa pun — itu gunanya simulasi.',
+    fx(){mlf.skenario=1;peta();
+      toast('🏆 SKEN-B: losses 5,1% · 207V · seimbang — kandidat juara.','ok',3200);}},
+   {type:'act',aid:'CEK',done:false,targets:()=>[mlf.D.mesh],
+    desc:'Uji kelayakan penuh SKEN-B: proteksi & kontingensi (klik layar).',
+    why:'Konfigurasi baru diuji kejamnya dunia nyata: arus gangguan tiap titik masih dalam jangkauan setting proteksi ✓, simulasi N-1 (satu seksi hilang) tetap bisa backfeed ✓, tak ada segmen >80% ✓. Konfigurasi yang hanya bagus saat cerah belum layak disebut bagus.',
+    fx(){mlf.skenario=2;peta();
+      toast('🛡️ Proteksi ✓ N-1 ✓ — SKEN-B lulus uji kejam.','ok',3000);}},
+   {type:'act',aid:'PLAN',done:false,targets:()=>[mlf.plan],
+    desc:'Terjemahkan ke RENCANA MANUVER nyata (klik lembar).',
+    why:'Simulasi menjadi instruksi: urutan switching make-before-break via LBS remote (ilmu SCADA-mu!), jadwal jam beban rendah, titik verifikasi tegangan, dan rencana mundur bila ada kejutan. Minggu depan dispatcher mengeksekusi — dan 38 MWh/bulan berhenti menguap, selamanya.',
+    fx(){toast('🗺️ Rencana manuver terbit — eksekusi minggu depan, losses −38 MWh/bln.','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Jaringan dirancang ulang tanpa satu pelanggan pun berkedip — dulu.</b> Model jujur, skenario berani, uji kejam, lalu rencana eksekusi. Perencana yang baik membuat pekerjaan dispatcher membosankan: semuanya sudah terjadi di simulasi.');
+    setTimeout(()=>showWin('loadflow'),2200);});
+  const s2l=seq.steps[2],of2l=s2l.fx;s2l.fx=()=>{of2l();mlf.D.mesh.userData.aid='CEK';};
+  say('VOLTA di sini 🧭 Naik meja: kini kamu <b>perencana jaringan</b>. Di software aliran daya, penyulang boleh dibongkar-pasang tanpa risiko. Satu syarat sebelum percaya simulasi: validasi dulu modelnya!');
+  $('#modTitle').textContent='J03·M7 — Studi Aliran Daya';
+  $('#taskHead').textContent='COBA DI DIGITAL, EKSEKUSI SEKALI';}
+MISSIONS.loadflow.build=buildLoadflow;
+Object.assign(REAL,{
+ loadflow:[
+  'Data beban memakai profil puncak NYATA per gardu (dari AMI/pengukuran), bukan kapasitas terpasang',
+  'Validasi model minimal di 5 titik ukur sebelum dipakai mengambil keputusan',
+  'Review setting proteksi WAJIB menyertai setiap rekonfigurasi — topologi baru, arus gangguan baru',
+  'Dokumentasikan konfigurasi normal baru ke SCADA, GIS & SOP — tiga sistem harus sepakat'],
+});

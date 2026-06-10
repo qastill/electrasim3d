@@ -629,3 +629,101 @@ Object.assign(REAL,{
   'Anti-islanding di inverter PLTS harus dikoordinasikan dengan mode microgrid (izin island terkendali)',
   'Resinkronisasi memakai sync-check relay — fase yang salah menghapus semua kerja baik sebelumnya'],
 });
+
+/* =====================================================================
+   MISI 7 — KOMISIONING FIRE SAFETY BESS
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ fire:{lvl:'JALUR 15 · BATERAI & BESS · MISI 7',icon:'🧯',title:'Komisioning Fire Safety BESS',strict:true,
+  loc:'📍 Site BESS baru 4 MWh · Hari uji proteksi kebakaran',
+  story:'Proyek BESS terbesarmu — 4 MWh, empat kontainer — hampir COD. Tapi satu gerbang terakhir menentukan izin operasinya: KOMISIONING FIRE SAFETY, disaksikan damkar kota. Kebakaran baterai litium berbeda mazhab dari api biasa: ia bermula dari dalam sel, tak butuh oksigen luar, dan menyemburkan gas yang bisa meledak. Sistemmu harus membuktikan bisa mendengar, menahan, dan memandu manusia menjauh.',
+  goal:'Seluruh rantai fire safety teruji di depan damkar: deteksi off-gas memutus operasi dini, suppression bekerja, ledakan tertunda oleh ventilasi, dan drill gabungan dengan damkar lulus.',
+  obj:['Uji deteksi bertingkat: off-gas → asap → panas','Uji suppression & sistem ventilasi anti-deflagrasi','Drill gabungan dengan damkar kota'],
+  learn:['Kebakaran litium bermula JAUH sebelum api: sel stres melepas off-gas khas — detektor off-gas adalah telinga paling dini, memutus operasi sebelum tetangga sel ikut demam','Thermal runaway sel tak bisa "dipadamkan" dari luar — strategi BESS: suppression menahan PENJALARAN & mendinginkan, sambil manusia menjauh','Gas venting baterai (H₂, CO, elektrolit) bisa meledak terkumpul di ruang tertutup: ventilasi darurat & panel pelepas ledakan adalah pasal desain, bukan aksesori','Damkar TIDAK menyemprot kontainer baterai seperti rumah: air untuk melindungi sekitar & mendinginkan — drill gabungan menyamakan mazhab sebelum malam kejadian'],
+  next:['Pelajari standar keselamatan BESS skala besar & jarak antar kontainer','Dalami analisis deflagrasi & desain ventilasi daruratnya','Susun pre-incident plan bersama damkar untuk tiap site']},
+});
+let mfr={};
+function buildFire(){
+  freshScene(0x9fb0c4,0x101822);
+  cam={theta:.1,phi:1.15,r:10,target:new THREE.Vector3(0,1.6,-.8)};
+  const ground=boxT(24,.1,14,TEX.concrete());ground.position.y=-.05;scene.add(ground);
+  /* 4 kontainer berjarak */
+  mfr.cont=[];
+  for(let i=0;i<4;i++){
+    const c=boxT(2.4,2.2,1.3,TEX.metal(),{metalness:.3});
+    c.position.set(-6.6+i*4.4,1.1,-2.4);scene.add(c);mfr.cont.push(c);}
+  scene.add(label('BESS 4 MWh — 4 KONTAINER BERJARAK',.85).translateY(2.9).translateZ(-2.4));
+  actMesh(mfr.cont[1],'DETEKSI');
+  /* panel pelepas ledakan di atap */
+  for(let i=0;i<4;i++){const v=box(.8,.06,.6,0xd8b020);
+    v.position.set(-6.6+i*4.4,2.24,-2.4);scene.add(v);}
+  /* layar uji */
+  const frame=boxT(3.6,2.2,.16,TEX.metal(),{metalness:.4});frame.position.set(0,2.5,2.4);frame.rotation.y=Math.PI;scene.add(frame);
+  mfr.D=makeDisplay(3.3,1.9,520,300);
+  mfr.D.mesh.position.set(0,2.5,2.3);mfr.D.mesh.rotation.y=Math.PI;scene.add(mfr.D.mesh);
+  actMesh(mfr.D.mesh,'SUPPRESS');
+  scene.add(label('PANEL UJI FIRE SAFETY — disaksikan DAMKAR',.8,'#ff9d6a').translateY(3.9).translateZ(2.3));
+  mfr.tahap=0;
+  function layar(){
+    const g=mfr.D.g,W=520,H=300;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.font='600 15px Consolas';g.textAlign='left';
+    const rows=[['1. Deteksi off-gas → trip',1],['2. Asap & panas → alarm zona',1],
+      ['3. Suppression release',2],['4. Ventilasi darurat & damper',2],
+      ['5. Drill gabungan damkar',3]];
+    g.fillStyle='#5fd4ff';g.font='700 17px Consolas';
+    g.fillText('CHECKLIST KOMISIONING',16,32);
+    g.font='600 15px Consolas';
+    rows.forEach((r,i)=>{const y=72+i*42;
+      g.fillStyle=mfr.tahap>=r[1]?'#46ff8e':'#5d748c';
+      g.fillText((mfr.tahap>=r[1]?'✓ ':'○ ')+r[0],16,y);});
+    mfr.D.tex.needsUpdate=true;}
+  layar();
+  /* damkar figur + truk */
+  const truk=box(2.6,1.1,1.1,0xc83a3a);truk.position.set(5.8,.85,1.6);scene.add(truk);
+  [[-1,-.6],[1,-.6],[-1,.6],[1,.6]].forEach(w=>{
+    const wh=cyl(.28,.28,.2,0x14181d);wh.rotation.x=Math.PI/2;
+    wh.position.set(5.8+w[0],.3,1.6+w[1]);scene.add(wh);});
+  mfr.dam=new THREE.Group();
+  const badan=cyl(.22,.28,.9,0xc83a3a);badan.position.y=.72;mfr.dam.add(badan);
+  const kepala=new THREE.Mesh(new THREE.SphereGeometry(.15,14,12),
+    new THREE.MeshStandardMaterial({color:0xd8b090}));kepala.position.y=1.36;mfr.dam.add(kepala);
+  const helm3=new THREE.Mesh(new THREE.SphereGeometry(.18,14,10,0,Math.PI*2,0,Math.PI/2),
+    new THREE.MeshStandardMaterial({color:0xd8d020}));helm3.position.y=1.42;mfr.dam.add(helm3);
+  mfr.dam.position.set(4.0,0,.8);scene.add(mfr.dam);
+  actMesh(badan,'DRILL');
+  scene.add(label('KOMANDAN DAMKAR',.6).translateX(4.0).translateY(1.9).translateZ(.8));
+  startSeq([
+   {type:'act',aid:'DETEKSI',done:false,targets:()=>[mfr.cont[1]],
+    desc:'Uji DETEKSI bertingkat: suntik gas uji ke kontainer 2 (klik kontainer).',
+    why:'Gas simulasi off-gas disuntik dekat sensor: 14 detik — alarm tingkat 1 & BESS MEMUTUS OPERASI otomatis (sumber panas berhenti sebelum menjalar); asap uji menyusul: alarm zona ke pusat & damkar. Telinga paling dini terbukti bangun: di dunia litium, menit pertama menentukan segalanya.',
+    fx(){mfr.tahap=1;layar();beep(880,.2,'square',.1);beep(880,.2,'square',.1,.35);
+      toast('👂 Off-gas 14 dtk → trip otomatis · asap → alarm zona ✓','ok',3200);}},
+   {type:'act',aid:'SUPPRESS',done:false,targets:()=>[mfr.D.mesh],
+    desc:'Uji SUPPRESSION & ventilasi anti-deflagrasi (klik panel).',
+    why:'Aerosol suppression dilepas di kontainer uji (sel dummy): konsentrasi merata <10 detik — tugasnya menahan penjalaran & mendinginkan, bukan "memadamkan" sel yang runaway (itu mustahil dari luar). Lalu skenario gas terkumpul: damper ventilasi darurat membuka, panel atap siap melepas tekanan TANPA meledakkan dinding. Ledakan yang diberi pintu tidak merubuhkan rumah.',
+    fx(){mfr.tahap=2;layar();
+      toast('🧯 Suppression <10 dtk ✓ · ventilasi & panel pelepas ✓','ok',3200);}},
+   {type:'act',aid:'DRILL',done:false,targets:()=>[mfr.dam.children[0]],
+    desc:'Puncaknya: DRILL GABUNGAN dengan damkar kota (klik komandan).',
+    why:'Skenario malam: alarm kontainer 3 — operator mundur ke titik aman & menyerahkan komando, damkar datang dengan pre-incident plan di tangan: TIDAK menyemprot kontainer, melainkan melindungi kontainer tetangga & memantau termal dari jarak. "Baterai itu kalian biarkan selesai dengan dirinya — tugas kita mengurung," kata komandan. Mazhab tersamakan SEBELUM malam sungguhan.',
+    fx(){mfr.tahap=3;layar();
+      toast('🚒 Drill gabungan LULUS — mazhab litium dipahami semua pihak.','ok',3400);sfx.big();}},
+   {type:'act',aid:'COD',done:false,targets:()=>[mfr.D.mesh],
+    desc:'Semua hijau: tanda tangan berita acara — izin operasi (klik panel).',
+    why:'Lima baris checklist hijau, disaksikan & ditandatangani damkar + pemilik. BESS 4 MWh resmi boleh beroperasi — bukan karena apinya mustahil, tapi karena setiap menit pertamanya sudah dilatih. Keselamatan baterai bukan janji sistem; ia koreografi manusia & mesin yang sudah di-gladi-resik.',
+    fx(){toast('📜 BA fire safety diteken — BESS 4 MWh resmi COD!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Gerbang terakhir terbuka!</b> Off-gas terdengar 14 detik, suppression mengurung, ventilasi memberi pintu pada ledakan, dan damkar satu mazhab denganmu. BESS terbesar dalam karier-mu beroperasi — dengan menit-menit pertamanya yang sudah dihafal semua orang.');
+    setTimeout(()=>showWin('fire'),2200);});
+  const s1f=seq.steps[1],of1f=s1f.fx;s1f.fx=()=>{of1f();mfr.D.mesh.userData.aid='COD';};
+  say('VOLTA di sini 🧯 Proyek 4 MWh-mu menunggu satu gerbang: <b>komisioning fire safety disaksikan damkar</b>. Kebakaran litium bermazhab lain: bermula dari dalam, tak butuh oksigen luar. Buktikan sistemmu mendengar lebih dini dari api. Mulai!');
+  $('#modTitle').textContent='J15·M7 — Fire Safety BESS';
+  $('#taskHead').textContent='DENGAR · KURUNG · LATIH';}
+MISSIONS.fire.build=buildFire;
+Object.assign(REAL,{
+ fire:[
+  'Desain mengikuti standar keselamatan BESS terkini (jarak, ventilasi deflagrasi, deteksi off-gas)',
+  'Pre-incident plan disusun BERSAMA damkar & diperbarui saat layout berubah',
+  'Air damkar untuk proteksi eksposur — siapkan suplai & akses yang dihitung sejak desain site',
+  'Pasca-kejadian sekecil apa pun: sel/modul terdampak dikarantina — reignition berjam-jam kemudian itu nyata'],
+});

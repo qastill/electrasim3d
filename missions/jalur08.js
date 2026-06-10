@@ -573,3 +573,76 @@ Object.assign(REAL,{
   'Fire watch dilatih menggunakan APAR & tahu jalur alarm — bukan sekadar orang yang kebetulan kosong',
   'Di area proses aktif: gas test KONTINU dengan alarm, bukan sekali di awal'],
 });
+
+/* =====================================================================
+   MISI 7 — CSMS: MENGELOLA KESELAMATAN KONTRAKTOR
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ csms:{lvl:'JALUR 08 · K3 LISTRIK · MISI 7',icon:'📑',title:'CSMS: Mengelola Keselamatan Kontraktor',strict:false,
+  loc:'📍 Plant · Proyek overhaul: 80 pekerja kontraktor masuk',
+  story:'Overhaul tahunan tiba — dan bersama 80 pekerja dari 5 kontraktor yang tak kamu kenal satu pun. Statistik industri jujur tapi kejam: mayoritas kecelakaan fatal menimpa PEKERJA KONTRAKTOR, bukan karyawan tetap. Mereka tak hafal plant-mu, budayanya beragam, dan tekanannya jadwal. CSMS — contractor safety management system — adalah cara membuat 80 orang asing pulang selamat.',
+  goal:'Proyek overhaul berjalan dengan CSMS penuh: kontraktor terprakualifikasi, semua ter-induksi, pekerjaan diawasi berbasis risiko, dan evaluasi akhir menjadi seleksi masa depan.',
+  obj:['Prakualifikasi: seleksi kontraktor dari rekam K3','Safety induction & verifikasi kompetensi semua pekerja','Pengawasan berbasis risiko & evaluasi akhir'],
+  learn:['CSMS punya siklus penuh: prakualifikasi → seleksi → pra-pekerjaan → pengawasan → evaluasi — kecelakaan kontraktor biasanya lahir dari tahap yang dilompati','Prakualifikasi menyaring DI ATAS KERTAS dulu: statistik kecelakaan, sertifikat tenaga ahli, sistem K3 — harga termurah dari kontraktor buruk K3 adalah harga termahal proyekmu','Induction bukan formalitas tanda tangan: pekerja harus TAHU bahaya spesifik plant-mu (jalur uap, area HV) — diuji, bukan diabsen','Pengawasan dialokasikan berbasis risiko: pekerjaan panas & ketinggian diawasi rapat; evaluasi akhir menentukan siapa boleh kembali tahun depan'],
+  next:['Pelajari permit-to-work terpadu untuk multi-kontraktor serentak','Dalami leading indicators: observasi & near-miss kontraktor','Bangun program penghargaan K3 kontraktor — wortel selain tongkat']},
+});
+let mcs={};
+function buildCSMS(){
+  freshScene(0xb8c6d4,0x141d28);
+  cam={theta:.05,phi:1.17,r:8,target:new THREE.Vector3(0,1.6,-.8)};
+  const Z=room(0x5a5f66,0xccd4cf,16,11);
+  /* meja prakualifikasi dgn 5 map */
+  const desk=boxT(2.8,.08,1.2,TEX.wood());desk.position.set(-4.0,1.0,-.6);scene.add(desk);
+  [[-1.2,-.9],[1.2,-.9],[-1.2,.1],[1.2,.1]].forEach(p=>{
+    const l=boxT(.08,1,.08,TEX.wood());l.position.set(-4.0+p[0],.5,p[1]-.6+.45);scene.add(l);});
+  mcs.maps=[];
+  for(let i=0;i<5;i++){const m=box(.34,.05,.46,[0x2a5a8a,0x5a8a2a,0x8a5a2a,0x8a2a2a,0x5a5a8a][i]);
+    m.position.set(-5.0+i*.5,1.07,-.6);scene.add(m);mcs.maps.push(m);}
+  actMesh(mcs.maps[3],'PRAKUAL');
+  scene.add(label('5 BERKAS PRAKUALIFIKASI',.6,'#5fd4ff').translateX(-4.0).translateY(1.5).translateZ(-.6));
+  /* ruang induction */
+  const layar=boxT(2.0,1.3,.12,TEX.metal(),{metalness:.4});layar.position.set(-.6,2.2,Z+.06);scene.add(layar);
+  mcs.ind=makeDisplay(1.8,1.1,400,240);
+  mcs.ind.mesh.position.set(-.6,2.2,Z+.14);scene.add(mcs.ind.mesh);
+  dispText(mcs.ind,['SAFETY INDUCTION','80 pekerja · 5 sesi'],['#5fd4ff','#8aa3bd']);
+  actMesh(mcs.ind.mesh,'INDUKSI');
+  scene.add(label('RUANG INDUCTION',.65,'#5fd4ff').translateX(-.6).translateY(3.0).translateZ(Z+.1));
+  /* area kerja dgn pengawas */
+  mcs.area=boxT(2.2,.04,1.8,TEX.hazard());mcs.area.position.set(2.8,.05,-1.2);scene.add(mcs.area);
+  actMesh(mcs.area,'AWASI');
+  scene.add(label('AREA KERJA RISIKO TINGGI',.6,'#ffd23f').translateX(2.8).translateY(.6).translateZ(-1.2));
+  /* papan skor evaluasi */
+  mcs.eval=box(.6,.75,.05,0xe8e4d8);mcs.eval.position.set(5.2,2.0,Z+.06);scene.add(mcs.eval);
+  actMesh(mcs.eval,'EVAL');
+  scene.add(label('SCORECARD KONTRAKTOR',.6,'#5fd4ff').translateX(5.2).translateY(2.6).translateZ(Z+.1));
+  startSeq([
+   {type:'act',aid:'PRAKUAL',done:false,targets:()=>[mcs.maps[3]],
+    desc:'PRAKUALIFIKASI: bedah 5 berkas — satu berkas merah (klik berkas merah).',
+    why:'Empat kontraktor lolos ambang skor. Berkas merah: harga termurah, tapi dua fatality dalam tiga tahun & tak punya petugas K3 tetap. Keputusan tegas: GUGUR — dan inilah pasal CSMS yang paling sering ditawar pengadaan: kontraktor murah ber-K3 buruk adalah utang berbunga nyawa.',
+    fx(){toast('📑 4 lolos · 1 gugur (2 fatality/3 thn) — murah ≠ layak.','bad',3200);}},
+   {type:'act',aid:'INDUKSI',done:false,targets:()=>[mcs.ind.mesh],
+    desc:'SAFETY INDUCTION 80 pekerja + UJI pemahaman (klik layar).',
+    why:'Lima sesi: bahaya spesifik plant (jalur uap, ruang HV, zona LOTO), aturan emas, jalur darurat — ditutup KUIS: yang di bawah nilai ambang mengulang, bukan diloloskan. Tujuh orang mengulang sesi sore; kedelapan puluh orang kini tahu plant ini, bukan sekadar menandatangani daftar hadir.',
+    fx(){dispText(mcs.ind,['80/80 LULUS UJI','7 via remedial'],['#46ff8e','#8aa3bd']);
+      toast('🎓 Induction + uji: 80/80 paham bahaya spesifik plant.','ok',3000);}},
+   {type:'act',aid:'AWASI',done:false,targets:()=>[mcs.area],
+    desc:'Alokasikan PENGAWASAN berbasis risiko selama pekerjaan (klik area).',
+    why:'Matriks sederhana: pekerjaan panas & ketinggian dapat pengawas penuh + izin harian; pekerjaan sedang dapat inspeksi acak; administrasi cukup spot check. Minggu kedua, pengawas menghentikan satu pekerjaan las tanpa fire watch — STOP, perbaiki, lanjut. Sistem yang berani berhenti adalah sistem yang hidup.',
+    fx(){toast('👁️ Pengawasan berbasis risiko + 1 stop-work tereksekusi.','ok',3200);}},
+   {type:'act',aid:'EVAL',done:false,targets:()=>[mcs.eval],
+    desc:'Proyek tuntas: EVALUASI akhir tiap kontraktor (klik scorecard).',
+    why:'Skor objektif: kepatuhan izin, temuan inspeksi, near-miss yang DILAPORKAN (melapor = nilai plus, bukan minus!), zero LTI ✓. Dua kontraktor dapat predikat prioritas tahun depan; satu dapat surat pembinaan. Evaluasi hari ini adalah prakualifikasi tahun depan — siklus menutup dirinya.',
+    fx(){toast('🏆 Overhaul 38 hari · 80 pekerja · ZERO LTI — siklus CSMS penuh!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>80 orang asing pulang selamat semua!</b> Disaring di kertas, dididik sampai paham, diawasi sesuai risiko, dievaluasi untuk masa depan. CSMS: keselamatan yang tak membeda-bedakan logo di seragam.');
+    setTimeout(()=>showWin('csms'),2200);});
+  say('VOLTA di sini 📑 Overhaul membawa <b>80 pekerja yang tak kamu kenal</b> — dan statistik kecelakaan kontraktor itu kejam. CSMS adalah jawabannya: saring, didik, awasi, evaluasi. Mulai dari lima berkas di meja!');
+  $('#modTitle').textContent='J08·M7 — CSMS Kontraktor';
+  $('#taskHead').textContent='ORANG ASING PULANG SELAMAT';}
+MISSIONS.csms.build=buildCSMS;
+Object.assign(REAL,{
+ csms:[
+  'Kriteria prakualifikasi & bobot K3 ditetapkan BERSAMA pengadaan sejak dokumen tender',
+  'Database kinerja K3 kontraktor dipelihara lintas-proyek — ingatan organisasi mengalahkan ingatan orang',
+  'Stop-work authority diberikan eksplisit ke pengawas & pekerja kontraktor tanpa takut sanksi',
+  'Audit silang: K3 kontraktor diaudit, tapi fasilitas & izin milikmu juga dievaluasi mereka'],
+});

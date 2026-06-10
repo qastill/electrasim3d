@@ -527,3 +527,90 @@ Object.assign(REAL,{
   'Lindungi kerahasiaan data pemasok (NDA) — data energi adalah data biaya produksi mereka',
   'Ukur program dengan dua angka: % emisi tercakup data primer & tren intensitas pemasok prioritas'],
 });
+
+/* =====================================================================
+   MISI 7 — RISIKO IKLIM: AUDIT KETAHANAN ASET
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ risiko:{lvl:'JALUR 11 · SUSTAINABILITY & CARBON · MISI 7',icon:'🌪️',title:'Risiko Iklim: Audit Ketahanan Aset',strict:false,
+  loc:'📍 PT Maju Plastik · Permintaan asuransi & bank',
+  story:'Surat dari dua arah sekaligus: bank menanyakan eksposur risiko iklim sebelum memperpanjang kredit, dan asuransi menaikkan premi 30% "karena lokasi". Selama ini kamu menghitung dampak pabrik TERHADAP iklim — kini sebaliknya: dampak iklim TERHADAP pabrik. Banjir, gelombang panas, dan angin bukan lagi cerita cuaca; mereka baris risiko finansial yang harus dipetakan, dihitung, dan dilawan.',
+  goal:'Profil risiko iklim pabrik tersusun: bahaya fisik teridentifikasi dari data, aset kritis ternilai kerentanannya, dan rencana adaptasi ber-prioritas meyakinkan bank & asuransi.',
+  obj:['Identifikasi bahaya iklim lokasi dari data historis & proyeksi','Nilai kerentanan aset kritis terhadap tiap bahaya','Susun adaptasi ber-prioritas & laporkan ke bank'],
+  learn:['Risiko iklim fisik = bahaya × paparan × kerentanan: lokasi yang sama bisa berisiko beda tergantung di mana panel listrikmu dipasang','Data bicara dua bahasa: historis (banjir 2021 setinggi 40 cm) & proyeksi (intensitas hujan naik) — adaptasi dirancang untuk masa depan, bukan masa lalu','Aset listrik adalah titik lemah klasik: panel di lantai dasar, trafo di halaman rendah — kerusakan airnya kecil, kerugian STOP PRODUKSInya raksasa','Adaptasi ber-prioritas dari rupiah-risiko: meninggikan panel listrik (puluhan juta) mencegah kerugian miliaran — bahasa yang langsung dipahami bank & asuransi'],
+  next:['Pelajari kerangka pelaporan risiko iklim (TCFD/ISSB)','Dalami business continuity plan untuk skenario iklim ekstrem','Tawarkan jasa climate risk assessment — permintaan bank terus naik']},
+});
+let mrk={};
+function buildRisiko(){
+  freshScene(0x8a98a8,0x10161e);
+  cam={theta:.05,phi:1.15,r:9,target:new THREE.Vector3(0,1.6,-.8)};
+  const ground=boxT(22,.1,13,TEX.concrete());ground.position.y=-.05;scene.add(ground);
+  /* pabrik + panel listrik rendah + trafo halaman */
+  const fab=boxT(5,2.6,3,TEX.plaster());fab.position.set(-2,1.3,-2.5);scene.add(fab);
+  fab.add(label('PT MAJU PLASTIK',.85).translateY(1.75));
+  mrk.panel=boxT(.9,1.2,.3,TEX.metal(),{metalness:.35});mrk.panel.position.set(.9,.65,-1.2);scene.add(mrk.panel);
+  actMesh(mrk.panel,'ASET');
+  scene.add(label('PANEL UTAMA — 40 cm dari tanah!',.6,'#ffd23f').translateX(1.4).translateY(1.5).translateZ(-1.0));
+  const trafo=boxT(1.1,1.1,.9,TEX.metal(),{metalness:.3});trafo.position.set(3.6,.6,-2.2);scene.add(trafo);
+  scene.add(label('TRAFO HALAMAN',.6).translateX(3.6).translateY(1.4).translateZ(-2.2));
+  /* layar data iklim */
+  const frame=boxT(3.8,2.2,.16,TEX.metal(),{metalness:.4});frame.position.set(-5.6,2.4,-2.4);frame.rotation.y=.5;scene.add(frame);
+  mrk.D=makeDisplay(3.5,1.9,520,300);
+  mrk.D.mesh.position.set(-5.52,2.4,-2.32);mrk.D.mesh.rotation.y=.5;scene.add(mrk.D.mesh);
+  actMesh(mrk.D.mesh,'DATA');
+  scene.add(label('DATA IKLIM LOKASI',.75,'#5fd4ff').translateX(-5.6).translateY(3.7).translateZ(-2.3));
+  function layar(mode){
+    const g=mrk.D.g,W=520,H=300;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.font='600 15px Consolas';g.textAlign='left';
+    g.fillStyle='#5fd4ff';g.font='700 17px Consolas';
+    g.fillText('BAHAYA FISIK — LOSARANG',16,32);
+    g.font='600 15px Consolas';
+    const rows=[['BANJIR','2021: 40cm · proyeksi: naik','#ff5a5a'],
+      ['GEL. PANAS','hari >35°C: 12→28/thn','#ffd23f'],
+      ['ANGIN','puting beliung 2x/dekade','#ffd23f'],
+      ['KEKERINGAN','pasokan air: moderat','#46ff8e']];
+    rows.forEach((r,i)=>{const y=72+i*40;
+      g.fillStyle=r[2];g.fillText(r[0],16,y);
+      g.fillStyle='#8aa3bd';g.fillText(r[1],150,y);});
+    if(mode>=1){g.fillStyle='#ff5a5a';g.font='700 15px Consolas';
+      g.fillText('risiko terbesar: BANJIR x PANEL 40cm = stop 2-4 minggu',16,H-18);}
+    mrk.D.tex.needsUpdate=true;}
+  layar(0);
+  /* lembar adaptasi + laporan bank */
+  mrk.adapt=box(.6,.75,.05,0xd8e8d8);mrk.adapt.position.set(5.8,2.0,-2.4);scene.add(mrk.adapt);
+  actMesh(mrk.adapt,'ADAPT');
+  scene.add(label('RENCANA ADAPTASI',.6,'#8df0b8').translateX(5.8).translateY(2.6).translateZ(-2.3));
+  mrk.bank=box(.5,.66,.04,0xe8d8a0);mrk.bank.position.set(5.8,.9,-2.4);scene.add(mrk.bank);
+  actMesh(mrk.bank,'BANK');
+  scene.add(label('LAPORAN KE BANK',.55,'#ffd23f').translateX(5.8).translateY(.45).translateZ(-2.3));
+  startSeq([
+   {type:'act',aid:'DATA',done:false,targets:()=>[mrk.D.mesh],
+    desc:'Kumpulkan DATA bahaya: historis + proyeksi lokasi (klik layar).',
+    why:'BMKG, peta rawan banjir daerah, dan kesaksian: banjir 2021 masuk 40 cm ke halaman; hari ber-suhu >35°C naik dari 12 ke 28 per tahun (chiller bekerja lebih berat — terhubung audit-mu!). Risiko iklim dimulai dari data lokasi yang jujur, bukan rata-rata nasional yang menenangkan.',
+    fx(){toast('🌪️ 4 bahaya terpetakan — banjir & panas naik kelas.','ok',3000);}},
+   {type:'act',aid:'ASET',done:false,targets:()=>[mrk.panel],
+    desc:'Nilai KERENTANAN aset kritis — temukan titik lemahnya (klik panel).',
+    why:'Tur kerentanan: panel listrik utama 40 cm dari tanah (banjir 2021 nyaris menciumnya!), trafo di titik terendah halaman, gudang bahan baku higroskopis di lantai dasar. Matriks bahaya×aset menjerit di satu sel: BANJIR × PANEL = produksi mati 2-4 minggu + Rp 3-5 M. Kerusakan kecil, kelumpuhan raksasa.',
+    fx(){layar(1);toast('⚠️ Sel merah: banjir x panel listrik = lumpuh 2-4 minggu.','bad',3200);}},
+   {type:'act',aid:'ADAPT',done:false,targets:()=>[mrk.adapt],
+    desc:'Susun ADAPTASI ber-prioritas rupiah-risiko (klik rencana).',
+    why:'Urut dari pengembalian tertinggi: (1) naikkan panel & MCC ke +1,2 m — Rp 180 jt mencegah Rp 3-5 M; (2) tanggul portabel & SOP banjir (latihan tahunan); (3) kapasitas chiller dievaluasi untuk 28 hari panas; (4) asuransi di-renegosiasi DENGAN bukti adaptasi. Adaptasi bukan biaya — ia diskon premi & kredit yang berlanjut.',
+    fx(){toast('🛡️ 4 adaptasi ber-prioritas — Rp 180 jt menjaga Rp 5 M.','ok',3200);}},
+   {type:'act',aid:'BANK',done:false,targets:()=>[mrk.bank],
+    desc:'Laporkan ke BANK & asuransi dengan kerangka resmi (klik laporan).',
+    why:'Laporan ala TCFD: bahaya teridentifikasi, dampak finansial terkuantifikasi, adaptasi terjadwal & teranggarkan. Bank memperpanjang kredit tanpa syarat tambahan; asuransi meninjau ulang premi +30% menjadi +8% "berkat mitigasi terdokumentasi". Risiko yang dipetakan adalah risiko yang bisa dinegosiasikan.',
+    fx(){toast('🏦 Kredit lanjut + premi turun — risiko terpetakan = daya tawar.','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Pabrik kini siap menghadapi iklim yang berubah!</b> Bahaya dibaca dari data, titik lemah ditemukan di panel 40 cm, dan Rp 180 juta adaptasi menjaga miliaran. Profesi karbonmu kini lengkap dua arah: mengurangi DAN bertahan.');
+    setTimeout(()=>showWin('risiko'),2200);});
+  say('VOLTA di sini 🌪️ Selama ini kamu menghitung dampak pabrik ke iklim — kini sebaliknya: <b>dampak iklim ke pabrik</b>. Bank & asuransi menunggu jawabannya. Mulai dari data bahaya lokasi!');
+  $('#modTitle').textContent='J11·M7 — Risiko Iklim & Adaptasi';
+  $('#taskHead').textContent='BAHAYA × PAPARAN × KERENTANAN';}
+MISSIONS.risiko.build=buildRisiko;
+Object.assign(REAL,{
+ risiko:[
+  'Gunakan beberapa skenario iklim (moderat & ekstrem) — masa depan bukan satu garis',
+  'Verifikasi elevasi banjir dengan survei topografi lokal, bukan hanya peta nasional kasar',
+  'Adaptasi diuji drill (banjir datang jam 2 pagi: siapa berbuat apa?) — rencana di laci tak menyelamatkan',
+  'Tinjau ulang tiap 2-3 tahun: data iklim, aset baru & pelajaran kejadian terkini'],
+});

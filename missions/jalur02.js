@@ -642,3 +642,95 @@ Object.assign(REAL,{
   'Verifikasi batas THD di titik sambung sesuai IEEE 519 / ketentuan utilitas setempat',
   'Saat menambah drive baru: spesifikasikan line reactor/AFE sejak pengadaan — mencegah lebih murah'],
 });
+
+/* =====================================================================
+   MISI 7 — GENSET STANDBY & ATS
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ genset:{lvl:'JALUR 02 · INDUSTRI & MANUFAKTUR · MISI 7',icon:'🔌',title:'Genset Standby & ATS: Komisioning Backup',strict:true,
+  loc:'📍 Pabrik tekstil · Instalasi genset 500 kVA + ATS',
+  story:'Dua kali padam PLN bulan lalu = dua batch produksi gagal = manajemen akhirnya membeli asuransi listrik: genset 500 kVA dengan ATS — automatic transfer switch yang berpindah sendiri saat PLN hilang. Hari ini komisioningnya, dan satu hukum tak boleh dilanggar: PLN dan genset TIDAK BOLEH pernah bertemu — interlock adalah nyawa sistem ini.',
+  goal:'Sistem backup beroperasi: genset teruji berbeban, ATS berpindah otomatis dengan interlock terverifikasi, dan uji black-building lolos.',
+  obj:['Komisioning genset: start manual & uji berbeban','Verifikasi interlock ATS — dua sumber tak boleh bertemu','Uji transfer otomatis: simulasi PLN padam'],
+  learn:['ATS memindah beban antar dua sumber dengan interlock mekanik+elektrik: kontaktor PLN & genset mustahil menutup bersamaan — paralel tak sengaja = arus saling serang yang menghancurkan keduanya','Genset standby diuji BERBEBAN (load bank/beban riil) — genset yang hanya dipanaskan tanpa beban menipu: wet stacking & regulator tak teruji','Urutan transfer otomatis: deteksi PLN hilang → tunda singkat (hindari kedip sesaat) → start genset → pindah saat tegangan-frekuensi stabil','Kembali ke PLN lebih sabar: tunda menit-an memastikan PLN benar-benar pulih, lalu genset cooling down sebelum mati — mesin panas yang langsung dibunuh memendekkan umurnya'],
+  next:['Pelajari sizing genset: beban starting motor terbesar menentukan','Dalami AMF controller & setting parameter transfernya','Eksplorasi sinkronisasi genset-PLN untuk soft transfer (peralihan tanpa kedip)']},
+});
+let mgn={};
+function buildGenset(){
+  freshScene(0xb0bfcc,0x131c26);
+  cam={theta:.1,phi:1.17,r:8.5,target:new THREE.Vector3(0,1.5,-.8)};
+  const ground=boxT(18,.1,11,TEX.concrete());ground.position.y=-.05;scene.add(ground);
+  /* genset */
+  mgn.gen=boxT(2.4,1.5,1.1,TEX.metal(),{metalness:.3});mgn.gen.position.set(-4.2,.8,-2);scene.add(mgn.gen);
+  actMesh(mgn.gen,'START');
+  const knalpot=cyl(.07,.07,.9,0x444444);knalpot.position.set(-5.2,1.9,-2);scene.add(knalpot);
+  scene.add(label('GENSET 500 kVA',.8).translateX(-4.2).translateY(1.95).translateZ(-2));
+  /* load bank */
+  mgn.lb=boxT(1.2,1.0,.9,TEX.metal(),{metalness:.4});mgn.lb.position.set(-1.4,.55,-2.2);scene.add(mgn.lb);
+  actMesh(mgn.lb,'BEBAN');
+  scene.add(label('LOAD BANK 400 kW',.65,'#5fd4ff').translateX(-1.4).translateY(1.35).translateZ(-2.2));
+  /* panel ATS */
+  const ats=boxT(1.4,2.0,.5,TEX.metal(),{metalness:.35});ats.position.set(1.6,1.05,-2.3);scene.add(ats);
+  ats.add(label('ATS — AUTOMATIC TRANSFER',.7).translateY(1.3));
+  mgn.D=makeDisplay(1.1,.8,300,210);
+  mgn.D.mesh.position.set(1.6,1.35,-2.04);scene.add(mgn.D.mesh);
+  actMesh(mgn.D.mesh,'INTERLOCK');
+  mgn.src='PLN';mgn.genOn=false;mgn.kw=0;
+  function layar(){
+    dispText(mgn.D,['SUMBER: '+mgn.src,
+      mgn.genOn?('genset '+mgn.kw+' kW'):'genset standby',
+      'interlock: MEKANIK+ELEKTRIK'],
+      [mgn.src==='PLN'?'#5fd4ff':'#ffd23f',mgn.genOn?'#46ff8e':'#7d8f84','#8aa3bd']);}
+  layar();
+  /* tombol simulasi padam */
+  mgn.padam=cyl(.12,.12,.09,0xd83a3a);mgn.padam.rotation.x=Math.PI/2;
+  mgn.padam.position.set(4.2,1.4,-2.2);scene.add(mgn.padam);
+  actMesh(mgn.padam,'PADAM');
+  scene.add(label('SIMULASI PLN PADAM',.6,'#ff9d9d').translateX(4.2).translateY(1.8).translateZ(-2.1));
+  /* lampu pabrik */
+  mgn.lamp=new THREE.Mesh(new THREE.SphereGeometry(.09,12,10),
+    new THREE.MeshStandardMaterial({color:0xffd97a,emissive:0xffd97a,emissiveIntensity:.9}));
+  mgn.lamp.position.set(4.2,2.8,-2.6);scene.add(mgn.lamp);
+  scene.add(label('BEBAN PABRIK',.6).translateX(4.2).translateY(3.2).translateZ(-2.6));
+  startSeq([
+   {type:'act',aid:'START',done:false,targets:()=>[mgn.gen],
+    desc:'Komisioning mesin: START manual genset, periksa parameter (klik genset).',
+    why:'Sebelum dipercaya otomatis, ia harus terbukti manual: oli, coolant, solar ✓ — start... 1.500 rpm, 400 V, 50 Hz stabil dalam 8 detik. Mesin sehat. Tapi tegangan tanpa beban itu baru setengah cerita.',
+    fx(){mgn.genOn=true;layar();beep(70,1.0,'sawtooth',.08);
+      toast('🔧 Start manual ✓ — 400V · 50Hz · 8 detik ke nominal.','ok',2800);}},
+   {type:'act',aid:'BEBAN',done:false,targets:()=>[mgn.lb],
+    desc:'Uji BERBEBAN: hubungkan load bank bertahap ke 80% (klik load bank).',
+    why:'Load bank menyuntik beban resistif murni: 25%... 50%... 80% (400 kW) — frekuensi dip sesaat lalu pulih, regulator tegangan bekerja, suhu & tekanan oli stabil satu jam penuh. Genset yang tak pernah diuji berbeban adalah janji yang belum pernah ditagih.',
+    fx(){mgn.kw=400;layar();
+      toast('🔥 80% beban 1 jam: freq ✓ volt ✓ suhu ✓ — janji tertagih.','ok',3000);}},
+   {type:'act',aid:'INTERLOCK',done:false,targets:()=>[mgn.D.mesh],
+    desc:'Hukum tertinggi: verifikasi INTERLOCK ATS (klik panel ATS).',
+    why:'Diuji dengan niat jahat: kontaktor PLN ditahan tutup, lalu genset dipaksa masuk — interlock mekanik MENOLAK bergerak, interlock elektrik memutus perintah. Dua lapis, dua-duanya bekerja. Paralel tak sengaja antara dua sumber tak sinkron = ledakan arus yang menghabisi keduanya — dan hari ini itu mustahil.',
+    fx(){toast('🔒 Interlock teruji dua lapis — PLN & genset mustahil bertemu.','ok',3000);}},
+   {type:'act',aid:'PADAM',done:false,targets:()=>[mgn.padam],
+    desc:'Ujian sesungguhnya: SIMULASI PLN PADAM — saksikan ATS bekerja (klik tombol).',
+    why:'Breaker PLN dibuka... lampu padam... 3 detik (tunda anti-kedip) → genset start otomatis → 8 detik mencapai nominal → ATS berpindah: lampu MENYALA kembali. Total gelap: 11 detik, tanpa satu tangan manusia pun. Itulah asuransi yang baru saja terbukti polisnya.',
+    fx(){mgn.src='GENSET';layar();
+      mgn.lamp.material.emissiveIntensity=0;
+      setTimeout(()=>{mgn.lamp.material.emissiveIntensity=.9;},1800);
+      beep(70,.9,'sawtooth',.08,.6);
+      toast('⚡ PLN hilang → 11 detik → pabrik hidup dari genset. OTOMATIS!','ok',3400);sfx.big();}},
+   {type:'act',aid:'BALIK',done:false,targets:()=>[mgn.D.mesh],
+    desc:'PLN pulih: amati transfer balik yang SABAR (klik panel).',
+    why:'PLN kembali... ATS tidak buru-buru: menunggu 5 menit memastikan pulih sungguhan (PLN suka PHP sesaat), pindah balik mulus, lalu genset cooling down 3 menit sebelum tidur — turbo & mesin panas tak boleh dibunuh mendadak. Sistem yang sabar adalah sistem yang berumur panjang.',
+    fx(){mgn.src='PLN';mgn.genOn=false;mgn.kw=0;layar();
+      toast('🔁 Balik ke PLN + cooldown 3 menit — komisioning TUNTAS.','ok',3200);sfx.big();}},
+  ],()=>{say('🎉 <b>Asuransi listrik pabrik aktif!</b> Genset teruji berbeban, interlock mustahil ditembus, dan transfer otomatis 11 detik terbukti. Padam PLN berikutnya hanya akan jadi catatan kecil di log — bukan batch yang gagal.');
+    setTimeout(()=>showWin('genset'),2200);});
+  const s3g=seq.steps[3],of3g=s3g.fx;s3g.fx=()=>{of3g();mgn.D.mesh.userData.aid='BALIK';};
+  say('VOLTA di sini 🔌 Dua padam, dua batch gagal — manajemen membeli <b>genset 500 kVA + ATS</b>. Hukum tertingginya satu: PLN dan genset TIDAK BOLEH bertemu. Komisioning dimulai dari mesin!');
+  $('#modTitle').textContent='J02·M7 — Genset Standby & ATS';
+  $('#taskHead').textContent='DUA SUMBER TAK BOLEH BERTEMU';}
+MISSIONS.genset.build=buildGenset;
+Object.assign(REAL,{
+ genset:[
+  'Uji beban berkala (bulanan 30% / tahunan mendekati penuh) — genset standby mati justru karena jarang bekerja',
+  'Solar disirkulasi & diuji kualitas (microbial growth) — tangki diam bertahun adalah sarang masalah',
+  'Battery starter genset di-monitoring & diganti terjadwal — penyebab gagal start nomor satu',
+  'Dokumentasikan setting AMF (tunda, ambang tegangan) & latih operator membaca alarm-nya'],
+});
