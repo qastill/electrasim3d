@@ -102,9 +102,12 @@
   .howStep p b{color:var(--yellow)}
   .howKey{margin:12px 0;padding:10px 12px;background:#0d1a29;border:1px solid var(--line);
     border-radius:7px;font-family:var(--mono);font-size:11.5px;color:var(--dim);line-height:1.8}
-  #btnHelp{pointer-events:auto;cursor:pointer;color:var(--cyan);font-family:var(--mono);
-    font-size:13px;border:none;background:var(--panel);padding:9px 13px}
-  #btnHelp:hover{background:#16263a}
+  #btnHelp,#btnFull,#btnFocus{pointer-events:auto;cursor:pointer;color:var(--cyan);font-family:var(--mono);
+    font-size:14px;border:none;background:var(--panel);padding:9px 12px;backdrop-filter:blur(10px)}
+  #btnHelp:hover,#btnFull:hover,#btnFocus:hover{background:#16263a}
+  #btnFocus.on{color:var(--yellow)}
+  /* mode fokus: sembunyikan panel objektif & tutor sepenuhnya */
+  #hud.focus #tasks,#hud.focus #tutor{display:none}
   .mBtn{display:flex;align-items:center;width:100%;cursor:pointer;
     background:#0d1a29;border:1px solid var(--line);color:var(--ink);padding:9px 11px;
     font-size:12.5px;text-align:left;gap:10px;border-radius:3px;transition:border-color .15s, background .15s}
@@ -163,9 +166,13 @@
   #stepBadge{position:absolute;top:54px;right:12px;background:var(--panel);border:1px solid var(--yellow);
     font-family:var(--mono);font-size:12px;color:var(--yellow);padding:6px 12px;letter-spacing:.15em;
     border-radius:7px;backdrop-filter:blur(10px);box-shadow:0 8px 22px #0007}
-  #tasks{position:absolute;left:12px;top:56px;width:min(300px,76vw);background:var(--panel);
-    border:1px solid var(--line);pointer-events:auto;max-height:46vh;overflow:auto;
-    border-radius:10px;backdrop-filter:blur(12px);box-shadow:0 12px 32px #0008}
+  #tasks{position:absolute;left:12px;top:56px;width:min(266px,68vw);background:#101d2ccc;
+    border:1px solid var(--line);pointer-events:auto;max-height:40vh;overflow:auto;
+    border-radius:10px;backdrop-filter:blur(12px);box-shadow:0 12px 32px #0008;
+    transition:opacity .35s}
+  /* panel redup saat tidak disentuh, jernih saat disorot — agar simulator selalu terlihat */
+  #tasks.idle{opacity:.28}
+  #tasks.idle:hover{opacity:1}
   #tasks header{padding:8px 12px;border-bottom:1px solid var(--line);font-family:var(--mono);
     font-size:10px;letter-spacing:.26em;color:var(--cyan);display:flex;justify-content:space-between;align-items:center;
     position:sticky;top:0;background:var(--panel)}
@@ -180,8 +187,8 @@
   #taskList li.done::before{border-color:var(--ok);background:var(--ok);box-shadow:inset 0 0 0 2px var(--panel)}
 
   /* ---------- TUTOR ---------- */
-  #tutor{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;width:min(680px,95vw);
-    background:var(--panel);border:1px solid var(--line);pointer-events:auto;display:flex;
+  #tutor{position:absolute;left:50%;transform:translateX(-50%);bottom:10px;width:min(640px,94vw);
+    background:#101d2cdd;border:1px solid var(--line);pointer-events:auto;display:flex;
     border-radius:12px;backdrop-filter:blur(12px);box-shadow:0 14px 40px #000a}
   #tutorMin{position:absolute;top:-25px;right:-1px;background:var(--panel);border:1px solid var(--line);
     border-bottom:none;color:var(--cyan);font-family:var(--mono);font-size:10px;padding:4px 12px;
@@ -198,11 +205,11 @@
   #avatar.talk #avFace{animation:pulseAv .8s infinite alternate}
   @keyframes pulseAv{from{transform:scale(1)}to{transform:scale(1.07)}}
   #avatar .nm{font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:var(--cyan)}
-  #tutorBody{flex:1;padding:10px 14px;min-width:0;display:flex;flex-direction:column;gap:8px}
-  #tutorTxt{font-size:13.5px;line-height:1.55;min-height:44px;max-height:160px;overflow:auto}
+  #tutorBody{flex:1;padding:9px 13px;min-width:0;display:flex;flex-direction:column;gap:7px}
+  #tutorTxt{font-size:13px;line-height:1.5;min-height:38px;max-height:112px;overflow:auto}
   #tutorTxt b{color:var(--yellow)}
-  .whyline{display:block;margin-top:6px;padding-top:6px;border-top:1px dashed var(--line);
-    font-size:12.5px;color:var(--dim);line-height:1.55}
+  .whyline{display:block;margin-top:5px;padding-top:5px;border-top:1px dashed var(--line);
+    font-size:12px;color:var(--dim);line-height:1.5}
   .whyline b{color:var(--cyan)}
   #tutorRow{display:flex;gap:8px;align-items:center}
   #tutorRow button{cursor:pointer;border:1px solid var(--line);background:#0e1c2c;color:var(--cyan);
@@ -243,10 +250,11 @@
     font-family:var(--mono);font-size:11px;padding:6px 12px;display:none}
 
   @media (max-width:640px){
-    #tasks{max-height:30vh;width:70vw}
-    #tutorTxt{font-size:12.5px;max-height:84px}
-    #avatar{width:56px}
+    #tasks{max-height:26vh;width:62vw}
+    #tutorTxt{font-size:12.5px;max-height:78px}
+    #avatar{width:54px}
     #stepBadge{top:50px;font-size:10px}
+    #btnFull,#btnFocus,#btnHelp{padding:9px 9px;font-size:13px}
   }
 </style>
 </head>
@@ -295,6 +303,8 @@
     <div class="tb stat">SKOR <b id="score">0</b></div>
     <div class="tb stat">❌ <b id="miss">0</b></div>
     <div class="tb stat">⏱ <b id="timer">00:00</b></div>
+    <button id="btnFocus" title="Fokus — sembunyikan panel">👁</button>
+    <button id="btnFull" title="Layar penuh">⛶</button>
     <button id="btnHelp" title="Cara bermain">❔</button>
   </div>
   <div id="progWrap"><div id="prog"></div></div>
@@ -709,6 +719,37 @@ $('#taskToggle').onclick=()=>{const l=$('#taskList');
   $('#taskToggle').textContent=hid?'tutup':'buka';};
 $('#tutorMin').onclick=()=>{const t=$('#tutor');t.classList.toggle('min');
   $('#tutorMin').textContent=t.classList.contains('min')?'▴ VOLTA':'▾ SEMBUNYIKAN';};
+
+/* ---------- LAYAR PENUH ---------- */
+$('#btnFull').onclick=()=>{
+  try{
+    const d=document, el=d.documentElement;
+    if(!d.fullscreenElement&&!d.webkitFullscreenElement){
+      (el.requestFullscreen||el.webkitRequestFullscreen||function(){}).call(el);
+    }else{
+      (d.exitFullscreen||d.webkitExitFullscreen||function(){}).call(d);
+    }
+  }catch(e){}};
+
+/* ---------- MODE FOKUS: sembunyikan semua panel ---------- */
+$('#btnFocus').onclick=()=>{
+  const hud=$('#hud'); const on=hud.classList.toggle('focus');
+  $('#btnFocus').classList.toggle('on',on);
+  toast(on?'👁 Mode fokus — panel disembunyikan (klik 👁 lagi untuk tampilkan)':'Panel ditampilkan kembali','info',1800);};
+
+/* ---------- REDUP OTOMATIS panel objektif: jernih saat disentuh, redup saat diam ----------
+   (panel VOLTA TIDAK ikut meredup agar instruksi selalu terbaca) */
+let idleTO=null;
+function nudgeUI(){
+  const t=$('#tasks');
+  if(t)t.classList.remove('idle');
+  clearTimeout(idleTO);
+  idleTO=setTimeout(()=>{
+    if(!curModule)return;
+    if(t)t.classList.add('idle');
+  },5000);}
+['pointermove','pointerdown','keydown','wheel'].forEach(ev=>
+  addEventListener(ev,nudgeUI,{passive:true}));
 let typeTO=null;
 function say(html){
   clearTimeout(typeTO);
@@ -717,6 +758,7 @@ function say(html){
   if(tu.classList.contains('min')){tu.classList.remove('min');$('#tutorMin').textContent='▾ SEMBUNYIKAN';}
   const el=$('#tutorTxt'), av=$('#avatar');
   el.innerHTML=''; av.classList.add('talk');
+  if(typeof nudgeUI==='function')nudgeUI(); /* panel cerah saat ada instruksi baru */
   const tmp=document.createElement('div'); tmp.innerHTML=html;
   const full=html; let i=0; const plain=tmp.textContent;
   speak(plain);
@@ -992,6 +1034,8 @@ $('#winMenu').onclick=()=>{$('#winBox').style.display='none';backToMenu();};
 $('#winRetry').onclick=()=>{$('#winBox').style.display='none';startModule(curModule);};
 $('#btnBack').onclick=backToMenu;
 function backToMenu(){curModule=null;timerOn=false;seq=null;moduleTick=null;stopSpeak();setHover(null);
+  clearTimeout(idleTO);
+  const t=$('#tasks');if(t)t.classList.remove('idle');
   $('#hud').style.display='none';$('#menu').style.display='block';renderMenu();}
 
 function onClick(x,y){
@@ -1037,9 +1081,12 @@ function startModule(k){
   $('#score').textContent='0';$('#miss').textContent='0';
   t0=Date.now();timerOn=true;$('#timer').textContent='00:00';
   $('#menu').style.display='none';$('#hud').style.display='block';
+  $('#hud').classList.remove('focus');$('#btnFocus').classList.remove('on');
   $('#winBox').style.display='none';
-  $('#taskList').style.display='';$('#taskToggle').textContent='tutup';
-  MISSIONS[k].build();}
+  /* objektif mulai ringkas (tertutup) agar tak menutupi simulator — langkah aktif tetap tampil di panel VOLTA */
+  $('#taskList').style.display='none';$('#taskToggle').textContent='buka';
+  MISSIONS[k].build();
+  nudgeUI();}
 
 renderMenu();
 /* prefetch modul misi saat idle agar briefing terbuka instan */
