@@ -311,3 +311,117 @@ Object.assign(REAL,{
   'Fuse link diganti sesuai tabel koordinasi (rating & tipe K/T), bukan sekadar yang tersedia di mobil',
   'Gangguan berulang di titik sama = usulkan perbaikan permanen: rabas pohon, ganti kawat AAAC-S, atau pasang LA'],
 });
+
+/* =====================================================================
+   MISI 4 — SCADA DISTRIBUSI: MANUVER JARAK JAUH
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ scada:{lvl:'JALUR 03 · DISTRIBUSI · MISI 4',icon:'🖥️',title:'SCADA: Manuver Jarak Jauh & FDIR',strict:true,
+  loc:'📍 Control center UP2D · Dispatcher trainee, 14:20',
+  story:'Kali ini kamu duduk di kursi yang dulu kamu mintai izin: DISPATCHER. Di layar SCADA, penyulang Karang kembali terganggu — tapi hari ini tak ada yang perlu memanjat tiang dulu: LBS bermotor tersebar di jaringan menunggu perintah jarak jauhmu. Lokalisir gangguan, selamatkan pelanggan sebanyak mungkin, dalam hitungan menit bukan jam.',
+  goal:'Seksi yang terganggu terisolasi via LBS remote dan pelanggan sehat dipulihkan dari dua arah — SAIDI terpangkas drastis.',
+  obj:['Baca indikasi gangguan & fault indicator di SCADA','Isolasi seksi terganggu dengan dua LBS pengapitnya','Pulihkan seksi sehat dari hulu & dari penyulang tetangga'],
+  learn:['SCADA memberi 3 kekuatan: telemetri (membaca), telesinyal (status), telekontrol (mengoperasikan dari jauh)','Fault indicator menunjuk seksi: FI menyala = arus gangguan LEWAT sini; FI padam pertama = gangguan di seksi setelahnya','Isolasi = membuka LBS di KEDUA ujung seksi terganggu; pelanggan di luar seksi itu tidak perlu ikut padam','Backfeed dari penyulang tetangga memulihkan seksi hilir — beban tetangga dicek dulu agar tak ikut tumbang'],
+  next:['Pelajari FDIR penuh otomatis (self-healing) tanpa dispatcher','Dalami protokol komunikasi SCADA: IEC 60870 & DNP3','Hitung dampak SAIDI/SAIFI dari otomasi jaringan']},
+});
+let msc={};
+function buildSCADA(){
+  freshScene(0x1d2a3a,0x0a121c);
+  cam={theta:0,phi:1.15,r:8.5,target:new THREE.Vector3(0,2.2,-1)};
+  const floor=boxT(18,.1,11,TEX.concrete());floor.position.y=-.05;scene.add(floor);
+  const wall=boxT(16,4.8,.2,TEX.metal(),{metalness:.2});wall.position.set(0,2.4,-3.4);scene.add(wall);
+  /* layar SCADA raksasa */
+  const frame=boxT(7.2,3.4,.18,TEX.metal(),{metalness:.4});frame.position.set(0,2.5,-3.3);scene.add(frame);
+  msc.D=makeDisplay(6.8,3.0,760,340);
+  msc.D.mesh.position.set(0,2.5,-3.2);scene.add(msc.D.mesh);
+  actMesh(msc.D.mesh,'BACA');
+  scene.add(label('SCADA — PENYULANG KARANG',.95).translateY(4.5).translateZ(-3.2));
+  /* meja dispatcher + tombol2 LBS */
+  const desk=boxT(5,.08,1.2,TEX.wood());desk.position.set(0,1.0,-.6);scene.add(desk);
+  msc.b1=box(.5,.3,.14,0x2b3a4a);msc.b1.position.set(-1.6,1.2,-.6);scene.add(msc.b1);
+  actMesh(msc.b1,'LBS2');
+  scene.add(label('LBS-2',.5,'#5fd4ff').translateX(-1.6).translateY(1.5).translateZ(-.6));
+  msc.b2=box(.5,.3,.14,0x2b3a4a);msc.b2.position.set(-.5,1.2,-.6);scene.add(msc.b2);
+  actMesh(msc.b2,'LBS3');
+  scene.add(label('LBS-3',.5,'#5fd4ff').translateX(-.5).translateY(1.5).translateZ(-.6));
+  msc.b3=box(.5,.3,.14,0x2b3a4a);msc.b3.position.set(.6,1.2,-.6);scene.add(msc.b3);
+  actMesh(msc.b3,'CB');
+  scene.add(label('CB GARDU',.5,'#5fd4ff').translateX(.6).translateY(1.5).translateZ(-.6));
+  msc.b4=box(.5,.3,.14,0x2b3a4a);msc.b4.position.set(1.7,1.2,-.6);scene.add(msc.b4);
+  actMesh(msc.b4,'TIE');
+  scene.add(label('TIE SW',.5,'#5fd4ff').translateX(1.7).translateY(1.5).translateZ(-.6));
+  msc.fase=0; /* 0 awal, 1 dibaca, 2 isolasi1, 3 isolasi2, 4 hulu, 5 backfeed */
+  function gambar(){
+    const g=msc.D.g,W=760,H=340;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.font='600 17px Consolas';g.textAlign='center';
+    const segs=[['S1',60,250],['S2',250,440],['S3',440,630]];
+    const open1=msc.fase>=2, open2=msc.fase>=3, cb=msc.fase>=4, tie=msc.fase>=5;
+    function line(x1,x2,y,on){g.strokeStyle=on?'#46ff8e':'#3a4a5c';g.lineWidth=6;
+      g.beginPath();g.moveTo(x1,y);g.lineTo(x2,y);g.stroke();}
+    /* seksi S1 hulu - S2 fault - S3 hilir */
+    line(40,250,150,cb);
+    line(250,440,150,false);
+    line(440,720,150,tie);
+    /* gardu kiri & tie kanan */
+    g.fillStyle=cb?'#46ff8e':'#ff5a5a';g.fillRect(20,130,20,40);
+    g.fillStyle='#8aa3bd';g.fillText('CB GARDU',60,120);
+    g.fillStyle=tie?'#46ff8e':'#5a4a2a';g.fillRect(720,130,20,40);
+    g.fillText('TIE (tetangga)',680,120);
+    /* LBS simbol */
+    function lbs(x,nama,open){g.strokeStyle=open?'#ffd23f':'#8aa3bd';g.lineWidth=5;
+      g.beginPath();g.moveTo(x-18,150);
+      open?g.lineTo(x+10,128):g.lineTo(x+18,150);g.stroke();
+      g.fillStyle='#8aa3bd';g.fillText(nama+(open?' ◊BUKA':' ▪tutup'),x,190);}
+    lbs(250,'LBS-2',open1);lbs(440,'LBS-3',open2);
+    /* fault indicator + petir */
+    if(msc.fase>=1){g.fillStyle='#ff5a5a';g.font='700 26px Consolas';
+      g.fillText('⚡ GANGGUAN',345,235);
+      g.font='600 16px Consolas';
+      g.fillText('FI-1 ✦nyala · FI-2 ✦nyala · FI-3 ○padam',345,265);}
+    g.fillStyle='#8aa3bd';g.font='600 15px Consolas';
+    g.fillText('S1: 800 plg',150,300);g.fillText('S2: 620 plg',345,300);g.fillText('S3: 510 plg',540,300);
+    const pulih=(cb?800:0)+(tie?510:0);
+    g.fillStyle=pulih?'#46ff8e':'#ff5a5a';g.font='700 18px Consolas';
+    g.fillText('PADAM: '+(1930-pulih-(msc.fase>=3?0:0)-(msc.fase>=5&&msc.fase>=4?620:0)<0?0:1930-pulih)+' → pulih: '+pulih,W/2,330);
+    msc.D.tex.needsUpdate=true;}
+  gambar();
+  startSeq([
+   {type:'act',aid:'BACA',done:false,targets:()=>[msc.D.mesh],
+    desc:'Baca SCADA: di seksi mana gangguannya? (klik layar)',
+    why:'CB gardu trip — 1.930 pelanggan padam. Fault indicator bercerita: FI-1 & FI-2 menyala (arus gangguan lewat), FI-3 padam. Arus berhenti di antara FI-2 dan FI-3 → gangguan di SEKSI 2. Membaca FI = setengah pekerjaan selesai.',
+    fx(){msc.fase=1;gambar();
+      toast('🔍 FI menunjuk SEKSI 2 — di sanalah gangguannya.','bad',3000);}},
+   {type:'act',aid:'LBS2',done:false,targets:()=>[msc.b1],
+    desc:'Isolasi sisi hulu: BUKA LBS-2 jarak jauh.',
+    why:'Telekontrol bekerja: perintah meluncur lewat radio, motor LBS membuka di tiang sana — 8 detik, tanpa satu orang pun memanjat. Pintu barat seksi gangguan tertutup.',
+    fx(){msc.fase=2;gambar();
+      toast('📡 LBS-2 TERBUKA (remote) — hulu terisolasi.','ok',2600);}},
+   {type:'act',aid:'LBS3',done:false,targets:()=>[msc.b2],
+    desc:'Isolasi sisi hilir: BUKA LBS-3.',
+    why:'Pintu timur ikut tertutup — seksi 2 kini terkurung sendirian bersama gangguannya. 620 pelanggan di dalamnya menunggu regu lapangan; tapi 1.310 lainnya tidak perlu ikut menunggu.',
+    fx(){msc.fase=3;gambar();
+      toast('📡 LBS-3 TERBUKA — seksi gangguan terkurung penuh.','ok',2600);}},
+   {type:'act',aid:'CB',done:false,targets:()=>[msc.b3],
+    desc:'Pulihkan hulu: TUTUP kembali CB gardu — S1 menyala.',
+    why:'Dengan seksi 2 terisolasi, CB aman ditutup: 800 pelanggan seksi 1 menyala kembali. Lima menit setelah gangguan — di era patroli manual, menit kelima itu regu bahkan belum naik mobil.',
+    fx(){msc.fase=4;gambar();
+      toast('💡 S1 PULIH via gardu — 800 pelanggan menyala.','ok',2800);}},
+   {type:'act',aid:'TIE',done:false,targets:()=>[msc.b4],
+    desc:'Pulihkan hilir: TUTUP TIE SWITCH — backfeed dari penyulang tetangga.',
+    why:'Seksi 3 tak bisa disuplai dari gardu sendiri (jalannya lewat seksi 2 yang sakit) — maka pintu belakang dibuka: penyulang tetangga menyuapinya dari arah sebaliknya. Cek dulu: beban tetangga 64%, sanggup. 510 pelanggan menyala dari arah yang tak mereka duga.',
+    fx(){msc.fase=5;gambar();
+      toast('🔁 BACKFEED aktif — S3 pulih. Padam tersisa: hanya seksi gangguan!','ok',3200);sfx.big();}},
+  ],()=>{say('🎉 <b>Manuver jarak jauh tuntas — 1.310 dari 1.930 pelanggan pulih dalam hitungan menit!</b> Seksi sakit terkurung, dua arah suplai bekerja. Begitulah SCADA mengubah jam menjadi menit.');
+    setTimeout(()=>showWin('scada'),2200);});
+  say('VOLTA di sini 🖥️ Hari ini kamu sang <b>dispatcher</b>: penyulang terganggu dan senjatamu adalah LBS remote di layar SCADA. Mantranya: <b>baca FI → kurung seksinya → pulihkan dua arah</b>. Mulai dari layar.');
+  $('#modTitle').textContent='J03·M4 — SCADA & Manuver Jarak Jauh';
+  $('#taskHead').textContent='BACA FI · KURUNG · PULIHKAN';}
+MISSIONS.scada.build=buildSCADA;
+Object.assign(REAL,{
+ scada:[
+  'Telekontrol tetap pakai komunikasi formal & log: perintah remote tercatat seperti manuver manual',
+  'Status LBS diverifikasi ganda (indikasi SCADA + telemetri arus) sebelum langkah berikutnya',
+  'Cek kemampuan penyulang tetangga (beban & setting proteksi) SEBELUM backfeed — jangan menulari',
+  'Regu lapangan tetap dikirim ke seksi terisolasi — SCADA melokalisir, manusia memperbaiki'],
+});

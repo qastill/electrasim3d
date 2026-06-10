@@ -316,3 +316,96 @@ Object.assign(REAL,{
   'Eccentricity & getaran poros dipantau saat coast down — anomali dicatat untuk inspeksi',
   'Sistem pelumas TETAP beroperasi selama turning gear — bearing tanpa oli rusak walau 3 RPM'],
 });
+
+/* =====================================================================
+   MISI 4 — BLACK START: MENGHIDUPKAN SISTEM DARI NOL
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ blackstart:{lvl:'JALUR 07 · PEMBANGKITAN · MISI 4',icon:'🌑',title:'Black Start: Menghidupkan Sistem dari Nol',strict:true,
+  loc:'📍 PLTU unit 2 · Blackout regional, 03:30',
+  story:'Mimpi buruk sistem tenaga menjadi nyata: blackout regional — jaringan mati total, dan PLTU-mu ikut gelap karena pemakaian sendirinya bergantung pada jaringan yang kini tiada. Tapi unitmu ditunjuk sebagai BLACK START UNIT: di halaman belakang ada genset diesel besar yang bisa hidup tanpa bantuan siapa pun. Dari percikan kecil itulah, satu provinsi akan menyala kembali.',
+  goal:'Unit hidup kembali dari nol: genset black start → pemakaian sendiri → boiler & turbin → generator membangun tegangan → siap memberi tegangan ke jaringan mati.',
+  obj:['Hidupkan genset black start (sumber mandiri)','Energize pemakaian sendiri & start auxiliary kritis','Bangun uap, putar turbin, bangkitkan tegangan ke jaringan'],
+  learn:['Pembangkit besar tak bisa menghidupkan dirinya: pompa & fan raksasanya butuh listrik — telur-ayam yang dipecahkan genset black start','Urutan pemakaian sendiri ada prioritasnya: pelumas & kontrol dulu, lalu pompa air umpan, fan, baru sisanya — kapasitas genset terbatas','Energize jaringan mati = soft energize: tegangan dibangun bertahap, beban dipanggil sedikit demi sedikit agar genset muda tak tumbang lagi','Black start dilatih rutin lewat drill — saat blackout nyata bukan waktunya membaca manual'],
+  next:['Pelajari skema pemulihan sistem: jalur black start regional','Dalami cold-load pickup: beban mati menarik arus lebih besar saat dinyalakan','Eksplorasi grid-forming inverter: black start era baterai']},
+});
+let mbk={};
+function buildBlackstart(){
+  freshScene(0x0e131c,0x05080d); /* gelap total */
+  cam={theta:-.1,phi:1.18,r:9.5,target:new THREE.Vector3(0,1.8,-.8)};
+  const floor=boxT(20,.1,12,TEX.concrete());floor.position.y=-.05;scene.add(floor);
+  /* genset black start */
+  mbk.gen=boxT(1.8,1.2,1.0,TEX.metal(),{metalness:.3});mbk.gen.position.set(-6.4,.65,-1.6);scene.add(mbk.gen);
+  actMesh(mbk.gen,'GENSET');
+  scene.add(label('GENSET BLACK START 2 MW',.7,'#5fd4ff').translateX(-6.4).translateY(1.6).translateZ(-1.6));
+  /* panel pemakaian sendiri */
+  const aux=boxT(1.4,2.0,.4,TEX.metal(),{metalness:.35});aux.position.set(-3.6,1.0,-2.4);scene.add(aux);
+  aux.add(label('PANEL PS (pemakaian sendiri)',.6).translateY(1.3));
+  mbk.psb=box(.3,.4,.14,0x18242f);mbk.psb.position.set(-3.6,1.2,-2.18);scene.add(mbk.psb);
+  actMesh(mbk.psb,'PS');
+  mbk.lampPS=new THREE.Mesh(new THREE.SphereGeometry(.06,12,10),
+    new THREE.MeshStandardMaterial({color:0x553322,emissive:0x000000}));
+  mbk.lampPS.position.set(-3.6,1.75,-2.16);scene.add(mbk.lampPS);
+  /* boiler + turbin + generator */
+  mbk.blr=boxT(2.0,2.4,1.6,TEX.metal(),{metalness:.2});mbk.blr.position.set(-.8,1.2,-2.0);scene.add(mbk.blr);
+  actMesh(mbk.blr,'BOILER');
+  scene.add(label('BOILER',.7).translateX(-.8).translateY(2.7).translateZ(-2.0));
+  mbk.turb=cyl(.6,.75,2.2,0x9aa7b4);mbk.turb.rotation.z=Math.PI/2;
+  mbk.turb.position.set(2.2,1.1,-2.0);scene.add(mbk.turb);
+  actMesh(mbk.turb,'TURBIN');
+  scene.add(label('TURBIN-GEN',.7).translateX(2.2).translateY(2.2).translateZ(-2.0));
+  /* layar status + breaker jaringan */
+  mbk.D=makeDisplay(1.9,1.0,400,220);
+  mbk.D.mesh.position.set(5.2,2.1,-2.4);scene.add(mbk.D.mesh);
+  dispText(mbk.D,['BLACKOUT','semua hitam…'],['#ff5a5a','#7d8f84']);
+  const pole=cyl(.04,.04,1.5,0x666666);pole.position.set(5.2,.75,-2.4);scene.add(pole);
+  mbk.brk=box(.4,.55,.16,0x18242f);mbk.brk.position.set(5.2,1.0,-2.36);scene.add(mbk.brk);
+  actMesh(mbk.brk,'GRID');
+  scene.add(label('BREAKER KE JARINGAN',.55,'#5fd4ff').translateX(5.2).translateY(.6).translateZ(-2.3));
+  mbk.rpm=0;mbk.steam=false;mbk.spin=false;
+  moduleTick=(dt)=>{
+    if(mbk.spin&&mbk.rpm<3000){mbk.rpm=Math.min(3000,mbk.rpm+dt*700);
+      dispText(mbk.D,[Math.round(mbk.rpm)+' RPM',mbk.rpm>=3000?'siap eksitasi':'rolling…'],
+        ['#ffd23f',mbk.rpm>=3000?'#46ff8e':'#8aa3bd']);}};
+  startSeq([
+   {type:'act',aid:'GENSET',done:false,targets:()=>[mbk.gen],
+    desc:'Hidupkan GENSET BLACK START — satu-satunya yang bisa hidup sendiri.',
+    why:'Mesin diesel dengan baterai start sendiri: tak butuh jaringan, tak butuh siapa pun. 2 MW kedengaran kecil untuk PLTU 100 MW — tapi cukup untuk membangunkan organ vitalnya. Setiap kebangkitan besar berawal dari percikan kecil.',
+    fx(){beep(70,1.2,'sawtooth',.08);
+      toast('🔦 Genset MENYALA — satu titik terang di tengah blackout.','ok',2800);}},
+   {type:'act',aid:'PS',done:false,targets:()=>[mbk.psb],
+    desc:'Energize PEMAKAIAN SENDIRI — hidupkan auxiliary sesuai prioritas.',
+    why:'2 MW dibagi dengan disiplin: pelumas & DC kontrol dulu (nyawa), pompa air umpan & FD fan kemudian (pernafasan), penerangan secukupnya. Melebihi kapasitas genset = blackout kedua yang lebih memalukan.',
+    fx(){mbk.lampPS.material.color.setHex(0x2ee87a);mbk.lampPS.material.emissive.setHex(0x2ee87a);
+      mbk.lampPS.material.emissiveIntensity=1;
+      toast('💡 PS hidup: pelumas ✓ kontrol ✓ feedwater ✓ fan ✓','ok',2800);}},
+   {type:'act',aid:'BOILER',done:false,targets:()=>[mbk.blr],
+    desc:'Nyalakan BOILER — bangun tekanan uap perlahan.',
+    why:'Burner menyala dari bahan bakar cadangan, drum mulai mendesis. Tak bisa diburu-buru: logam tebal boiler menuntut kurva pemanasan — memaksanya cepat hari ini berarti merawat retakan bertahun-tahun.',
+    fx(){mbk.steam=true;
+      toast('🔥 Boiler menyala — tekanan merangkak menuju nominal.','ok',2800);}},
+   {type:'act',aid:'TURBIN',done:false,targets:()=>[mbk.turb],
+    desc:'Alirkan uap: ROLL TURBIN menuju 3000 RPM.',
+    why:'Uap perdana mendorong sudu — turbin bangun dari tidur panjangnya melalui kecepatan kritis yang dilewati tanpa berhenti (resonansi tak suka ditunggangi). Menuju 3000: detak jantung 50 Hz yang akan ditawarkan pada provinsi yang gelap.',
+    fx(){mbk.spin=true;
+      toast('🌀 Turbin rolling… pantau RPM di layar.','ok',2600);}},
+   {type:'act',aid:'GRID',done:false,targets:()=>[mbk.brk],
+    check:()=>mbk.rpm>=3000,
+    checkFail:'Belum 3000 RPM! Generator harus di kecepatan nominal sebelum membangkitkan tegangan ke jaringan.',
+    desc:'Di 3000 RPM: eksitasi ON & TUTUP breaker — beri tegangan ke jaringan mati.',
+    why:'Tak ada sinkronisasi kali ini — jaringannya MATI: generatormu satu-satunya nada di keheningan. Tegangan dibangun, breaker menutup ke jalur transmisi kosong, lalu dispatcher memanggil beban kota sedikit demi sedikit. Dari genset 2 MW, provinsi menyala kembali.',
+    fx(){dispText(mbk.D,['150 kV SIAP','jalur pemulihan AKTIF'],['#46ff8e','#46ff8e']);
+      toast('🌅 TEGANGAN MENGALIR — pemulihan sistem dimulai dari unitmu!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Dari gelap gulita menjadi pemberi cahaya!</b> Genset kecil membangunkan raksasa, raksasa membangunkan provinsi. Black start: prosedur paling jarang dipakai, paling menentukan saat dipakai.');
+    setTimeout(()=>showWin('blackstart'),2200);});
+  say('VOLTA di sini, dan dunia sedang gelap 🌑 <b>Blackout total</b> — dan unitmu adalah black start unit. Pecahkan paradoks telur-ayam: pembangkit butuh listrik untuk membuat listrik. Jawabannya menunggu di halaman belakang.');
+  $('#modTitle').textContent='J07·M4 — Black Start';
+  $('#taskHead').textContent='DARI NOL MENJADI 150 kV';}
+MISSIONS.blackstart.build=buildBlackstart;
+Object.assign(REAL,{
+ blackstart:[
+  'Unit black start diuji berkala (drill nyata sampai PS hidup dari genset) — kontrak ancillary menuntutnya',
+  'Bahan bakar genset & cadangan boiler dijaga levelnya: blackout tidak memberi tahu jadwalnya',
+  'Koordinasi pemulihan dipimpin pusat pengatur: jalur energize & urutan beban sudah tertulis di skema',
+  'Baterai DC station diuji kapasitasnya — kontrol & proteksi hidup dari DC saat semuanya mati'],
+});

@@ -310,3 +310,93 @@ Object.assign(REAL,{
   'Modul pengganti harus kompatibel arus/tegangan dengan string existing — beda generasi = mismatch',
   'Catat semua temuan & penggantian di logbook O&M — klaim garansi modul butuh riwayat'],
 });
+
+/* =====================================================================
+   MISI 4 — PLTS HYBRID OFF-GRID + BATERAI
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ hybrid:{lvl:'JALUR 10 · PV & SOLAR · MISI 4',icon:'🏝️',title:'PLTS Hybrid Off-Grid + Baterai',strict:false,
+  loc:'📍 Pulau Karang Jaya · Desa nelayan tanpa jaringan PLN',
+  story:'Tiga ratus kepala keluarga, genset tua yang minum solar mahal kiriman kapal, dan listrik hanya 6 jam semalam. Proyekmu mengubah semuanya: PLTS + baterai + genset cadangan dalam satu sistem hybrid off-grid. Tak ada jaringan PLN untuk bersandar — di pulau ini, sistemmu ADALAH jaringannya.',
+  goal:'Sistem hybrid beroperasi dengan prioritas benar: surya dulu, baterai kemudian, genset hanya saat terdesak — listrik 24 jam pertama dalam sejarah desa.',
+  obj:['Rangkai arsitektur: PV → MPPT → bus baterai → inverter','Set prioritas sumber & ambang genset di hybrid controller','Uji skenario: siang, malam, dan mendung panjang'],
+  learn:['Off-grid berarti inverter membentuk jaringannya sendiri (grid-forming): ialah yang menetapkan 230V/50Hz, bukan mengikuti','Prioritas energi termurah: surya (gratis) → baterai (tersimpan) → genset (mahal) — controller mengeksekusinya otomatis','Ambang genset diset dari SoC baterai (mis. start di 30%, stop di 80%) — genset bekerja singkat & efisien, bukan menyala semalaman','Autonomi baterai dihitung untuk hari mendung (1,5-2 hari) — pulau tidak punya rencana B'],
+  next:['Pelajari sizing autonomi & solar charge controller MPPT vs PWM','Dalami genset auto-start (AMF) & sinkronisasi dengan inverter','Eksplorasi mini-grid komunal: smart meter prabayar desa']},
+});
+let mhy={};
+function buildHybrid(){
+  freshScene(0xcfe8f0,0x14242c);
+  cam={theta:-.1,phi:1.12,r:9,target:new THREE.Vector3(0,1.6,-.8)};
+  const ground=boxT(22,.1,13,TEX.gravel());ground.position.y=-.05;scene.add(ground);
+  /* laut dekoratif */
+  const laut=box(22,.04,3,0x2a6a9a,{roughness:.2,metalness:.3});laut.position.set(0,.02,5);scene.add(laut);
+  /* array PV */
+  mhy.pv=box(3.2,.08,2.0,0x16263e,{roughness:.25,metalness:.5});
+  mhy.pv.position.set(-5.4,1.5,-2.0);mhy.pv.rotation.x=-.25;scene.add(mhy.pv);
+  [[-1.2,0],[1.2,0]].forEach(o=>{const leg=cyl(.06,.06,1.4,0x8a8a8a);
+    leg.position.set(-5.4+o[0],.7,-2.0);scene.add(leg);});
+  actMesh(mhy.pv,'PV');
+  scene.add(label('ARRAY PV 40 kWp',.75).translateX(-5.4).translateY(2.4).translateZ(-2.0));
+  /* MPPT + bank baterai */
+  mhy.mppt=box(.6,.8,.3,0x2a5a8a);mhy.mppt.position.set(-2.8,1.2,-2.2);scene.add(mhy.mppt);
+  actMesh(mhy.mppt,'MPPT');
+  scene.add(label('MPPT CHARGER',.6,'#5fd4ff').translateX(-2.8).translateY(1.85).translateZ(-2.2));
+  const rak=boxT(1.8,1.2,.8,TEX.metal(),{metalness:.3});rak.position.set(-.6,.65,-2.2);scene.add(rak);
+  rak.add(label('BANK BATERAI LFP 120 kWh',.6).translateY(.95));
+  /* inverter hybrid + display */
+  mhy.inv=boxT(1.0,1.3,.5,TEX.metal(),{metalness:.35});mhy.inv.position.set(1.8,.7,-2.2);scene.add(mhy.inv);
+  mhy.inv.add(label('HYBRID INVERTER 30 kW',.6).translateY(.95));
+  mhy.D=makeDisplay(.85,.55,260,160);
+  mhy.D.mesh.position.set(1.8,.85,-1.93);scene.add(mhy.D.mesh);
+  dispText(mhy.D,['OFFLINE','—'],['#7d8f84','#7d8f84']);
+  actMesh(mhy.D.mesh,'CFG');
+  /* genset */
+  mhy.gen=boxT(1.4,1.0,.9,TEX.metal(),{metalness:.3});mhy.gen.position.set(4.2,.55,-2.2);scene.add(mhy.gen);
+  actMesh(mhy.gen,'UJIN');
+  scene.add(label('GENSET CADANGAN 25 kVA',.6).translateX(4.2).translateY(1.35).translateZ(-2.2));
+  /* desa */
+  [[6.4,.6],[7.4,.2]].forEach((o,i)=>{
+    const r=boxT(.9,.7,.8,TEX.plaster());r.position.set(o[0],.4,o[1]);scene.add(r);
+    const atap=box(1.05,.3,.95,0x8a5a40);atap.position.set(o[0],.9,o[1]);scene.add(atap);});
+  mhy.lampDesa=new THREE.Mesh(new THREE.SphereGeometry(.09,12,10),
+    new THREE.MeshStandardMaterial({color:0x553322,emissive:0x000000}));
+  mhy.lampDesa.position.set(6.9,1.5,.4);scene.add(mhy.lampDesa);
+  scene.add(label('DESA · 300 KK',.7).translateX(6.9).translateY(2.0).translateZ(.4));
+  startSeq([
+   {type:'act',aid:'PV',done:false,targets:()=>[mhy.pv],
+    desc:'Verifikasi ARRAY 40 kWp: string, polaritas, grounding (klik panel).',
+    why:'Ilmu misi-misi sebelumnya dipakai semua: Voc tiap string, polaritas dua kali cek, rangka dibumikan. Di pulau, kesalahan instalasi tak bisa menelepon vendor — kapal berikutnya dua minggu lagi.',
+    fx(){toast('☀️ 8 string ✓ polaritas ✓ grounding ✓ — array siap.','ok',2600);}},
+   {type:'act',aid:'MPPT',done:false,targets:()=>[mhy.mppt],
+    desc:'Sambung & set MPPT charger ke bank baterai.',
+    why:'MPPT memburu titik daya maksimum panel sepanjang hari — 15-30% lebih banyak panen daripada charger PWM murah. Profil charging diset khas LFP: absorption 56,8 V, tanpa equalization. Baterai adalah jantung pulau; charger adalah dokternya.',
+    fx(){toast('🔋 MPPT aktif: profil LFP · panen maksimal sepanjang hari.','ok',2600);}},
+   {type:'act',aid:'CFG',done:false,targets:()=>[mhy.D.mesh],
+    desc:'Set PRIORITAS & ambang genset di hybrid controller (klik display).',
+    why:'Aturan main pulau ditulis di sini: surya melayani beban + mengisi baterai; malam = baterai; genset auto-start hanya bila SoC < 30% dan berhenti di 80%. Energi termahal dipakai paling akhir, paling singkat — solar kiriman kapal itu emas cair.',
+    fx(){dispText(mhy.D,['PV>BAT>GEN','gen: SoC 30-80%'],['#46ff8e','#eaf2fb']);
+      toast('⚙️ Prioritas terkunci: surya → baterai → genset (darurat).','ok',2800);}},
+   {type:'act',aid:'UJIN',done:false,targets:()=>[mhy.gen],
+    desc:'Uji skenario MENDUNG: paksa SoC rendah — genset harus bangun sendiri.',
+    why:'Simulasi tiga hari mendung: SoC menyentuh 30% → AMF menghidupkan genset otomatis, inverter sinkron, baterai terisi ke 80% → genset pamit sendiri. Total kerja: 2,5 jam — bukan semalaman seperti dulu. Sistem lulus ujian hari terburuknya.',
+    fx(){beep(75,1.0,'sawtooth',.07);
+      toast('🌧️ SoC 30% → genset auto-start → 80% → auto-stop ✓','ok',3000);}},
+   {type:'act',aid:'NYALA',done:false,targets:()=>[mhy.inv],
+    desc:'Momen bersejarah: ON-kan sistem — listrik 24 jam pertama desa!',
+    why:'Inverter membentuk 230V/50Hz-nya sendiri — jaringan mini lahir di pulau ini. Lampu-lampu rumah menyala dan TIDAK akan padam jam 9 malam. Kulkas pertama, pompa air pertama, anak-anak belajar malam pertama. Listrik mengubah desa; kamu yang membawanya.',
+    fx(){mhy.lampDesa.material.color.setHex(0xffd97a);mhy.lampDesa.material.emissive.setHex(0xffd97a);
+      mhy.lampDesa.material.emissiveIntensity=1;
+      toast('🏝️ DESA MENYALA 24 JAM — sejarah baru Karang Jaya!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Mini-grid pulau beroperasi!</b> Surya bekerja siang, baterai berjaga malam, genset hanya tamu darurat. Tak ada PLN di sini — sistemmu lah PLN-nya. Dan 300 keluarga tidur dengan lampu menyala.');
+    setTimeout(()=>showWin('hybrid'),2200);});
+  say('VOLTA di sini 🏝️ Misi paling bermakna: <b>melistriki pulau tanpa jaringan</b>. Tiga sumber, satu aturan: yang gratis dulu, yang mahal paling akhir. Mulai dari array — dan ingat, kapal sparepart datang dua minggu sekali.');
+  $('#modTitle').textContent='J10·M4 — PLTS Hybrid Off-Grid';
+  $('#taskHead').textContent='SURYA → BATERAI → GENSET';}
+MISSIONS.hybrid.build=buildHybrid;
+Object.assign(REAL,{
+ hybrid:[
+  'Sizing autonomi memakai data radiasi bulan TERBURUK lokasi, bukan rata-rata tahunan',
+  'Latih operator lokal: sistem terbaik mati oleh ketiadaan orang yang paham di pulau',
+  'Stok suku cadang kritis di lokasi (fuse, MC4, satu MPPT cadangan) — logistik pulau tak kenal darurat',
+  'Manajemen beban komunal disepakati desa (jam beban besar bergiliran) — sosial menentukan teknis'],
+});

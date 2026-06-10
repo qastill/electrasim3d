@@ -320,3 +320,118 @@ Object.assign(REAL,{
   'Autotune dinamis (motor berputar) lebih akurat — pastikan beban dilepas & area aman',
   'Simpan backup parameter VFD eksternal; unit pengganti tinggal restore, bukan setting ulang dari nol'],
 });
+
+/* =====================================================================
+   MISI 4 — INTERLOCK KONVEYOR BERURUTAN
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ konveyor:{lvl:'JALUR 02 · INDUSTRI & MANUFAKTUR · MISI 4',icon:'🏭',title:'Interlock Konveyor Berurutan',strict:true,
+  loc:'📍 Pabrik pengantongan · Line konveyor CV1 → CV2',
+  story:'Dua konveyor seri mengantar karung 50 kg dari mesin pengisi ke gudang. Minggu lalu operator baru menyalakan CV1 (hulu) saat CV2 (hilir) mati — lima karung menumpuk di titik transfer, robek, dan line berhenti dua jam. Hari ini kamu memasang aturan emas konveyor seri ke dalam sistem: urutan bukan saran, ia hukum.',
+  goal:'Line beroperasi dengan interlock benar: start dari hilir ke hulu, stop dari hulu ke hilir, dan sensor penumpukan menjaga titik transfer.',
+  obj:['Pahami aturan urutan start/stop konveyor seri','Start CV2 (hilir) dulu, baru CV1 (hulu)','Pasang sensor anti-numpuk & uji stop berurutan'],
+  learn:['Start selalu dari HILIR ke hulu: penerima siap dulu, baru pengirim mengirim — kebalikannya = tumpukan di transfer','Stop selalu dari HULU ke hilir: pengirim berhenti dulu, hilir menghabiskan muatan (clearing time) baru ikut berhenti','Sensor penumpukan di titik transfer = pagar terakhir saat manusia/logika lalai — ia menghentikan hulu otomatis','Interlock sejenis ini melindungi juga motor: konveyor hilir mati + hulu memaksa = beban macet = TOR trip'],
+  next:['Pelajari ladder cascade start-stop untuk N konveyor seri','Tambahkan pull-cord & belt-sway switch (proteksi keselamatan konveyor)','Dalami perhitungan clearing time dari panjang & kecepatan belt']},
+});
+let mkv={};
+function buildKonveyor(){
+  freshScene(0xb0bfcc,0x131c26);
+  cam={theta:.3,phi:1.12,r:10,target:new THREE.Vector3(0,1.2,-.8)};
+  const floor=boxT(26,.1,14,TEX.concrete());floor.position.y=-.05;scene.add(floor);
+  /* CV1 (hulu, kiri) dan CV2 (hilir, kanan) */
+  function beltUnit(x,w,nama){
+    const b=box(w,.22,1.1,0x222a31,{roughness:.85});b.position.set(x,.85,-1.5);scene.add(b);
+    [-w/2+.6,0,w/2-.6].forEach(dx=>{
+      const leg=boxT(.12,.78,.9,TEX.metal(),{metalness:.4});leg.position.set(x+dx,.39,-1.5);scene.add(leg);});
+    scene.add(label(nama,.7).translateX(x).translateY(1.6).translateZ(-1.5));
+    return b;}
+  beltUnit(-3.4,6,'CV1 · HULU (pengisi)');
+  beltUnit(3.2,6,'CV2 · HILIR (gudang)');
+  /* mesin pengisi di ujung kiri */
+  const filler=boxT(1.4,2.2,1.2,TEX.metal(),{metalness:.3});filler.position.set(-7.0,1.1,-1.5);scene.add(filler);
+  scene.add(label('MESIN PENGISI',.6).translateX(-7.0).translateY(2.5).translateZ(-1.5));
+  /* titik transfer + sensor numpuk */
+  const tpost=cyl(.04,.04,1.4,0x666666);tpost.position.set(-.1,.7,-2.3);scene.add(tpost);
+  mkv.sjam=box(.16,.16,.16,0xd8b020);mkv.sjam.position.set(-.1,1.35,-2.2);scene.add(mkv.sjam);
+  actMesh(mkv.sjam,'SJAM');
+  scene.add(label('TITIK TRANSFER',.55,'#ffd23f').translateX(-.1).translateY(1.85).translateZ(-2.2));
+  /* panel kontrol: P&ID display + tombol */
+  const panel=boxT(2.6,2.0,.25,TEX.metal(),{metalness:.35});panel.position.set(-4.6,2.0,-4.2);scene.add(panel);
+  panel.add(label('PANEL LINE',.8).translateY(1.25));
+  mkv.D=makeDisplay(2.2,1.1,420,220);
+  mkv.D.mesh.position.set(-4.6,2.2,-4.06);scene.add(mkv.D.mesh);
+  actMesh(mkv.D.mesh,'CEK');
+  function layar(){
+    dispText(mkv.D,['CV1: '+(mkv.cv1?'RUN':'STOP')+' · CV2: '+(mkv.cv2?'RUN':'STOP'),
+      mkv.sensorOn?'sensor transfer AKTIF':'sensor transfer: belum',
+      'aturan: start 2→1 · stop 1→2'],
+      [mkv.cv1&&mkv.cv2?'#46ff8e':'#ffd23f',mkv.sensorOn?'#46ff8e':'#7d8f84','#8aa3bd']);}
+  mkv.btn2=cyl(.1,.1,.08,0x2ec06a);mkv.btn2.rotation.x=Math.PI/2;
+  mkv.btn2.position.set(-3.9,1.1,-4.05);scene.add(mkv.btn2);
+  actMesh(mkv.btn2,'CV2');
+  scene.add(label('CV2',.5,'#7af0a8').translateX(-3.9).translateY(1.38).translateZ(-4.0));
+  mkv.btn1=cyl(.1,.1,.08,0x2ec06a);mkv.btn1.rotation.x=Math.PI/2;
+  mkv.btn1.position.set(-4.6,1.1,-4.05);scene.add(mkv.btn1);
+  actMesh(mkv.btn1,'CV1');
+  scene.add(label('CV1',.5,'#7af0a8').translateX(-4.6).translateY(1.38).translateZ(-4.0));
+  mkv.btnStop=cyl(.1,.1,.08,0xd83a3a);mkv.btnStop.rotation.x=Math.PI/2;
+  mkv.btnStop.position.set(-5.3,1.1,-4.05);scene.add(mkv.btnStop);
+  actMesh(mkv.btnStop,'STOP1');
+  scene.add(label('STOP SEQ',.5,'#ff9d9d').translateX(-5.3).translateY(1.38).translateZ(-4.0));
+  /* karung berjalan */
+  mkv.items=[];mkv.cv1=false;mkv.cv2=false;mkv.sensorOn=false;mkv.spawnT=1.0;
+  mkv.stopping=false;mkv.clearT=0;
+  layar();
+  moduleTick=(dt)=>{
+    if(mkv.cv1){mkv.spawnT-=dt;
+      if(mkv.spawnT<=0){mkv.spawnT=2.2;
+        const s=new THREE.Mesh(new THREE.SphereGeometry(.3,12,10),
+          new THREE.MeshStandardMaterial({color:0xc8b48a,roughness:.9}));
+        s.scale.set(1,.66,.8);s.position.set(-6.2,1.18,-1.5);scene.add(s);
+        mkv.items.push(s);}}
+    for(let i=mkv.items.length-1;i>=0;i--){
+      const p=mkv.items[i].position;
+      const onCV1=p.x<-.2, onCV2=p.x>=-.2;
+      if((onCV1&&mkv.cv1)||(onCV2&&mkv.cv2))p.x+=dt*1.2;
+      if(p.x>6.0){scene.remove(mkv.items[i]);mkv.items.splice(i,1);}}
+    if(mkv.stopping){mkv.clearT-=dt;
+      if(mkv.clearT<=0&&mkv.cv2){mkv.cv2=false;layar();
+        toast('⏹ CV2 berhenti — line kosong, stop sequence tuntas.','ok',2600);}}};
+  startSeq([
+   {type:'act',aid:'CEK',done:false,targets:()=>[mkv.D.mesh],
+    desc:'Pelajari ATURAN URUTAN di panel line (klik layar).',
+    why:'Tertulis jelas: start 2→1 (hilir dulu), stop 1→2 (hulu dulu). Bukan selera — geometri yang memaksanya: barang mengalir dari 1 ke 2, maka penerima wajib siap sebelum pengirim mengirim.',
+    fx(){toast('📋 Aturan dipahami: start dari hilir, stop dari hulu.','ok',2600);}},
+   {type:'act',aid:'CV2',done:false,targets:()=>[mkv.btn2],
+    desc:'Start CV2 — konveyor HILIR menyala lebih dulu.',
+    why:'CV2 berputar kosong sebentar — dan itu benar: jalur pembuangan sudah hidup sebelum satu karung pun dikirim. Seperti membuka pintu sebelum melempar bola.',
+    fx(){mkv.cv2=true;layar();beep(100,.5,'sawtooth',.06);
+      toast('▶ CV2 RUN — hilir siap menerima.','ok',2400);}},
+   {type:'act',aid:'CV1',done:false,targets:()=>[mkv.btn1],
+    desc:'Kini giliran CV1 — hulu mulai mengirim karung.',
+    why:'Karung mengalir mulus melintasi titik transfer karena hilir sudah menunggu. Urutan terbalik minggu lalu memberi pabrik ini dua jam kerugian — urutan benar hari ini tak memberi apa-apa kecuali kelancaran. Begitulah keandalan: tak terlihat.',
+    fx(){mkv.cv1=true;layar();beep(100,.5,'sawtooth',.06);
+      toast('▶ CV1 RUN — karung mengalir, transfer mulus.','ok',2600);}},
+   {type:'act',aid:'SJAM',done:false,targets:()=>[mkv.sjam],
+    desc:'Pasang & aktifkan SENSOR PENUMPUKAN di titik transfer.',
+    why:'Pagar terakhir: bila karung tertahan menutupi sensor lebih dari 3 detik, PLC menghentikan CV1 otomatis — tumpukan tak akan pernah lebih dari satu. Interlock manusia bisa lupa; sensor tidak.',
+    fx(){mkv.sensorOn=true;layar();
+      toast('📡 Sensor anti-numpuk AKTIF — transfer terjaga 24/7.','ok',2600);}},
+   {type:'act',aid:'STOP1',done:false,targets:()=>[mkv.btnStop],
+    desc:'Uji STOP berurutan: tekan STOP SEQ — perhatikan urutannya.',
+    why:'CV1 berhenti seketika; CV2 terus berjalan beberapa detik menghabiskan karung yang masih di atasnya (clearing time), lalu berhenti sendiri. Tidak ada satu karung pun menginap di belt — line bersih, siap shift berikutnya.',
+    fx(){mkv.cv1=false;mkv.stopping=true;mkv.clearT=4.5;layar();
+      toast('⏹ CV1 stop — CV2 clearing… amati karung terakhir keluar.','ok',3000);sfx.big();}},
+  ],()=>{say('🎉 <b>Interlock sempurna!</b> Start dari hilir, stop dari hulu, sensor menjaga titik transfer. Konveyor seri yang dijalankan dengan hukum yang benar tidak pernah jadi berita.');
+    setTimeout(()=>showWin('konveyor'),2200);});
+  say('VOLTA di sini 🏭 Dua konveyor seri dan satu hukum besi: <b>start dari hilir, stop dari hulu</b>. Minggu lalu hukum itu dilanggar — hari ini kamu menanamkannya ke sistem. Mulai dari panel.');
+  $('#modTitle').textContent='J02·M4 — Interlock Konveyor';
+  $('#taskHead').textContent='START 2→1 · STOP 1→2';}
+MISSIONS.konveyor.build=buildKonveyor;
+Object.assign(REAL,{
+ konveyor:[
+  'Interlock urutan diwujudkan di logika DAN diuji fisik saat komisioning — bukan dipercaya dari diagram',
+  'Lengkapi proteksi keselamatan konveyor: pull-cord sepanjang sisi, belt-sway, & guard titik jepit',
+  'Clearing time dihitung dari panjang belt ÷ kecepatan + margin — bukan angka tebakan',
+  'Alarm penumpukan dicatat di sistem: transfer yang sering tersumbat = masalah desain, bukan operator'],
+});

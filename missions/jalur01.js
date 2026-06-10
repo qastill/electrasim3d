@@ -311,3 +311,120 @@ Object.assign(REAL,{
   'Ukur juga arus NETRAL sebelum-sesudah: penurunan drastis adalah bukti keberhasilan balancing',
   'Beban 1 fasa besar (AC, heater) dicatat dayanya saat perencanaan — balancing dimulai dari desain'],
 });
+
+/* =====================================================================
+   MISI 4 — SAKLAR TUKAR & SENSOR GERAK
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ tukar:{lvl:'JALUR 01 · INSTALASI BANGUNAN · MISI 4',icon:'💡',title:'Saklar Tukar & Sensor Gerak',strict:false,
+  loc:'📍 Rumah 2 lantai · Instalasi tangga & koridor',
+  story:'Keluhan rumah dua lantai yang klasik: lampu tangga hanya bisa dimatikan dari bawah — siapa pun yang naik harus memilih antara gelap atau boros. Jawabannya berumur seabad dan tetap elegan: SAKLAR TUKAR (hotel). Plus bonus modern untuk koridor: sensor gerak PIR yang menyalakan lampu hanya saat dibutuhkan.',
+  goal:'Lampu tangga dikendalikan dari DUA tempat (atas & bawah), dan lampu koridor menyala otomatis via sensor PIR.',
+  obj:['Rangkai saklar tukar: fasa → SK1 → dua kawat pengantara → SK2 → lampu','Uji nyala-mati dari bawah DAN dari atas','Pasang sensor PIR koridor & uji deteksi'],
+  learn:['Saklar tukar (SPDT) punya 1 terminal common + 2 pengantara: posisi tuasnya MEMILIH jalur, bukan memutus','Dua kawat pengantara menghubungkan SK1-SK2: lampu menyala bila kedua saklar memilih jalur yang SAMA — itulah kenapa keduanya bisa membalik keadaan','Sensor PIR mendeteksi perubahan panas inframerah yang bergerak — pasang menjauhi sumber panas (lampu, AC) agar tidak salah picu','Time delay & lux setting PIR diatur: menyala hanya saat gelap, padam 1-3 menit setelah gerakan terakhir'],
+  next:['Naik level: saklar silang (3 titik kendali atau lebih)','Pelajari smart relay/timer tangga untuk gedung','Masuk smart home: saklar pintar & integrasi sensor']},
+});
+let mtk={};
+function buildTukar(){
+  freshScene(0xa8c0d4,0x141e2a);
+  cam={theta:.1,phi:1.15,r:7,target:new THREE.Vector3(0,2.2,-1)};
+  const floor=boxT(12,.1,9,TEX.concrete());floor.position.y=-.05;scene.add(floor);
+  const wall=boxT(11,5.2,.15,TEX.plaster());wall.position.set(0,2.6,-3);scene.add(wall);
+  const Z=-2.86;
+  /* tangga dekoratif */
+  for(let i=0;i<5;i++){const st=boxT(1.6,.12,.45,TEX.wood());
+    st.position.set(-3.2,.4+i*.42,-1.2-i*.32);scene.add(st);}
+  scene.add(label('TANGGA',.6,'#8aa3bd').translateX(-3.2).translateY(2.9).translateZ(-1.8));
+  /* sumber */
+  const src=box(.9,.7,.16,COL.dark);src.position.set(-4.4,4.0,Z);scene.add(src);
+  src.add(label('FASA (dari MCB)',.6).translateY(.55));
+  terminal('F','fasa',-4.4,3.6,Z+.12);
+  /* SK1 bawah */
+  const sk1=box(.45,.45,.16,COL.cream);sk1.position.set(-2.6,1.4,Z);scene.add(sk1);
+  sk1.add(label('SK1 · BAWAH',.55).translateY(.45));
+  actMesh(sk1,'UJI1');
+  terminal('SK1-C','fasa',-2.6,1.75,Z+.12);
+  terminal('SK1-A','fasa',-2.85,1.05,Z+.12);
+  terminal('SK1-B','fasa',-2.35,1.05,Z+.12);
+  scene.add(label('C',.36).translateX(-2.42).translateY(1.78).translateZ(Z+.1));
+  /* SK2 atas */
+  const sk2=box(.45,.45,.16,COL.cream);sk2.position.set(-.4,3.3,Z);scene.add(sk2);
+  sk2.add(label('SK2 · ATAS',.55).translateY(.45));
+  actMesh(sk2,'UJI2');
+  terminal('SK2-A','fasa',-.65,3.7,Z+.12);
+  terminal('SK2-B','fasa',-.15,3.7,Z+.12);
+  terminal('SK2-C','fasa',-.4,2.95,Z+.12);
+  /* lampu tangga */
+  const fit=cyl(.09,.13,.2,0x444444);fit.position.set(1.4,4.3,Z+.1);scene.add(fit);
+  mtk.bulbMat=new THREE.MeshStandardMaterial({color:0xfff4c2,roughness:.3,emissive:0x000000});
+  mtk.bulb=new THREE.Mesh(new THREE.SphereGeometry(.18,18,14),mtk.bulbMat);
+  mtk.bulb.position.set(1.4,4.08,Z+.1);scene.add(mtk.bulb);
+  mtk.light=new THREE.PointLight(0xffe9a8,0,7);mtk.light.position.set(1.4,3.9,Z+.7);scene.add(mtk.light);
+  scene.add(label('LAMPU TANGGA',.6).translateX(1.4).translateY(4.65).translateZ(Z));
+  terminal('L-F','fasa',1.2,3.85,Z+.14);
+  /* netral langsung (disederhanakan, sudah tersambung) */
+  scene.add(label('(netral lampu sudah tersambung)',.5,'#8aa3bd').translateX(1.7).translateY(3.6).translateZ(Z+.1));
+  /* PIR + lampu koridor */
+  mtk.pir=new THREE.Mesh(new THREE.SphereGeometry(.14,14,10),
+    new THREE.MeshStandardMaterial({color:0xe8edf2,roughness:.4}));
+  mtk.pir.position.set(3.6,4.2,Z+.1);scene.add(mtk.pir);
+  actMesh(mtk.pir,'PIR');
+  scene.add(label('SENSOR PIR',.55,'#5fd4ff').translateX(3.6).translateY(4.6).translateZ(Z));
+  mtk.kor=new THREE.Mesh(new THREE.SphereGeometry(.14,16,12),
+    new THREE.MeshStandardMaterial({color:0xfff4c2,roughness:.3,emissive:0x000000}));
+  mtk.kor.position.set(4.5,4.1,Z+.1);scene.add(mtk.kor);
+  actMesh(mtk.kor,'JALAN');
+  scene.add(label('LAMPU KORIDOR',.55).translateX(4.5).translateY(4.55).translateZ(Z));
+  terms={};clickables.forEach(c=>{if(c.userData.kind==='terminal')terms[c.userData.id]=c;});
+  mtk.s1=true;mtk.s2=true;mtk.on=false;
+  function lampu(){
+    mtk.on=(mtk.s1===mtk.s2);
+    mtk.bulbMat.emissive.setHex(mtk.on?0xffd97a:0x000000);
+    mtk.bulbMat.emissiveIntensity=mtk.on?1:0;
+    mtk.light.intensity=mtk.on?1.4:0;}
+  startSeq([
+   {type:'wire',a:'F',b:'SK1-C',color:COL.fasa,done:false,
+    desc:'Fasa dari MCB masuk ke terminal COMMON SK1 (bawah).',
+    why:'Common adalah gerbang masuk-keluar saklar tukar; dua terminal lainnya hanyalah dua jalur pilihan. Salah menaruh fasa di terminal pengantara = rangkaian kacau yang kadang nyala kadang mati tanpa pola.',
+    wrong:'Fasa selalu masuk lewat terminal COMMON (C), bukan pengantara.'},
+   {type:'wire',a:'SK1-A',b:'SK2-A',color:COL.fasa,done:false,
+    desc:'Kawat PENGANTARA pertama: SK1-A ke SK2-A.',
+    why:'Inilah jalur pilihan pertama. Bila kedua saklar sama-sama menunjuk jalur A, arus mengalir penuh — lampu menyala.'},
+   {type:'wire',a:'SK1-B',b:'SK2-B',color:COL.fasa,done:false,
+    desc:'Kawat PENGANTARA kedua: SK1-B ke SK2-B.',
+    why:'Jalur pilihan kedua melengkapi pasangannya. Kini tiap saklar bisa membelokkan arus: pindahkan SATU tuas mana pun, keadaan lampu pasti terbalik — matematika sederhana dua pilihan.'},
+   {type:'wire',a:'SK2-C',b:'L-F',color:COL.fasa,done:false,
+    desc:'Dari COMMON SK2, fasa keluar menuju LAMPU.',
+    why:'Rangkaian tukar lengkap: fasa → C1 → (A/B) → C2 → lampu. Netral lampu langsung ke sumber seperti biasa — saklar apa pun tidak pernah memutus netral.'},
+   {type:'act',aid:'UJI1',done:false,targets:()=>[sk1],
+    desc:'UJI dari BAWAH: klik SK1 — lampu harus berubah keadaan.',
+    why:'Tuas SK1 berpindah jalur → keadaan rangkaian terbalik → lampu menyala. Orang di bawah kini berkuasa penuh.',
+    fx(){mtk.s1=!mtk.s1;lampu();
+      toast(mtk.on?'💡 NYALA dari bawah ✓':'⬛ MATI dari bawah ✓','ok',2200);}},
+   {type:'act',aid:'UJI2',done:false,targets:()=>[sk2],
+    desc:'UJI dari ATAS: klik SK2 — pastikan lampu berubah lagi.',
+    why:'Dan dari atas pun sama berkuasanya. Naik dengan terang, matikan dari atas; turun pagi, nyalakan dari atas. Tidak ada lagi pilihan antara gelap dan boros.',
+    fx(){mtk.s2=!mtk.s2;lampu();
+      toast(mtk.on?'💡 NYALA dari atas ✓ — saklar tukar bekerja!':'⬛ MATI dari atas ✓ — saklar tukar bekerja!','ok',2600);}},
+   {type:'act',aid:'PIR',done:false,targets:()=>[mtk.pir],
+    desc:'Pasang & setel SENSOR PIR koridor (klik sensor).',
+    why:'PIR membaca panas tubuh yang BERGERAK. Setelan: lux rendah (hanya aktif saat gelap), delay 90 detik. Dipasang menjauhi lampu & AC — sumber panas lain adalah hantu yang menyalakan lampu tengah malam.',
+    fx(){toast('⚙️ PIR: lux 10 · delay 90s · arah ke koridor ✓','ok',2600);}},
+   {type:'act',aid:'JALAN',done:false,targets:()=>[mtk.kor],
+    desc:'UJI: berjalanlah di koridor (klik lampu koridor).',
+    why:'Langkah pertama terdeteksi — lampu menyala sendiri; 90 detik setelah koridor sepi, ia pamit sendiri. Energi dipakai persis saat dibutuhkan: otomasi paling sederhana, paling terasa.',
+    fx(){mtk.kor.material.emissive.setHex(0xffd97a);mtk.kor.material.emissiveIntensity=1;
+      toast('🚶 Gerakan terdeteksi — lampu koridor MENYALA otomatis!','ok',2800);sfx.big();}},
+  ],()=>{say('🎉 <b>Instalasi cerdas selesai!</b> Saklar tukar menaklukkan tangga, PIR menjaga koridor. Rumah yang sama, kenyamanan yang naik kelas — dan tagihan yang justru turun.');
+    setTimeout(()=>showWin('tukar'),2200);});
+  say('VOLTA di sini 💡 Trik kelistrikan paling elegan warisan seabad: <b>saklar tukar</b> — satu lampu, dua tempat kendali. Kuncinya memahami terminal COMMON. Plus bonus modern: sensor gerak PIR. Mulai dari fasa!');
+  $('#modTitle').textContent='J01·M4 — Saklar Tukar & Sensor Gerak';
+  $('#taskHead').textContent='DUA SAKLAR, SATU LAMPU';}
+MISSIONS.tukar.build=buildTukar;
+Object.assign(REAL,{
+ tukar:[
+  'Kawat pengantara diberi warna berbeda dari fasa utama & ditandai di kedua ujung — penyelamat saat perbaikan',
+  'Gunakan saklar tukar berkualitas (SNI): kontak SPDT murahan cepat aus karena sering dioperasikan',
+  'PIR koridor diuji jalan sungguhan di malam hari: pola jangkauan nyata beda dengan brosur',
+  'Untuk 3+ titik kendali, sisipkan saklar silang di antara dua saklar tukar'],
+});

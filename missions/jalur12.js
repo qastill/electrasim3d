@@ -320,3 +320,106 @@ Object.assign(REAL,{
   'Perjanjian lahan jangka panjang dengan klausul listrik & akses 24 jam — sewa setahun untuk aset 10 tahun itu keliru',
   'Cek rencana kompetitor & peta SPKLU existing (aplikasi resmi) sebelum memutuskan'],
 });
+
+/* =====================================================================
+   MISI 4 — MANAJEMEN BEBAN DINAMIS SPKLU
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ loadmgmt:{lvl:'JALUR 12 · EV & EV CHARGING · MISI 4',icon:'⚖️',title:'Manajemen Beban Dinamis SPKLU',strict:false,
+  loc:'📍 SPKLU lokasi B · 4 charger, 1 trafo, jam sibuk',
+  story:'Lokasi keduamu sukses — terlalu sukses: empat charger kini sering penuh bersamaan, dan total tarikannya mengancam trafo 197 kVA yang tersedia. Membayar uprating trafo? Setahun antre & ratusan juta. Atau... mengajari para charger BERBAGI dengan cerdas: dynamic load management — kecerdasan yang lebih murah dari tembaga.',
+  goal:'Empat charger melayani bersamaan tanpa pernah melampaui batas daya: DLM aktif, prioritas adil, dan uji beban penuh lolos.',
+  obj:['Hitung anggaran daya & batas aman trafo','Konfigurasi DLM: alokasi dinamis & prioritas','Uji skenario 4 mobil serentak — batas tak pernah jebol'],
+  learn:['Static limit membagi rata & menyia-nyiakan: 4 charger dipatok 12 kW selamanya walau hanya 1 mobil mengisi','Dynamic load management membaca keadaan tiap detik: 1 mobil = dapat penuh; 4 mobil = dibagi adil — kapasitas selalu terpakai optimal','Charger berkomunikasi via OCPP smart charging profile: pusat menetapkan, unit menaati','First-come priority vs equal share: kebijakan bisnis menentukan algoritma — teknologi mengikuti niat'],
+  next:['Pelajari OCPP 2.0.1 smart charging & ISO 15118 (plug & charge)','Gabungkan DLM dengan PLTS atap lokasi: charging mengikuti matahari','Dalami V2G: mobil sebagai baterai cadangan gedung']},
+});
+let mlm={};
+function buildLoadMgmt(){
+  freshScene(0x9fb6cc,0x101a26);
+  cam={theta:.15,phi:1.15,r:9,target:new THREE.Vector3(0,1.5,-.8)};
+  const ground=boxT(20,.1,12,TEX.concrete());ground.position.y=-.05;scene.add(ground);
+  /* 4 charger berjejer */
+  mlm.units=[];mlm.kw=[0,0,0,0];mlm.cars=[false,false,false,false];
+  [-4.5,-1.5,1.5,4.5].forEach((x,i)=>{
+    const u=boxT(.8,1.9,.55,TEX.metal(),{metalness:.3});u.position.set(x,.95,-2.2);scene.add(u);
+    const st=box(.82,.26,.57,0x18b06a);st.position.set(x,1.6,-2.2);scene.add(st);
+    const D=makeDisplay(.5,.3,220,130);
+    D.mesh.position.set(x,1.25,-1.91);scene.add(D.mesh);
+    dispText(D,['IDLE','0 kW'],['#7d8f84','#7d8f84']);
+    mlm.units.push({mesh:u,D});
+    actMesh(u,'CAR'+i);
+    scene.add(label('CP-'+(i+1),.6).translateX(x).translateY(2.25).translateZ(-2.2));});
+  /* gardu trafo */
+  const trf=boxT(1.3,1.3,1.0,TEX.metal(),{metalness:.3});trf.position.set(-7.4,.7,-2.2);scene.add(trf);
+  scene.add(label('TRAFO 197 kVA tersedia',.65).translateX(-7.4).translateY(1.7).translateZ(-2.2));
+  /* layar DLM pusat */
+  const frame=boxT(2.8,1.8,.16,TEX.metal(),{metalness:.4});frame.position.set(0,2.6,-4.2);scene.add(frame);
+  frame.add(label('DLM CONTROLLER',.8).translateY(1.15));
+  mlm.D=makeDisplay(2.5,1.5,460,280);
+  mlm.D.mesh.position.set(0,2.6,-4.1);scene.add(mlm.D.mesh);
+  actMesh(mlm.D.mesh,'BUDGET');
+  function panel(){
+    const g=mlm.D.g,W=460,H=280;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    const tot=mlm.kw.reduce((a,b)=>a+b,0);
+    g.font='700 18px Consolas';g.textAlign='left';
+    g.fillStyle='#5fd4ff';g.fillText('BUDGET: 100 kW'+(mlm.dlm?' · DLM ON':''),16,30);
+    mlm.kw.forEach((k,i)=>{
+      const y=66+i*44;
+      g.fillStyle='#8aa3bd';g.fillText('CP-'+(i+1),16,y);
+      g.fillStyle=k>0?'#46ff8e':'#3a4a5c';
+      g.fillRect(90,y-16,k*5.2,22);
+      g.fillText(k.toFixed(0)+' kW',90+k*5.2+10,y);});
+    g.fillStyle=tot>100?'#ff5a5a':'#ffd23f';g.font='700 19px Consolas';
+    g.fillText('TOTAL: '+tot.toFixed(0)+' kW '+(tot>100?'⚠ LEBIH!':'✓'),16,H-18);
+    mlm.D.tex.needsUpdate=true;}
+  mlm.dlm=false;panel();
+  function alok(){ /* alokasi DLM */
+    const aktif=mlm.cars.map((c,i)=>c?i:-1).filter(i=>i>=0);
+    mlm.kw=[0,0,0,0];
+    if(!aktif.length){panel();return;}
+    if(!mlm.dlm){aktif.forEach(i=>mlm.kw[i]=50);} /* tanpa DLM: rakus */
+    else{const share=Math.min(50,100/aktif.length);
+      aktif.forEach(i=>mlm.kw[i]=share);}
+    aktif.forEach(i=>{dispText(mlm.units[i].D,['CHARGING',mlm.kw[i].toFixed(0)+' kW'],
+      ['#2ee87a','#2ee87a']);});
+    mlm.units.forEach((u,i)=>{if(!mlm.cars[i])dispText(u.D,['IDLE','0 kW'],['#7d8f84','#7d8f84']);});
+    panel();}
+  startSeq([
+   {type:'act',aid:'BUDGET',done:false,targets:()=>[mlm.D.mesh],
+    desc:'Hitung ANGGARAN DAYA dari kapasitas trafo (klik layar DLM).',
+    why:'Trafo menyisakan 197 kVA; dikurangi beban lain & margin keamanan → anggaran charger: 100 kW. Empat charger 50 kW = potensi 200 kW: dua kali anggaran. Tanpa manajemen, jam sibuk = trafo menjerit. Angka 100 inilah konstitusi lokasi ini.',
+    fx(){toast('🧮 Anggaran daya: 100 kW untuk 4 charger (potensi 200).','info',3000);}},
+   {type:'act',aid:'CAR0',done:false,targets:()=>[mlm.units[0].mesh],
+    desc:'Mobil pertama datang — colok di CP-1 (klik charger 1).',
+    why:'Satu mobil sendirian: CP-1 memberi 50 kW PENUH — tidak ada alasan berhemat saat anggaran longgar. Inilah keunggulan dinamis atas statis: kapasitas tidak disandera oleh kemungkinan.',
+    fx(){mlm.cars[0]=true;mlm.dlm=true;alok();
+      toast('🚗 CP-1: 50 kW penuh — anggaran masih lega.','ok',2600);}},
+   {type:'act',aid:'CAR1',done:false,targets:()=>[mlm.units[1].mesh],
+    desc:'Mobil kedua masuk CP-2 (klik charger 2).',
+    why:'Dua mobil × 50 = 100 kW — tepat di garis anggaran. DLM membiarkan keduanya kencang: pemakaian 100% kapasitas tanpa selembar pun terlewat. Statis-12kW akan menyuruh keduanya merangkak — di sinilah uang berbeda.',
+    fx(){mlm.cars[1]=true;alok();
+      toast('🚗🚗 2×50 kW = 100 kW — pas di garis, masih aman.','ok',2600);}},
+   {type:'act',aid:'CAR2',done:false,targets:()=>[mlm.units[2].mesh],
+    desc:'Jam sibuk dimulai: mobil ketiga di CP-3!',
+    why:'Tiga mobil meminta 150 — anggaran tetap 100. DLM menghitung ulang dalam sekejap: 33 kW per mobil, adil rata. Tiap pengisian sedikit melambat; trafo tidak pernah tahu ada yang berubah. Pengorbanan kecil yang tak terasa, menggantikan bencana yang pasti terasa.',
+    fx(){mlm.cars[2]=true;alok();
+      toast('🚗×3 → DLM membagi: 33 kW/mobil — total tetap 100 ✓','ok',2800);}},
+   {type:'act',aid:'CAR3',done:false,targets:()=>[mlm.units[3].mesh],
+    desc:'Uji puncak: mobil KEEMPAT — semua slot penuh!',
+    why:'Empat mobil, 25 kW masing-masing, total persis 100 — trafo bernafas normal di jam tersibuk dalam sejarah lokasi. Tanpa DLM hari ini berakhir dengan trafo trip & empat pelanggan marah; dengan DLM, hanya statistik bagus di laporan bulanan.',
+    fx(){mlm.cars[3]=true;alok();
+      toast('🏁 4 mobil · 25 kW/unit · total 100 — TRAFO AMAN SEMPURNA!','ok',3200);sfx.big();}},
+  ],()=>{say('🎉 <b>Kecerdasan mengalahkan tembaga!</b> Tanpa uprating, tanpa antre setahun: empat charger berbagi 100 kW secara dinamis dan adil. Software yang baik adalah trafo kedua yang tak terlihat.');
+    setTimeout(()=>showWin('loadmgmt'),2200);});
+  say('VOLTA di sini ⚖️ Lokasimu laris — dan trafonya mulai ketar-ketir. Solusi termurah bukan tembaga baru, tapi <b>dynamic load management</b>: ajari charger berbagi. Mulai dari menghitung anggaran daya.');
+  $('#modTitle').textContent='J12·M4 — Manajemen Beban Dinamis';
+  $('#taskHead').textContent='BERBAGI 100 kW DENGAN ADIL';}
+MISSIONS.loadmgmt.build=buildLoadMgmt;
+Object.assign(REAL,{
+ loadmgmt:[
+  'Anggaran daya disepakati tertulis dengan PLN/pengelola gedung — bukan asumsi internal',
+  'Uji failsafe: bila komunikasi DLM putus, charger wajib fallback ke batas aman rendah',
+  'Pantau kurva beban trafo nyata bulan pertama — validasi DLM bekerja di dunia nyata',
+  'Sosialisasikan ke pelanggan (app/stiker): kecepatan bisa turun di jam ramai — ekspektasi dikelola'],
+});

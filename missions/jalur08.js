@@ -278,3 +278,102 @@ Object.assign(REAL,{
   'Harness yang pernah menahan jatuh atau melewati masa pakai pabrikan langsung dimusnahkan',
   'Area di bawah diberi barikade & rambu — kepala di bawah tidak memilih kapan kunci jatuh'],
 });
+
+/* =====================================================================
+   MISI 4 — IZIN KERJA RUANG TERBATAS
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ ruang:{lvl:'JALUR 08 · K3 LISTRIK · MISI 4',icon:'🕳️',title:'Ruang Terbatas: Izin & Gas Test',strict:true,
+  loc:'📍 Power house · Cable basement (ruang kabel bawah tanah)',
+  story:'Kabel feeder di basement harus diperbaiki — dan basement itu adalah RUANG TERBATAS: pintu sempit, ventilasi alami nyaris nol, dan sejarah kelam di industri: mayoritas korban ruang terbatas justru para PENOLONG yang menyusul masuk tanpa prosedur. Udara yang membunuh tidak terlihat; izin kerja dan gas test-lah matanya.',
+  goal:'Pekerjaan basement berjalan aman: izin khusus terbit, gas teruji 3 level, ventilasi paksa berjalan, attendant & tripod siaga.',
+  obj:['Terbitkan izin kerja ruang terbatas + identifikasi bahaya','Gas test 3 level SEBELUM masuk & ventilasi paksa','Attendant + tripod siaga, komunikasi berkala selama bekerja'],
+  learn:['Ruang terbatas membunuh lewat udara: kekurangan O2, gas beracun (H2S, CO), atau gas mudah terbakar — ketiganya tak terlihat','Gas test dilakukan di 3 LEVEL (atas-tengah-bawah): gas ringan berkumpul di atas, yang berat mengendap di bawah','Attendant di luar adalah hukum: ia TIDAK pernah ikut masuk — ia memanggil bantuan & menarik lewat tripod','Statistik kelam: ±60% fatality ruang terbatas adalah calon penyelamat yang masuk tanpa alat — niat baik bukan APD'],
+  next:['Pelajari klasifikasi ruang terbatas & non-permit vs permit-required','Latih penyelamatan vertikal dengan tripod & full body harness','Dalami continuous gas monitoring untuk pekerjaan panjang']},
+});
+let mrg={};
+function buildRuang(){
+  freshScene(0x8a9aa8,0x10161e);
+  cam={theta:.1,phi:1.1,r:8,target:new THREE.Vector3(0,1.0,-.5)};
+  const floor=boxT(16,.1,11,TEX.concrete());floor.position.y=-.05;scene.add(floor);
+  /* lubang manhole + tangga */
+  const rim=new THREE.Mesh(new THREE.TorusGeometry(.75,.1,10,28),
+    new THREE.MeshStandardMaterial({color:0xd8b020,roughness:.5}));
+  rim.rotation.x=Math.PI/2;rim.position.set(0,.12,-.6);scene.add(rim);
+  const hole=cyl(.7,.7,.05,0x05080c);hole.position.set(0,.05,-.6);scene.add(hole);
+  scene.add(label('MANHOLE — CABLE BASEMENT',.7,'#ffd23f').translateY(.9).translateZ(-.6));
+  /* papan izin */
+  mrg.permit=box(.55,.7,.05,0xe8e4d8);mrg.permit.position.set(-3.6,1.5,-2.6);scene.add(mrg.permit);
+  actMesh(mrg.permit,'IZIN');
+  const ptiang=cyl(.03,.03,1.5,0x666666);ptiang.position.set(-3.6,.75,-2.6);scene.add(ptiang);
+  scene.add(label('IZIN RUANG TERBATAS',.6,'#5fd4ff').translateX(-3.6).translateY(2.05).translateZ(-2.6));
+  /* gas detector dgn probe panjang */
+  mrg.gas=box(.2,.3,.1,0xd8b020);mrg.gas.position.set(-1.8,.9,.6);scene.add(mrg.gas);
+  actMesh(mrg.gas,'GAS');
+  scene.add(label('GAS DETECTOR + PROBE',.55,'#5fd4ff').translateX(-1.8).translateY(1.3).translateZ(.6));
+  /* blower ventilasi + ducting */
+  mrg.blow=boxT(.8,.7,.6,TEX.metal(),{metalness:.35});mrg.blow.position.set(1.8,.4,.8);scene.add(mrg.blow);
+  actMesh(mrg.blow,'VENT');
+  const duct=cyl(.16,.16,1.8,0xd8d040,14);duct.rotation.z=.9;
+  duct.position.set(.9,.45,.2);scene.add(duct);
+  scene.add(label('BLOWER + DUCTING',.55,'#5fd4ff').translateX(1.8).translateY(1.0).translateZ(.8));
+  /* tripod di atas manhole */
+  mrg.tripod=new THREE.Group();
+  [[-.55,.4],[.55,.4],[0,-.62]].forEach(o=>{
+    const kaki=cyl(.035,.035,2.2,0xcc8830);
+    kaki.position.set(o[0]/2,1.05,-.6+o[1]/2);kaki.rotation.z=o[0]*.4;kaki.rotation.x=-o[1]*.4;
+    mrg.tripod.add(kaki);});
+  const winch=box(.2,.16,.14,0x444b55);winch.position.set(0,2.1,-.6);mrg.tripod.add(winch);
+  mrg.tripod.visible=false;scene.add(mrg.tripod);
+  mrg.tripodBtn=box(.4,.3,.3,0xcc8830);mrg.tripodBtn.position.set(3.6,.3,-.6);scene.add(mrg.tripodBtn);
+  actMesh(mrg.tripodBtn,'TRIPOD');
+  scene.add(label('TRIPOD (terlipat)',.55,'#5fd4ff').translateX(3.6).translateY(.8).translateZ(-.6));
+  /* attendant (figur) + radio */
+  mrg.att=new THREE.Group();
+  const badan=cyl(.22,.28,.9,0xd87a20);badan.position.y=.75;mrg.att.add(badan);
+  const kepala=new THREE.Mesh(new THREE.SphereGeometry(.16,14,12),
+    new THREE.MeshStandardMaterial({color:0xd8b090}));kepala.position.y=1.4;mrg.att.add(kepala);
+  const helm=new THREE.Mesh(new THREE.SphereGeometry(.18,14,10,0,Math.PI*2,0,Math.PI/2),
+    new THREE.MeshStandardMaterial({color:0xffd23f}));helm.position.y=1.46;mrg.att.add(helm);
+  mrg.att.position.set(-1.4,-2,-.2);scene.add(mrg.att); /* tersembunyi dulu */
+  mrg.attBtn=box(.16,.3,.1,0x141a20,{emissive:0x06303d,emissiveIntensity:.5});
+  mrg.attBtn.position.set(5.0,.9,.4);scene.add(mrg.attBtn);
+  actMesh(mrg.attBtn,'ATT');
+  scene.add(label('RADIO ATTENDANT',.55,'#5fd4ff').translateX(5.0).translateY(1.3).translateZ(.4));
+  startSeq([
+   {type:'act',aid:'IZIN',done:false,targets:()=>[mrg.permit],
+    desc:'Terbitkan IZIN KERJA ruang terbatas + identifikasi bahaya.',
+    why:'Izin khusus ini berbeda dari izin biasa: ia mensyaratkan gas test, ventilasi, attendant, alat penyelamat, dan jalur komunikasi — SEMUA tercentang sebelum satu kaki pun turun. Basement kabel menyimpan dua hantu: O2 termakan korosi & gas dari kabel terbakar.',
+    fx(){toast('📋 Izin terbit: 7 syarat wajib — belum satu pun boleh dilewati.','ok',2800);}},
+   {type:'act',aid:'GAS',done:false,targets:()=>[mrg.gas],
+    desc:'GAS TEST dari LUAR: ukur 3 level lewat probe (klik detector).',
+    why:'Probe turun tanpa manusia: atas O2 20,9% ✓ · tengah 19,2% ⚠ · bawah 17,8% ✗ (minimum aman 19,5%). Dugaan benar: oksigen di dasar termakan oksidasi. Tanpa probe ini, korban pertama tumbang dalam dua tarikan napas — tanpa bau, tanpa peringatan.',
+    fx(){toast('🧪 O2 dasar 17,8% — BELUM AMAN. Ventilasi wajib!','bad',3000);}},
+   {type:'act',aid:'VENT',done:false,targets:()=>[mrg.blow],
+    desc:'Jalankan VENTILASI PAKSA: blower + ducting sampai dasar.',
+    why:'Udara segar dipompa ke titik TERDALAM — mendorong udara mati keluar lewat manhole. 20 menit kemudian tes ulang: 20,8% ✓ merata tiga level. Ventilasi terus berjalan selama pekerjaan: ruang yang sudah aman bisa memburuk lagi diam-diam.',
+    fx(){beep(140,1.0,'sawtooth',.06);
+      toast('🌬️ Purging 20 menit → tes ulang: O2 20,8% ✓ 3 level.','ok',3000);}},
+   {type:'act',aid:'TRIPOD',done:false,targets:()=>[mrg.tripodBtn],
+    desc:'Dirikan TRIPOD + winch di atas manhole (klik tripod).',
+    why:'Pekerja masuk memakai harness yang TERHUBUNG ke winch tripod sejak sebelum turun. Bila ia tumbang di bawah, attendant memutar winch dari ATAS — penyelamatan tanpa seorang pun ikut masuk. Alat ini mengubah statistik 60% itu menjadi nol.',
+    fx(){mrg.tripod.visible=true;mrg.tripodBtn.visible=false;
+      toast('🔺 Tripod berdiri — jalur penyelamatan vertikal siap.','ok',2600);}},
+   {type:'act',aid:'ATT',done:false,targets:()=>[mrg.attBtn],
+    desc:'Tugaskan ATTENDANT & mulai pekerjaan dengan komunikasi berkala.',
+    why:'Attendant berdiri di manhole dengan satu sumpah: TIDAK masuk, apa pun yang terjadi — tugasnya menghitung kepala, memanggil bantuan, memutar winch. Komunikasi tiap 5 menit; dua kali tak menjawab = penarikan. Pekerjaan kabel dimulai... dan selesai tanpa cerita seram.',
+    fx(){mrg.att.position.set(-1.4,0,-.2);
+      toast('🦺 Attendant siaga — pekerja turun, kabel diperbaiki AMAN.','ok',3200);sfx.big();}},
+  ],()=>{say('🎉 <b>Ruang terbatas ditaklukkan dengan prosedur, bukan keberanian.</b> Gas diuji, udara dipaksa segar, tripod & attendant berjaga. Pulang lengkap — satu-satunya statistik yang kita rayakan.');
+    setTimeout(()=>showWin('ruang'),2200);});
+  say('VOLTA di sini 🕳️ Basement kabel menanti — dan ia <b>ruang terbatas</b>: pembunuh paling senyap di industri. Hafalkan urutannya: izin, gas test 3 level, ventilasi, tripod, attendant. Udara tak terlihat; prosedurlah matamu.');
+  $('#modTitle').textContent='J08·M4 — Ruang Terbatas & Gas Test';
+  $('#taskHead').textContent='UJI UDARA SEBELUM PERCAYA';}
+MISSIONS.ruang.build=buildRuang;
+Object.assign(REAL,{
+ ruang:[
+  'Gas detector dikalibrasi & bump test sebelum tiap pemakaian — sensor mati = kepercayaan palsu',
+  'Pekerja & attendant wajib pelatihan ruang terbatas tersertifikasi, termasuk drill penyelamatan',
+  'Monitoring gas KONTINU selama bekerja (bukan hanya sebelum masuk) untuk pekerjaan > 30 menit',
+  'Isolasi energi ke ruang (kabel, pipa) dengan LOTO sebelum masuk — ruang terbatas + energi = ganda bahayanya'],
+});

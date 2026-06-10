@@ -321,3 +321,103 @@ Object.assign(REAL,{
   'Transfer banyak bay dilakukan satu per satu dengan log per langkah — tidak pernah borongan',
   'Pahami batas arus kopel: total beban yang dipindah tak boleh melampaui rating bus coupler'],
 });
+
+/* =====================================================================
+   MISI 4 — PROTEKSI DISTANCE RELAY
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ distance:{lvl:'JALUR 04 · TRANSMISI · MISI 4',icon:'🛡️',title:'Proteksi Distance Relay: Analisis Trip',strict:false,
+  loc:'📍 GI 150 kV Kosambi · Pagi setelah badai petir',
+  story:'Semalam penghantar Sukamandi trip lalu reclose sukses — sistem hanya berkedip. Pagi ini tugasmu khas engineer proteksi: MEMBACA ulang kejadian itu dari rekaman relay. Distance relay menyimpan cerita lengkap: di kilometer berapa petir menyambar, zona mana yang bekerja, dan berapa milidetik keputusan diambil.',
+  goal:'Rekaman gangguan terbaca tuntas: lokasi gangguan dihitung dari impedansi, kerja zona diverifikasi benar, dan laporan analisis terbit.',
+  obj:['Baca rekaman DFR & besaran gangguan','Pahami zona proteksi & verifikasi kerja relay','Hitung lokasi gangguan & terbitkan laporan'],
+  learn:['Distance relay mengukur IMPEDANSI (V/I) ke titik gangguan — impedansi sebanding jarak, itulah nama "distance"','Zona 1: ±80% panjang saluran, trip SEKETIKA; Zona 2: sampai ~120%, tunda 0,4s — perlambatan yang disengaja demi selektivitas','Gangguan petir bersifat sementara: reclose sukses = isolator sehat kembali setelah busur padam','Fault locator: persen impedansi × panjang saluran = kilometer tiang — regu patroli berangkat ke titik, bukan menyusuri 40 km'],
+  next:['Pelajari karakteristik mho/quadrilateral pada bidang R-X','Dalami teleproteksi (PUTT/POTT) yang mempercepat zona 2','Analisis DFR multi-terminal untuk gangguan kompleks']},
+});
+let mdz={};
+function buildDistance(){
+  freshScene(0x7f9cc0,0x0d1726);
+  cam={theta:0,phi:1.18,r:8,target:new THREE.Vector3(0,1.9,-1)};
+  const floor=boxT(16,.1,10,TEX.concrete());floor.position.y=-.05;scene.add(floor);
+  const wall=boxT(14,4.4,.2,TEX.metal(),{metalness:.25});wall.position.set(0,2.2,-3.2);scene.add(wall);
+  /* panel relay */
+  const panel=boxT(2.2,2.6,.3,TEX.metal(),{metalness:.4});panel.position.set(-4.2,1.6,-2.9);scene.add(panel);
+  panel.add(label('RELAY DISTANCE 21',.75).translateY(1.6));
+  mdz.R=makeDisplay(1.6,1.0,360,220);
+  mdz.R.mesh.position.set(-4.2,1.9,-2.73);scene.add(mdz.R.mesh);
+  dispText(mdz.R,['TRIP 02:14:31','Z1 · reclose OK'],['#ff5a5a','#46ff8e']);
+  actMesh(mdz.R.mesh,'RELAY');
+  /* layar DFR besar */
+  const frame=boxT(4.6,2.4,.16,TEX.metal(),{metalness:.4});frame.position.set(.6,2.3,-3.1);scene.add(frame);
+  frame.add(label('DFR — REKAMAN GANGGUAN',.85).translateY(1.5));
+  mdz.D=makeDisplay(4.3,2.1,620,320);
+  mdz.D.mesh.position.set(.6,2.3,-3.0);scene.add(mdz.D.mesh);
+  actMesh(mdz.D.mesh,'DFR');
+  function dfr(mode){
+    const g=mdz.D.g,W=620,H=320;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    /* gelombang arus */
+    g.strokeStyle='#5fd4ff';g.lineWidth=2.5;g.beginPath();
+    for(let x=0;x<W;x++){
+      let a=28;
+      if(x>220&&x<320)a=95; /* gangguan */
+      if(x>=320)a=4;        /* CB buka */
+      if(x>430)a=30;        /* reclose */
+      g.lineTo(x,160-Math.sin(x*.22)*a);}
+    g.stroke();
+    g.font='600 15px Consolas';g.textAlign='center';
+    g.fillStyle='#ffd23f';g.fillText('▲ gangguan',270,40);
+    g.fillStyle='#ff5a5a';g.fillText('▲ trip 82ms',330,62);
+    g.fillStyle='#46ff8e';g.fillText('▲ reclose OK',470,40);
+    if(mode>=1){g.fillStyle='#eaf2fb';g.font='700 17px Consolas';g.textAlign='left';
+      g.fillText('If = 4,8 kA · V = 61% · Z = 3,1 Ω∠78°',24,290);}
+    if(mode>=2){g.fillStyle='#46ff8e';
+      g.fillText('Z1 (80% = 4,4Ω): 3,1Ω DI DALAM → trip seketika ✓',24,265);}
+    mdz.D.tex.needsUpdate=true;}
+  dfr(0);
+  /* peta saluran + kalkulator + laporan */
+  mdz.M=makeDisplay(2.4,1.0,480,200);
+  mdz.M.mesh.position.set(4.6,2.2,-3.05);scene.add(mdz.M.mesh);
+  dispText(mdz.M,['SALURAN 40 km','Kosambi ─── Sukamandi'],['#5fd4ff','#8aa3bd']);
+  actMesh(mdz.M.mesh,'LOKASI');
+  scene.add(label('FAULT LOCATOR',.6,'#5fd4ff').translateX(4.6).translateY(2.95).translateZ(-3.0));
+  mdz.rep=box(.55,.7,.05,0xe8e4d8);mdz.rep.position.set(4.6,.9,-3.05);scene.add(mdz.rep);
+  actMesh(mdz.rep,'LAPOR');
+  scene.add(label('LAPORAN ANALISIS',.55,'#5fd4ff').translateX(4.6).translateY(1.45).translateZ(-3.0));
+  startSeq([
+   {type:'act',aid:'RELAY',done:false,targets:()=>[mdz.R.mesh],
+    desc:'Baca catatan RELAY: apa yang ia putuskan semalam? (klik relay)',
+    why:'02:14:31 — trip Zona 1, fasa R-tanah, reclose sukses 0,8 detik kemudian. Relay sudah bekerja; tugas engineer adalah memastikan ia bekerja BENAR. Kepercayaan pada proteksi dibangun dari audit seperti ini.',
+    fx(){toast('📟 Trip Z1 · R-N · reclose sukses — mari bedah rekamannya.','info',2800);}},
+   {type:'act',aid:'DFR',done:false,targets:()=>[mdz.D.mesh],
+    desc:'Buka rekaman DFR: baca besaran gangguannya (klik layar).',
+    why:'Gelombang bercerita: arus melonjak 4,8 kA, tegangan terjun ke 61%, lalu senyap 82 ms kemudian — kecepatan yang mustahil bagi manusia, refleks biasa bagi relay. Impedansi terukur: 3,1 Ω∠78°.',
+    fx(){dfr(1);toast('📈 If 4,8kA · Z terukur 3,1Ω∠78° — khas sambaran petir.','ok',3000);}},
+   {type:'act',aid:'ZONA',done:false,targets:()=>[mdz.D.mesh],
+    desc:'Verifikasi kerja ZONA: benarkah Z1 yang seharusnya bekerja?',
+    why:'Setting Z1 = 80% × 5,5 Ω saluran = 4,4 Ω. Terukur 3,1 Ω — jelas di dalam Z1 → trip seketika adalah keputusan BENAR. Andai 5,0 Ω (ujung saluran), Z2-lah yang wajib bekerja dengan tundaan — memberi kesempatan relay seberang bertindak dulu.',
+    fx(){dfr(2);toast('🛡️ 3,1Ω < 4,4Ω (Z1) — relay bekerja TEPAT sesuai filosofi.','ok',3000);}},
+   {type:'act',aid:'LOKASI',done:false,targets:()=>[mdz.M.mesh],
+    desc:'Hitung LOKASI gangguan untuk regu patroli (klik fault locator).',
+    why:'3,1 ÷ 5,5 = 56% × 40 km = kilometer 22,5 — sekitar tower 57-58. Regu inspeksi tak perlu menyusuri 40 km: langsung ke dua tower itu, cari jejak flashover di isolator. Matematika menghemat satu hari kerja.',
+    fx(){dispText(mdz.M,['LOKASI: KM 22,5','tower 57-58 → patroli'],['#46ff8e','#eaf2fb']);
+      toast('📍 KM 22,5 (tower 57-58) — regu berangkat terarah.','ok',3000);}},
+   {type:'act',aid:'LAPOR',done:false,targets:()=>[mdz.rep],
+    desc:'Terbitkan LAPORAN analisis gangguan (klik laporan).',
+    why:'Kronologi, besaran, kerja proteksi, lokasi, rekomendasi (cek isolator tower 57-58 + data petir BMKG). Satu gangguan yang dianalisis tuntas mencegah sepuluh berikutnya — itulah nilai engineer proteksi.',
+    fx(){toast('📋 Laporan terbit — proteksi terverifikasi, patroli terarah.','ok',3000);sfx.big();}},
+  ],()=>{say('🎉 <b>Analisis kelas engineer proteksi!</b> Relay membaca impedansi, kamu membaca relay. Zona benar, lokasi ketemu, laporan terbit — sistem makin bisa dipercaya.');
+    setTimeout(()=>showWin('distance'),2200);});
+  /* layar DFR dipakai 2x */
+  const s1=seq.steps[1],of1=s1.fx;s1.fx=()=>{of1();mdz.D.mesh.userData.aid='ZONA';};
+  say('VOLTA di sini 🛡️ Semalam relay memutus dalam <b>82 milidetik</b> — pagi ini kita periksa pekerjaannya. Distance relay mengukur jarak lewat impedansi; ikuti rekamannya dan temukan di tower mana petir menyambar.');
+  $('#modTitle').textContent='J04·M4 — Proteksi Distance Relay';
+  $('#taskHead').textContent='BACA · VERIFIKASI · TEMUKAN';}
+MISSIONS.distance.build=buildDistance;
+Object.assign(REAL,{
+ distance:[
+  'Analisis gangguan memakai rekaman DUA ujung saluran — single-end locator punya error ±2-5%',
+  'Verifikasi setting relay berkala terhadap data impedansi saluran terbaru (rekonduktor mengubah Z)',
+  'Cocokkan waktu kejadian dengan data lightning detector untuk konfirmasi penyebab',
+  'Temuan patroli (jejak flashover) ditutup dalam laporan yang sama — loop analisis-lapangan harus menutup'],
+});

@@ -281,3 +281,93 @@ Object.assign(REAL,{
   'Stok sampah kering/RDF disiapkan sebelum musim hujan — mitigasi dimulai dari perencanaan bunker',
   'Kalibrasi berkala CEMS oleh pihak terakreditasi; sensor melenceng = keputusan operasi melenceng'],
 });
+
+/* =====================================================================
+   MISI 4 — LINE RDF: SAMPAH JADI BAHAN BAKAR
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ rdf:{lvl:'JALUR 13 · WASTE TO ENERGY · MISI 4',icon:'🧱',title:'Line RDF: Sampah Jadi Bahan Bakar',strict:false,
+  loc:'📍 Fasilitas RDF · Kontrak perdana pabrik semen',
+  story:'PLTSa-mu kini punya saudara: line RDF (refuse derived fuel) — sampah dipilah, dicacah, dikeringkan menjadi bahan bakar padat untuk tanur semen. Pabrik semen membayar per ton, TAPI dengan spesifikasi galak: kalor minimal 18 MJ/kg, kadar air < 15%, klorin < 0,8%. Hari ini batch perdana menentukan kontrak setahun.',
+  goal:'Batch RDF perdana lolos spesifikasi pembeli: pemilahan bersih, cacahan seragam, kering sesuai target, dan uji lab hijau.',
+  obj:['Pilah: singkirkan PVC, logam & inert dari umpan','Cacah ke ukuran seragam & keringkan ke target','Uji lab batch & kirim dengan sertifikat analisis'],
+  learn:['RDF = sampah yang naik kelas jadi komoditas — dan komoditas tunduk pada spesifikasi, bukan belas kasihan','PVC adalah musuh nomor satu: klorinnya merusak tanur semen & membentuk dioksin — pemilahan PVC menentukan nasib kontrak','Kadar air adalah pencuri kalor: tiap persen air menurunkan nilai bakar — pengeringan adalah pabrik nilai tambah','Nilai kalor 18+ MJ/kg ≈ batubara muda: tanur semen mengganti batubara dengan sampahmu, emisi fosil turun dua pihak'],
+  next:['Pelajari co-processing semen: kenapa tanur 1450°C ideal bagi RDF','Dalami neraca bisnis RDF: tipping fee + harga jual vs olah','Eksplorasi SRF kualitas tinggi untuk industri lain']},
+});
+let mrf={};
+function buildRDF(){
+  freshScene(0xa8b8a8,0x101a14);
+  cam={theta:.15,phi:1.18,r:10,target:new THREE.Vector3(0,1.6,-.8)};
+  const ground=boxT(24,.1,13,TEX.concrete());ground.position.y=-.05;scene.add(ground);
+  /* umpan sampah */
+  const pile=new THREE.Mesh(new THREE.ConeGeometry(1.1,1.0,16),
+    new THREE.MeshStandardMaterial({color:0x6a6a52,roughness:.95}));
+  pile.position.set(-7.0,.55,-1.6);scene.add(pile);
+  scene.add(label('UMPAN SAMPAH KOTA',.7).translateX(-7.0).translateY(1.5).translateZ(-1.6));
+  /* stasiun pilah: magnet + manual */
+  mrf.sort=boxT(1.8,1.2,1.0,TEX.metal(),{metalness:.3});mrf.sort.position.set(-4.2,.65,-1.6);scene.add(mrf.sort);
+  actMesh(mrf.sort,'PILAH');
+  const mag=cyl(.3,.3,.5,0x8a3a3a);mag.rotation.z=Math.PI/2;mag.position.set(-4.2,1.7,-1.6);scene.add(mag);
+  scene.add(label('PEMILAHAN (magnet+manual+NIR)',.6,'#5fd4ff').translateX(-4.2).translateY(2.3).translateZ(-1.6));
+  /* shredder */
+  mrf.shred=boxT(1.5,1.4,1.1,TEX.metal(),{metalness:.35});mrf.shred.position.set(-1.4,.75,-1.6);scene.add(mrf.shred);
+  actMesh(mrf.shred,'CACAH');
+  scene.add(label('SHREDDER',.7,'#5fd4ff').translateX(-1.4).translateY(1.75).translateZ(-1.6));
+  /* dryer drum */
+  mrf.dry=cyl(.7,.7,2.6,0x8a6a4a,20,{metalness:.2});mrf.dry.rotation.z=Math.PI/2;
+  mrf.dry.position.set(1.8,.9,-1.6);scene.add(mrf.dry);
+  actMesh(mrf.dry,'KERING');
+  scene.add(label('ROTARY DRYER',.7,'#5fd4ff').translateX(1.8).translateY(1.95).translateZ(-1.6));
+  /* lab + display */
+  mrf.lab=box(.4,.3,.3,0xe8edf2);mrf.lab.position.set(4.4,1.1,-.2);scene.add(mrf.lab);
+  actMesh(mrf.lab,'LAB');
+  const tbl=boxT(1.2,.07,.7,TEX.wood());tbl.position.set(4.4,.95,-.2);scene.add(tbl);
+  const tleg=boxT(.08,.95,.08,TEX.wood());tleg.position.set(4.4,.47,-.2);scene.add(tleg);
+  scene.add(label('LAB UJI BATCH',.6,'#5fd4ff').translateX(4.4).translateY(1.55).translateZ(-.2));
+  mrf.D=makeDisplay(1.8,1.0,400,220);
+  mrf.D.mesh.position.set(4.6,2.4,-2.4);scene.add(mrf.D.mesh);
+  dispText(mrf.D,['SPEC PEMBELI','≥18 MJ · ≤15% air · ≤0,8% Cl'],['#ffd23f','#8aa3bd']);
+  /* truk kirim */
+  const tbody=box(2.2,.9,1.0,0xc8c8c8);tbody.position.set(7.2,.85,-1.4);scene.add(tbody);
+  const tcab=box(.8,.7,.95,0x2a6a3a);tcab.position.set(5.9,.75,-1.4);scene.add(tcab);
+  [[6.4,-.9],[7.8,-.9],[6.4,-1.9],[7.8,-1.9]].forEach(w=>{
+    const wh=cyl(.22,.22,.16,0x14181d);wh.rotation.x=Math.PI/2;
+    wh.position.set(w[0],.28,w[1]);scene.add(wh);});
+  actMesh(tbody,'KIRIM');
+  scene.add(label('TRUK → PABRIK SEMEN',.65).translateX(6.8).translateY(1.7).translateZ(-1.4));
+  startSeq([
+   {type:'act',aid:'PILAH',done:false,targets:()=>[mrf.sort],
+    desc:'Jalankan PEMILAHAN: buang PVC, logam, inert (klik stasiun).',
+    why:'Magnet menarik besi, sensor NIR mengenali PVC dari pantulan inframerahnya, tangan terlatih menyapu sisanya. PVC HARUS keluar di sini: klorin yang lolos hari ini menjadi penalti kontrak bulan depan — dan dioksin di tanur orang lain.',
+    fx(){toast('🧲 Pilah: −6% logam · −2% PVC · −9% inert → umpan bersih.','ok',2800);}},
+   {type:'act',aid:'CACAH',done:false,targets:()=>[mrf.shred],
+    desc:'CACAH ke ukuran seragam <50 mm (klik shredder).',
+    why:'Tanur semen menyukai keseragaman: potongan 30-50 mm terbakar tuntas mengambang di kiln. Bonus fisika: cacahan kecil = luas permukaan besar = pengeringan lebih cepat di tahap berikutnya. Satu mesin, dua kebaikan.',
+    fx(){beep(85,.9,'sawtooth',.08);
+      toast('🔪 Cacahan seragam 40 mm — siap masuk dryer.','ok',2600);}},
+   {type:'act',aid:'KERING',done:false,targets:()=>[mrf.dry],
+    desc:'KERINGKAN di rotary dryer: kejar kadar air <15%.',
+    why:'Masuk 38% air, target <15%. Drum berputar pelan, udara panas (dipanaskan sebagian oleh PLTSa sendiri!) menyapu cacahan. Tiap persen air yang menguap = nilai kalor naik — pengeringan bukan biaya, ia pabrik nilai tambah.',
+    fx(){toast('♨️ Kadar air 38% → 12% — kalor melonjak naik.','ok',2800);}},
+   {type:'act',aid:'LAB',done:false,targets:()=>[mrf.lab],
+    desc:'UJI LAB batch perdana: lolos spec? (klik lab kit)',
+    why:'Bom kalorimeter & analisis: kalor 19,4 MJ/kg (≥18 ✓) · air 12% (≤15 ✓) · klorin 0,5% (≤0,8 ✓). Tiga lampu hijau — angka yang lahir dari pemilahan yang jujur di hulu. Sertifikat analisis dicetak: paspor batch ini.',
+    fx(){dispText(mrf.D,['19,4 MJ · 12% · 0,5%Cl','LOLOS SPEC ✓✓✓'],['#46ff8e','#46ff8e']);
+      toast('🧪 LOLOS semua parameter — sertifikat analisis terbit!','ok',3000);}},
+   {type:'act',aid:'KIRIM',done:false,targets:()=>[tbody],
+    desc:'KIRIM batch perdana ke pabrik semen (klik truk).',
+    why:'24 ton RDF berangkat — di tanur 1450°C sana ia menggantikan batubara. Sampah kota yang dulu jadi gunung kini jadi invoice: tipping fee DAN harga jual, dua arah pendapatan dari benda yang semua orang buang.',
+    fx(){toast('🚛 24 ton terkirim — kontrak setahun AMAN. Sampah = komoditas!','ok',3200);sfx.big();}},
+  ],()=>{say('🎉 <b>Batch perdana lolos!</b> Pilah jujur, cacah seragam, kering disiplin — dan sampah kota resmi naik kelas jadi bahan bakar industri. PLTSa membakar, RDF menjual: dua jurus satu fasilitas.');
+    setTimeout(()=>showWin('rdf'),2200);});
+  say('VOLTA di sini 🧱 Bisnis baru: <b>mengubah sampah jadi bahan bakar bersertifikat</b>. Pembelinya pabrik semen, dan mereka tidak menerima alasan — hanya spesifikasi. Musuh utamamu bernama PVC. Mulai dari pemilahan!');
+  $('#modTitle').textContent='J13·M4 — Line RDF';
+  $('#taskHead').textContent='PILAH · CACAH · KERING · LOLOS';}
+MISSIONS.rdf.build=buildRDF;
+Object.assign(REAL,{
+ rdf:[
+  'Sampling uji per batch mengikuti standar (komposit, bukan sejumput) — pembeli menguji ulang di tanur',
+  'Kontrak memuat formula harga terikat kualitas: bonus kalor tinggi, penalti klorin/air lebih',
+  'Debu line RDF mudah terbakar: housekeeping ketat + deteksi panas di shredder & dryer',
+  'Jaga konsistensi pasokan: tanur semen benci kejutan kualitas — blending umpan adalah kuncinya'],
+});
