@@ -169,3 +169,86 @@ Object.assign(REAL,{
   'Susun MACC (marginal abatement cost curve) agar urutan proyek berbasis Rp/tCO₂e nyata',
   'Tinjau roadmap tiap tahun: faktor emisi grid berubah, teknologi turun harga, target bisa dipercepat'],
 });
+
+/* =====================================================================
+   MISI 3 — MENGHADAPI VERIFIKASI PIHAK KETIGA
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ verif:{lvl:'JALUR 11 · SUSTAINABILITY & CARBON · MISI 3',icon:'🧾',title:'Menghadapi Verifikasi Pihak Ketiga',strict:false,
+  loc:'📍 PT Maju Plastik · Hari verifikasi laporan emisi',
+  story:'Buyer Eropa puas dengan baseline & roadmap-mu — kini syarat terakhir: laporan emisi harus DIVERIFIKASI pihak ketiga independen. Verifikator datang pagi ini dengan satu pekerjaan: meragukan setiap angkamu. Laporan yang bagus tidak takut diragukan; ia justru menyiapkan bukti sebelum diminta.',
+  goal:'Laporan emisi lolos verifikasi dengan opini reasonable assurance — termasuk menghadapi temuan dengan jujur.',
+  obj:['Siapkan paket evidence sebelum verifikator tiba','Dampingi sampling & uji telusur data','Tangani temuan dengan koreksi terbuka, bukan pembelaan'],
+  learn:['Verifikasi menguji JEJAK: setiap angka harus bisa ditelusuri mundur sampai dokumen sumber (faktur, logbook, meter)','Temuan bukan musibah — menyembunyikan temuan itulah musibah; koreksi terbuka justru menaikkan kredibilitas','Faktor emisi harus dari sumber resmi dengan tahun publikasi konsisten di seluruh laporan','Opini reasonable assurance = verifikator yakin secara wajar laporan bebas salah saji material'],
+  next:['Pelajari ISO 14064-3: prinsip & prosedur verifikasi GHG','Siapkan sistem data emisi otomatis (bukan spreadsheet rapuh)','Dalami materialitas: salah saji berapa persen yang mengubah opini']},
+});
+let mvr={};
+function buildVerif(){
+  freshScene(0xb8d0c0,0x121d18);
+  cam={theta:0,phi:1.2,r:6.5,target:new THREE.Vector3(0,1.5,-1)};
+  const Z=room(0x6b5a45,0xd8d2c4);
+  /* meja rapat verifikasi */
+  const desk=boxT(3.6,.08,1.5,TEX.wood());desk.position.set(0,1.0,-.5);scene.add(desk);
+  [[-1.6,-1.1],[1.6,-1.1],[-1.6,0],[1.6,0]].forEach(p=>{
+    const l=boxT(.08,1,.08,TEX.wood());l.position.set(p[0],.5,p[1]+0.45);scene.add(l);});
+  /* binder evidence */
+  mvr.binder=box(.7,.5,.3,0x2a5a8a);mvr.binder.position.set(-1.3,1.28,-.5);scene.add(mvr.binder);
+  actMesh(mvr.binder,'DOK');
+  scene.add(label('BINDER EVIDENCE',.6,'#5fd4ff').translateX(-1.3).translateY(1.7).translateZ(-.5));
+  /* laptop verifikator */
+  const lap=box(.7,.05,.5,0x2b3a4a);lap.position.set(.6,1.08,-.5);scene.add(lap);
+  mvr.S=makeDisplay(.66,.42,330,210);
+  mvr.S.mesh.position.set(.6,1.38,-.72);mvr.S.mesh.rotation.x=-.15;scene.add(mvr.S.mesh);
+  dispText(mvr.S,['SAMPLING','pilih bukti acak…'],['#5fd4ff','#7d8f84']);
+  actMesh(mvr.S.mesh,'SAMPLING');
+  scene.add(label('LAPTOP VERIFIKATOR',.6,'#5fd4ff').translateX(.6).translateY(1.85).translateZ(-.7));
+  /* papan temuan */
+  mvr.papan=makeDisplay(2.4,1.3,480,260);
+  mvr.papan.mesh.position.set(-2.6,2.4,Z+.08);scene.add(mvr.papan.mesh);
+  dispText(mvr.papan,['LEMBAR TEMUAN','—'],['#5fd4ff','#7d8f84']);
+  actMesh(mvr.papan.mesh,'TEMUAN');
+  scene.add(label('LEMBAR TEMUAN VERIFIKASI',.7,'#5fd4ff').translateX(-2.6).translateY(3.25).translateZ(Z+.1));
+  /* dokumen koreksi & sertifikat */
+  mvr.rev=box(.5,.66,.04,0xf0ead8);mvr.rev.position.set(2.2,2.2,Z+.06);scene.add(mvr.rev);
+  actMesh(mvr.rev,'KOREKSI');
+  scene.add(label('REVISI PERHITUNGAN',.55,'#5fd4ff').translateX(2.2).translateY(2.75).translateZ(Z+.1));
+  mvr.cert=box(.6,.45,.04,0xe8d8a0);mvr.cert.position.set(3.6,2.2,Z+.06);scene.add(mvr.cert);
+  actMesh(mvr.cert,'OPINI');
+  scene.add(label('PERNYATAAN VERIFIKASI',.55,'#ffd23f').translateX(3.6).translateY(2.7).translateZ(Z+.1));
+  startSeq([
+   {type:'act',aid:'DOK',done:false,targets:()=>[mvr.binder],
+    desc:'Siapkan paket EVIDENCE sebelum verifikator tiba (klik binder).',
+    why:'Satu binder per scope: faktur solar 12 bulan, rekening listrik PLN, logbook genset, sertifikat kalibrasi meter, dan kertas kerja perhitungan. Verifikasi lancar = 80% persiapan, 20% pertemuan.',
+    fx(){toast('🗂️ Evidence 3 scope tersusun + kertas kerja terindeks.','ok',2800);}},
+   {type:'act',aid:'SAMPLING',done:false,targets:()=>[mvr.S.mesh],
+    desc:'Dampingi UJI TELUSUR: verifikator memilih sampel acak (klik laptop).',
+    why:'"Angka solar Maret — tunjukkan sumbernya." Dari laporan → kertas kerja → rekap bulanan → faktur fisik No. 0312: cocok. Tiga sampel ditelusuri, tiga sampai ke akar. Inilah jejak audit yang sehat.',
+    fx(){dispText(mvr.S,['3 SAMPEL ✓','jejak utuh sampai faktur'],['#46ff8e','#eaf2fb']);
+      toast('🔍 Uji telusur LOLOS — laporan→faktur tersambung utuh.','ok',2800);}},
+   {type:'act',aid:'TEMUAN',done:false,targets:()=>[mvr.papan.mesh],
+    desc:'Verifikator menemukan sesuatu — baca LEMBAR TEMUAN (klik papan).',
+    why:'Temuan: faktor emisi grid memakai publikasi 2023, padahal laporan tahun 2026 (tersedia faktor 2025). Selisihnya menaikkan Scope 2 sekitar 3%. Momen ini menentukan: membela diri, atau memperbaiki?',
+    fx(){dispText(mvr.papan,['TEMUAN #1','FE grid 2023 → harusnya 2025'],['#ffd23f','#eaf2fb']);
+      toast('⚠️ Temuan: faktor emisi kedaluwarsa — Scope 2 kurang saji ~3%.','bad',3000);}},
+   {type:'act',aid:'KOREKSI',done:false,targets:()=>[mvr.rev],
+    desc:'Tanggapi dengan benar: KOREKSI terbuka (klik revisi).',
+    why:'Tanpa drama: faktor diganti publikasi resmi terbaru, Scope 2 naik 1.001→1.031 tCO2e, seluruh dokumen turunan diperbarui, akar masalah dicatat (tak ada prosedur pembaruan FE tahunan — sekarang ada). Kredibilitas justru NAIK.',
+    fx(){dispText(mvr.papan,['TEMUAN #1 ✓','dikoreksi & prosedur dibuat'],['#46ff8e','#46ff8e']);
+      toast('✏️ Dikoreksi: 1.270 tCO2e total + prosedur update FE tahunan.','ok',3000);}},
+   {type:'act',aid:'OPINI',done:false,targets:()=>[mvr.cert],
+    desc:'Terima PERNYATAAN VERIFIKASI (klik sertifikat).',
+    why:'"Reasonable assurance — laporan bebas salah saji material." Tanda tangan verifikator independen inilah yang dibaca buyer Eropa: bukan janji perusahaan tentang dirinya, tapi kesaksian pihak yang dibayar untuk meragukan.',
+    fx(){toast('🏅 OPINI TERBIT: reasonable assurance — kontrak ekspor AMAN!','ok',3200);sfx.big();}},
+  ],()=>{say('🎉 <b>Lolos verifikasi dengan kepala tegak!</b> Evidence siap, jejak utuh, dan temuan dijawab dengan koreksi — bukan pembelaan. Laporan karbon yang kredibel dibangun dari keberanian dikoreksi.');
+    setTimeout(()=>showWin('verif'),2200);});
+  say('VOLTA di sini 🧾 Hari yang menegangkan: <b>verifikator datang untuk meragukan angkamu</b>. Dan justru itu bagus — laporan yang teruji keraguan adalah laporan yang dipercaya dunia. Siapkan binder!');
+  $('#modTitle').textContent='J11·M3 — Verifikasi Pihak Ketiga';
+  $('#taskHead').textContent='BUKTI · JEJAK · KOREKSI TERBUKA';}
+MISSIONS.verif.build=buildVerif;
+Object.assign(REAL,{
+ verif:[
+  'Simpan dokumen sumber minimal sesuai periode retensi standar pelaporan (umumnya 5+ tahun)',
+  'Buat prosedur tertulis pembaruan faktor emisi tahunan dengan penanggung jawab jelas',
+  'Jangan tanda tangani kontrak verifikasi dengan pihak yang juga konsultan penyusun laporanmu (konflik kepentingan)',
+  'Temuan & koreksi didokumentasikan dalam log — verifikasi tahun depan dimulai dari log ini'],
+});

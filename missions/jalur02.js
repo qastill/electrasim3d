@@ -227,3 +227,96 @@ Object.assign(REAL,{
   'Kencangkan terminal dengan torsi sesuai tabel pabrikan, lalu jadwalkan re-torque berkala',
   'Catat trip di CMMS: tanggal, akar masalah, perbaikan — trip berulang pola = masalah sistemik'],
 });
+
+/* =====================================================================
+   MISI 3 — KOMISIONING VFD
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ vfd:{lvl:'JALUR 02 · INDUSTRI & MANUFAKTUR · MISI 3',icon:'🎛️',title:'Komisioning VFD (Variable Frequency Drive)',strict:false,
+  loc:'📍 Pabrik tekstil · Upgrade blower line 2 ke VFD',
+  story:'Setelah dua kali drama (star-delta lalu trip), manajemen akhirnya setuju: blower line 2 di-upgrade ke VFD. Kecepatan bisa diatur sesuai kebutuhan proses, arus start nyaris tanpa lonjakan, dan hemat energi besar — TAPI hanya bila parameternya diisi benar. VFD dengan parameter asal = motor panas diam-diam.',
+  goal:'VFD terkomisioning lengkap: parameter motor sesuai nameplate, ramp aman, autotune lolos, dan motor berputar halus di kecepatan proses.',
+  obj:['Salin data nameplate motor ke parameter VFD','Set ramp time & jalankan autotune','Uji jalan pada frekuensi proses & verifikasi arus'],
+  learn:['VFD mengatur kecepatan lewat frekuensi: 50 Hz = nominal, 35 Hz = 70% kecepatan','Parameter motor (arus, cosφ, rpm) WAJIB sesuai nameplate — proteksi elektronik VFD bergantung padanya','Autotune mengukur karakter motor sebenarnya: resistansi & induktansi lilitan','Hukum afinitas fan/pompa: turun 30% kecepatan ≈ hemat 65% daya — di sinilah VFD membayar dirinya'],
+  next:['Pelajari kontrol PID: VFD mengejar setpoint tekanan/aliran otomatis','Dalami harmonisa VFD & kapan butuh line reactor/filter','Hubungkan VFD ke PLC lewat fieldbus (Modbus/Profinet)']},
+});
+let mvf={};
+function buildVFD(){
+  freshScene(0xb0bfcc,0x131c26);
+  cam={theta:-.1,phi:1.2,r:6.5,target:new THREE.Vector3(.3,1.7,-1)};
+  const Z=room(0x55606a,0xb9bfc6);
+  /* panel + VFD */
+  const panel=boxT(2.4,2.2,.25,TEX.metal(),{metalness:.35});panel.position.set(-1.6,1.9,Z-.04);scene.add(panel);
+  panel.add(label('PANEL VFD BLOWER L2',.85).translateY(1.4));
+  const vfd=box(.7,.95,.22,0x2b3a4a);vfd.position.set(-2.1,2.2,Z+.12);scene.add(vfd);
+  mvf.D=makeDisplay(.55,.34,240,150);
+  mvf.D.mesh.position.set(-2.1,2.42,Z+.26);scene.add(mvf.D.mesh);
+  dispText(mvf.D,['P-MENU','param kosong'],['#5fd4ff','#7d8f84']);
+  actMesh(mvf.D.mesh,'PARAM');
+  scene.add(label('VFD 7,5 kW',.6,'#5fd4ff').translateX(-2.1).translateY(2.9).translateZ(Z+.1));
+  /* tombol autotune & run */
+  mvf.tune=box(.3,.16,.1,0xcc8830);mvf.tune.position.set(-2.1,1.85,Z+.26);scene.add(mvf.tune);
+  actMesh(mvf.tune,'TUNE');
+  scene.add(label('AUTOTUNE',.42).translateX(-2.1).translateY(1.66).translateZ(Z+.2));
+  mvf.knob=cyl(.09,.09,.07,0x2ec06a);mvf.knob.rotation.x=Math.PI/2;
+  mvf.knob.position.set(-1.2,1.85,Z+.22);scene.add(mvf.knob);
+  actMesh(mvf.knob,'RUN');
+  scene.add(label('RUN/SPEED',.45,'#7af0a8').translateX(-1.2).translateY(1.62).translateZ(Z+.18));
+  /* layar ramp */
+  mvf.R=makeDisplay(.9,.45,260,130);
+  mvf.R.mesh.position.set(-1.2,2.45,Z+.14);scene.add(mvf.R.mesh);
+  dispText(mvf.R,['RAMP','—'],['#5fd4ff','#7d8f84']);
+  actMesh(mvf.R.mesh,'RAMP');
+  /* motor + nameplate */
+  const mb=cyl(.34,.34,.95,0x3a6ea8);mb.rotation.z=Math.PI/2;mb.position.set(1.8,.6,-1.2);scene.add(mb);
+  mvf.fan=cyl(.3,.3,.06,0xd8e0e8,18,{metalness:.5});
+  mvf.fan.rotation.z=Math.PI/2;mvf.fan.position.set(2.38,.6,-1.2);scene.add(mvf.fan);
+  const bl=box(.5,.05,.04,0x9fb0c0);mvf.fan.add(bl);
+  const bl2=bl.clone();bl2.rotation.x=Math.PI/2;mvf.fan.add(bl2);
+  mvf.plate=box(.3,.2,.03,0xd8dee4,{metalness:.6});mvf.plate.position.set(1.8,1.0,-.72);scene.add(mvf.plate);
+  actMesh(mvf.plate,'PLATE');
+  scene.add(label('NAMEPLATE',.5,'#5fd4ff').translateX(1.8).translateY(1.25).translateZ(-.7));
+  scene.add(label('MOTOR BLOWER 5,5 kW',.7).translateX(1.8).translateY(1.6).translateZ(-1.2));
+  mvf.hz=0;mvf.run=false;
+  moduleTick=(dt)=>{if(mvf.run&&mvf.hz<35){mvf.hz=Math.min(35,mvf.hz+dt*3.5);
+    dispText(mvf.D,[mvf.hz.toFixed(1)+' Hz',(8.1*mvf.hz/50).toFixed(1)+' A · RUN'],
+      ['#46ff8e','#46ff8e']);}
+    if(mvf.run)mvf.fan.rotation.x+=dt*mvf.hz*.35;};
+  startSeq([
+   {type:'act',aid:'PLATE',done:false,targets:()=>[mvf.plate],
+    desc:'Mulai dari sumbernya: baca NAMEPLATE motor (klik pelat).',
+    why:'Nameplate adalah akta lahir motor: 5,5 kW · Δ380 V · 11,5 A · cosφ 0,84 · 1450 rpm. Semua angka proteksi VFD berasal dari sini — bukan dari ingatan atau perkiraan.',
+    fx(){toast('🏷️ 5,5kW · 380V · 11,5A · cosφ 0,84 · 1450 rpm — dicatat.','ok',2800);}},
+   {type:'act',aid:'PARAM',done:false,targets:()=>[mvf.D.mesh],
+    desc:'Masukkan parameter motor ke VFD (klik layar VFD).',
+    why:'Grup parameter motor diisi persis nameplate. Dari sinilah VFD menghitung proteksi termal elektronik — TOR digital yang melindungi motor di segala kecepatan, termasuk kecepatan rendah saat kipas motor sendiri lemah.',
+    fx(){dispText(mvf.D,['PARAM ✓','5,5kW 11,5A 1450'],['#46ff8e','#eaf2fb']);
+      toast('⚙️ P102=5,5kW · P103=11,5A · P105=1450rpm ✓','ok',2600);}},
+   {type:'act',aid:'RAMP',done:false,targets:()=>[mvf.R.mesh],
+    desc:'Set RAMP: akselerasi 10 s, deselerasi 15 s (klik layar ramp).',
+    why:'Ramp menggantikan hentakan DOL dengan tanjakan landai: arus start nyaris rata. Deselerasi lebih panjang dari akselerasi agar energi balik fan tidak membuat DC bus VFD overvoltage.',
+    fx(){dispText(mvf.R,['ACC 10s','DEC 15s ✓'],['#46ff8e','#46ff8e']);
+      toast('📈 Ramp diset — tanjakan landai, tanpa hentakan.','ok',2400);}},
+   {type:'act',aid:'TUNE',done:false,targets:()=>[mvf.tune],
+    desc:'Jalankan AUTOTUNE (klik tombol oranye) — motor diam, VFD belajar.',
+    why:'VFD menyuntik sinyal uji & mengukur resistansi serta induktansi lilitan motor SESUNGGUHNYA — bukan teori. Hasilnya: kontrol vektor yang presisi & torsi penuh bahkan di kecepatan rendah.',
+    fx(){beep(300,.5,'sine',.06);beep(340,.5,'sine',.06,.5);
+      toast('🧠 Autotune selesai: Rs=0,9Ω · Lm OK — model motor tersimpan.','ok',2800);}},
+   {type:'act',aid:'RUN',done:false,targets:()=>[mvf.knob],
+    desc:'RUN! Putar ke frekuensi proses 35 Hz (klik kenop hijau).',
+    why:'35 Hz = 70% kecepatan — kebutuhan aliran proses saat ini. Hukum afinitas: daya ikut pangkat tiga kecepatan, jadi 70% speed ≈ 34% daya. Blower yang sama, tagihan listrik sepertiga.',
+    fx(){mvf.run=true;beep(120,.8,'sine',.07);
+      toast('🌀 Motor mengalun mulus ke 35 Hz · 5,7 A — hemat 66%!','ok',3000);sfx.big();}},
+  ],()=>{say('🎉 <b>VFD beroperasi!</b> Dari DOL yang menghentak, star-delta yang berkompromi, kini kontrol penuh: kecepatan presisi, start selembut sutra, dan penghematan yang terasa di tagihan.');
+    setTimeout(()=>showWin('vfd'),2200);});
+  say('VOLTA di sini 🎛️ Evolusi terakhir starter motor: <b>VFD</b>. Satu aturan emasnya: <b>parameter = nameplate</b>, bukan perkiraan. Mulai dari pelat kecil di badan motor itu.');
+  $('#modTitle').textContent='J02·M3 — Komisioning VFD';
+  $('#taskHead').textContent='NAMEPLATE → PARAM → TUNE → RUN';}
+MISSIONS.vfd.build=buildVFD;
+Object.assign(REAL,{
+ vfd:[
+  'Jarak kabel VFD-motor panjang butuh output reactor/dV-dt filter — tegangan pantul merusak isolasi motor',
+  'Motor lama yang dipasangi VFD perlu dicek kelas isolasinya (inverter-duty) & bearing (arus bearing)',
+  'Autotune dinamis (motor berputar) lebih akurat — pastikan beban dilepas & area aman',
+  'Simpan backup parameter VFD eksternal; unit pengganti tinggal restore, bukan setting ulang dari nol'],
+});

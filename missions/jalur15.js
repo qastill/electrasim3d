@@ -206,3 +206,113 @@ Object.assign(REAL,{
   'Pasang trending otomatis suhu modul di EMS dengan alarm bertingkat (warning/critical)',
   'Post-mortem tiap alarm termal: data BMS dianalisis untuk akar penyebab, bukan sekadar di-reset'],
 });
+
+/* =====================================================================
+   MISI 3 — CAPACITY TEST & RENCANA AUGMENTASI
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ soh:{lvl:'JALUR 15 · BATERAI & BESS · MISI 3',icon:'📊',title:'Capacity Test & Rencana Augmentasi',strict:false,
+  loc:'📍 BESS container 1 MWh · Tes tahunan, tahun ke-3',
+  story:'Kontrak peak shaving menjamin 800 kWh usable setiap sore — selamanya? Tidak. Baterai menua seperti kita semua. Tes kapasitas tahunan hari ini menjawab dua pertanyaan yang ditunggu pemilik: berapa sisa kapasitas SEBENARNYA, dan kapan harus menambah rack baru sebelum kontrak terlanggar.',
+  goal:'SoH terukur lewat tes kapasitas penuh, tren degradasi terproyeksikan, dan rencana augmentasi tersusun sebelum kontrak terancam.',
+  obj:['Tinjau baseline & siapkan kondisi tes standar','Jalankan full charge-discharge test terukur','Hitung SoH, proyeksikan tren, susun rencana augmentasi'],
+  learn:['SoH (state of health) = kapasitas terukur hari ini ÷ kapasitas pelat nama — KPI utama aset baterai','Tes kapasitas butuh kondisi standar (arus, suhu, rentang SoC) agar tahun ke tahun bisa dibandingkan apel-ke-apel','Degradasi normal LFP ±2-3%/tahun; tikungan tajam di kurva = ada masalah (suhu? siklus berlebih?)','Augmentasi direncanakan SEBELUM kontrak terlanggar — pengadaan rack butuh berbulan-bulan'],
+  next:['Pelajari degradasi kalender vs siklus — dua jam biologis baterai','Dalami augmentasi: rack baru & lama yang SoH-nya beda harus dikelola PCS terpisah','Eksplorasi second-life battery: kemana rack pensiun pergi']},
+});
+let msh={};
+function buildSoH(){
+  freshScene(0x9fb0c4,0x101822);
+  cam={theta:.1,phi:1.18,r:8,target:new THREE.Vector3(0,1.6,-1)};
+  const ground=boxT(18,.1,11,TEX.concrete());ground.position.y=-.05;scene.add(ground);
+  const cont=boxT(3.6,2.4,1.6,TEX.metal(),{metalness:.3});cont.position.set(-2.8,1.2,-2.0);scene.add(cont);
+  cont.add(label('BESS 1 MWh · TAHUN KE-3',.95).translateY(1.5));
+  /* layar EMS riwayat */
+  msh.E=makeDisplay(1.5,.9,340,210);
+  msh.E.mesh.position.set(-2.8,1.4,-1.18);scene.add(msh.E.mesh);
+  dispText(msh.E,['RIWAYAT','baseline 1.000 kWh'],['#5fd4ff','#7d8f84']);
+  actMesh(msh.E.mesh,'BASE');
+  scene.add(label('EMS — RIWAYAT ASET',.6,'#5fd4ff').translateX(-2.8).translateY(2.05).translateZ(-1.1));
+  /* PCS untuk tes */
+  msh.pcs=boxT(1.2,1.7,.8,TEX.metal(),{metalness:.3});msh.pcs.position.set(.4,.9,-2.0);scene.add(msh.pcs);
+  msh.pcs.add(label('PCS — MODE TES',.7).translateY(1.15));
+  actMesh(msh.pcs,'TEST');
+  msh.P=makeDisplay(.9,.5,260,140);
+  msh.P.mesh.position.set(.4,1.5,-1.58);scene.add(msh.P.mesh);
+  dispText(msh.P,['STANDBY','SoC 100% · 25°C'],['#7d8f84','#8aa3bd']);
+  /* layar hasil + kurva tren */
+  const frame=boxT(2.8,1.8,.16,TEX.metal(),{metalness:.4});frame.position.set(3.8,2.0,-2.9);scene.add(frame);
+  frame.add(label('ANALISIS KAPASITAS',.8).translateY(1.15));
+  msh.D=makeDisplay(2.5,1.5,460,290);
+  msh.D.mesh.position.set(3.8,2.0,-2.8);scene.add(msh.D.mesh);
+  actMesh(msh.D.mesh,'HASIL');
+  function kurva(mode){
+    const g=msh.D.g,W=460,H=290;
+    g.fillStyle='#0c141d';g.fillRect(0,0,W,H);
+    g.strokeStyle='#2a3a4c';g.lineWidth=2;
+    g.beginPath();g.moveTo(56,16);g.lineTo(56,H-40);g.lineTo(W-14,H-40);g.stroke();
+    g.font='600 14px Consolas';g.fillStyle='#8aa3bd';g.textAlign='left';
+    g.fillText('100%',8,30);g.fillText('80%',16,H-90);
+    /* garis kontrak 80% */
+    g.strokeStyle='#7a2a2a';g.setLineDash([7,5]);
+    g.beginPath();g.moveTo(56,H-100);g.lineTo(W-14,H-100);g.stroke();g.setLineDash([]);
+    g.fillStyle='#ff8d8d';g.fillText('batas kontrak 800 kWh',60,H-106);
+    const pts=[[0,100],[1,97.4],[2,94.3],[3,91.2]];
+    g.strokeStyle='#46ff8e';g.lineWidth=3;g.beginPath();
+    pts.forEach((p,i)=>{const x=56+p[0]/7*(W-90),y=H-40-(p[1]-78)/22*(H-70);
+      i===0?g.moveTo(x,y):g.lineTo(x,y);
+      g.fillStyle='#46ff8e';g.fillRect(x-3,y-3,6,6);});
+    g.stroke();
+    if(mode>=1){g.strokeStyle='#ffd23f';g.setLineDash([6,6]);g.beginPath();
+      for(let t=3;t<=7;t+=.5){const v=91.2-(t-3)*2.9;
+        const x=56+t/7*(W-90),y=H-40-(v-78)/22*(H-70);
+        t===3?g.moveTo(x,y):g.lineTo(x,y);}
+      g.stroke();g.setLineDash([]);
+      g.fillStyle='#ffd23f';g.font='700 16px Consolas';
+      g.fillText('Proyeksi: sentuh 80% awal thn ke-7',60,34);}
+    if(mode>=2){g.fillStyle='#46ff8e';g.font='700 16px Consolas';
+      g.fillText('AUGMENTASI +200 kWh → thn ke-5 ✓',60,58);}
+    msh.D.tex.needsUpdate=true;}
+  kurva(0);
+  /* papan rencana */
+  msh.plan=box(.6,.7,.05,0xe8e4d8);msh.plan.position.set(6.4,1.6,-2.0);scene.add(msh.plan);
+  actMesh(msh.plan,'PLAN');
+  scene.add(label('RENCANA AUGMENTASI',.6,'#5fd4ff').translateX(6.4).translateY(2.15).translateZ(-2.0));
+  msh.testing=false;msh.kwh=0;
+  moduleTick=(dt)=>{if(msh.testing&&msh.kwh<912){msh.kwh=Math.min(912,msh.kwh+dt*260);
+    dispText(msh.P,['DISCHARGE C/4',Math.round(msh.kwh)+' kWh terukur'],
+      ['#ffd23f',msh.kwh>=912?'#46ff8e':'#8aa3bd']);}};
+  startSeq([
+   {type:'act',aid:'BASE',done:false,targets:()=>[msh.E.mesh],
+    desc:'Tinjau BASELINE & riwayat tes (klik layar EMS).',
+    why:'Komisioning: 1.000 kWh. Tahun 1: 974. Tahun 2: 943. Tanpa angka pembanding, tes hari ini hanyalah angka kesepian — tren-lah yang bercerita. Syarat tes juga dicatat: arus C/4, suhu 25°C, rentang SoC penuh.',
+    fx(){toast('📚 Baseline 1.000 → 974 → 943 kWh. Kondisi tes: standar sama.','info',3000);}},
+   {type:'act',aid:'TEST',done:false,targets:()=>[msh.pcs],
+    desc:'Jalankan FULL DISCHARGE TEST terukur (klik PCS).',
+    why:'Dari SoC 100%, discharge arus konstan C/4 sampai batas bawah — meter kelas teliti menghitung tiap kWh yang keluar. Suhu dijaga HVAC: tes di suhu berbeda = membandingkan apel dengan rambutan.',
+    fx(){msh.testing=true;beep(160,.6,'sine',.07);
+      toast('🔋 Discharge dimulai — saksikan kWh terkumpul di layar PCS.','ok',2800);}},
+   {type:'act',aid:'HASIL',done:false,targets:()=>[msh.D.mesh],
+    check:()=>msh.kwh>=912,
+    checkFail:'Tes belum selesai! Tunggu discharge tuntas (layar PCS menunjukkan hasil akhir).',
+    desc:'Tes tuntas: hitung SoH & baca tren (klik layar analisis).',
+    why:'912 kWh ÷ 1.000 = SoH 91,2%. Empat titik membentuk garis: degradasi konsisten ±2,9%/tahun — sehat untuk LFP yang bekerja tiap hari. Tidak ada tikungan tajam = tidak ada masalah tersembunyi.',
+    fx(){kurva(1);
+      toast('📐 SoH 91,2% · degradasi 2,9%/thn — proyeksi menyentuh kontrak thn ke-7.','ok',3200);}},
+   {type:'act',aid:'PLAN',done:false,targets:()=>[msh.plan],
+    desc:'Susun RENCANA AUGMENTASI sebelum kontrak terancam (klik papan).',
+    why:'Proyeksi menyentuh batas 800 kWh awal tahun ke-7 — tapi margin operasional menipis lebih dulu. Rencana: tambah rack 200 kWh di tahun ke-5, anggaran masuk RKAP tahun ke-4. Aset dikelola dengan kalender, bukan dengan kepanikan.',
+    fx(){kurva(2);
+      toast('🗓️ Augmentasi 200 kWh thn ke-5 — kontrak aman, anggaran terjadwal.','ok',3200);sfx.big();}},
+  ],()=>{say('🎉 <b>Kesehatan aset terbaca jernih!</b> SoH 91,2%, tren rapi, dan augmentasi sudah punya tanggal sebelum masalah punya nama. Begitulah baterai dikelola: dengan data, bukan firasat.');
+    setTimeout(()=>showWin('soh'),2200);});
+  say('VOLTA di sini 📊 Tahun ke-3 BESS-mu — saatnya <b>medical check-up baterai</b>. Tes kapasitas penuh, hitung SoH, dan jawab pertanyaan terpenting pemilik: kapan menambah rack? Mulai dari riwayat di EMS.');
+  $('#modTitle').textContent='J15·M3 — Capacity Test & SoH';
+  $('#taskHead').textContent='UKUR · TREN · RENCANAKAN';}
+MISSIONS.soh.build=buildSoH;
+Object.assign(REAL,{
+ soh:[
+  'Gunakan prosedur tes yang sama persis tiap tahun (arus, suhu, rentang SoC) — komparabilitas adalah segalanya',
+  'Meter energi untuk tes harus terkalibrasi; selisih 1% meter = selisih 1% kesimpulan SoH',
+  'Bandingkan SoH terukur dengan jaminan degradasi vendor — selisih besar = bahan klaim garansi',
+  'Rack augmentasi beda umur tidak diparalel langsung dengan rack lama — perlu manajemen PCS/string terpisah'],
+});

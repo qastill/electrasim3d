@@ -206,3 +206,94 @@ Object.assign(REAL,{
   'Foto posisi pemasangan & beri label "alat ukur terpasang" agar tidak dimatikan operator',
   'Sinkronkan jam logger sebelum mulai — analisis multi-titik butuh timestamp yang seragam'],
 });
+
+/* =====================================================================
+   MISI 3 — ANALISIS TARIF & LOAD SHIFTING
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ tarif:{lvl:'JALUR 06 · ENERGY AUDITOR · MISI 3',icon:'💸',title:'Analisis Tarif & Load Shifting WBP/LWBP',strict:false,
+  loc:'📍 PT Maju Plastik · Tindak lanjut audit, ruang produksi',
+  story:'Logger sudah bicara, efisiensi teknis sudah berjalan — kini lapisan penghematan yang sering terlewat: STRUKTUR TARIF. Tagihan industri membedakan WBP (waktu beban puncak, 18:00–22:00) yang jauh lebih mahal dari LWBP. Dan profil logger menunjukkan: proses paling rakus justru berjalan di jam termahal.',
+  goal:'Beban yang bisa digeser teridentifikasi, jadwal produksi baru tersusun, dan penghematan dihitung tanpa mengurangi output produksi.',
+  obj:['Pahami struktur tarif & temukan biaya WBP','Identifikasi proses yang bisa digeser (dan yang tidak)','Susun jadwal baru & hitung penghematan'],
+  learn:['Tarif industri: WBP (18–22) bisa ~1,5x LWBP — kWh yang sama, harga berbeda hanya karena JAM','Load shifting menghemat tanpa mengurangi konsumsi: energi sama, waktu berbeda','Yang bisa digeser: proses batch dengan buffer (giling, mixing, charging). Yang tidak: proses kontinu & jam kerja orang','Shifting juga menolong PLN: puncak sistem turun — itulah kenapa struktur tarifnya dibuat demikian'],
+  next:['Pelajari tarif premium & captive power: kapan genset/PLTS lebih murah dari WBP','Simulasikan BESS untuk arbitrase tarif di pelanggan industri','Dalami demand response: insentif memangkas beban saat sistem genting']},
+});
+let mtf={};
+function buildTarif(){
+  freshScene(0xb8c6d4,0x141d28);
+  cam={theta:.05,phi:1.2,r:8,target:new THREE.Vector3(0,1.6,-.8)};
+  const Z=room(0x55606a,0xb9c4bd,16,11);
+  /* papan tarif + profil */
+  mtf.D=makeDisplay(3.4,1.8,560,300);
+  mtf.D.mesh.position.set(-3.2,2.3,Z+.08);scene.add(mtf.D.mesh);
+  actMesh(mtf.D.mesh,'BILL');
+  scene.add(label('STRUKTUR TAGIHAN & PROFIL',.8,'#5fd4ff').translateX(-3.2).translateY(3.4).translateZ(Z+.1));
+  function draw(mode){
+    const g=mtf.D.g,W=560,H=300;
+    g.fillStyle='#0c141d';g.fillRect(0,0,W,H);
+    g.strokeStyle='#2a3a4c';g.lineWidth=2;
+    g.beginPath();g.moveTo(40,16);g.lineTo(40,H-34);g.lineTo(W-14,H-34);g.stroke();
+    /* zona WBP 18-22 */
+    const x18=40+18/24*(W-66), x22=40+22/24*(W-66);
+    g.fillStyle=mode>=2?'#1c3a2a':'#3a1c1c';g.fillRect(x18,16,x22-x18,H-50);
+    g.fillStyle='#ff8d8d';g.font='600 15px Consolas';g.textAlign='center';
+    g.fillText('WBP 1,5x',x18+(x22-x18)/2,32);
+    g.strokeStyle='#ffd23f';g.lineWidth=3;g.beginPath();
+    for(let h=0;h<=24;h++){
+      let v=.3+.1*Math.sin(h/24*Math.PI*2-1);
+      if(mode<2){if(h>=18&&h<=22)v=.85;}     /* batch malam */
+      else{if(h>=1&&h<=5)v=.85;if(h>=18&&h<=22)v=.35;} /* digeser */
+      const x=40+h/24*(W-66),y=H-34-v*(H-80);
+      h===0?g.moveTo(x,y):g.lineTo(x,y);}
+    g.stroke();
+    g.fillStyle='#8aa3bd';g.font='600 14px Consolas';
+    [0,6,12,18,24].forEach(h=>g.fillText(h+':00',40+h/24*(W-66),H-14));
+    g.textAlign='left';g.fillStyle=mode>=2?'#46ff8e':'#ffd23f';g.font='700 16px Consolas';
+    g.fillText(mode>=2?'GILINGAN → 01:00-05:00 (LWBP) ✓':'GILINGAN jalan 18-22 = jam TERMAHAL',48,H-44);
+    mtf.D.tex.needsUpdate=true;}
+  draw(0);
+  /* mesin-mesin */
+  mtf.giling=boxT(1.6,1.3,1.0,TEX.metal(),{metalness:.3});mtf.giling.position.set(1.2,.7,-1.6);scene.add(mtf.giling);
+  actMesh(mtf.giling,'MESIN');
+  scene.add(label('GILINGAN PLASTIK 90kW · BATCH',.65,'#ffd23f').translateX(1.2).translateY(1.7).translateZ(-1.6));
+  const ext=boxT(2.2,.9,.8,TEX.metal(),{metalness:.3});ext.position.set(4.4,.5,-1.8);scene.add(ext);
+  actMesh(ext,'EXT');
+  scene.add(label('EXTRUDER · KONTINU 24 JAM',.6).translateX(4.4).translateY(1.25).translateZ(-1.8));
+  /* papan jadwal & kalkulator */
+  mtf.jadwal=box(.9,.65,.05,0xe8e4d8);mtf.jadwal.position.set(2.4,2.2,Z+.06);scene.add(mtf.jadwal);
+  actMesh(mtf.jadwal,'JADWAL');
+  scene.add(label('PAPAN JADWAL PRODUKSI',.6,'#5fd4ff').translateX(2.4).translateY(2.75).translateZ(Z+.1));
+  mtf.calc=box(.3,.05,.4,0x33404e);mtf.calc.position.set(5.2,1.0,-.2);scene.add(mtf.calc);
+  actMesh(mtf.calc,'HITUNG');
+  scene.add(label('KALKULATOR',.5,'#5fd4ff').translateX(5.2).translateY(1.3).translateZ(-.2));
+  startSeq([
+   {type:'act',aid:'BILL',done:false,targets:()=>[mtf.D.mesh],
+    desc:'Bedah struktur TAGIHAN: di mana uang menguap? (klik layar)',
+    why:'Blok WBP 18:00–22:00 dihargai ~1,5x. Dan lihat kurvanya: gunung beban justru berdiri tegak persis di zona merah itu — 90 kW gilingan menyala di jam termahal, tiap malam, sepanjang tahun.',
+    fx(){toast('🧾 38% biaya datang dari 4 jam WBP — gunung di zona merah.','bad',3000);}},
+   {type:'act',aid:'MESIN',done:false,targets:()=>[mtf.giling],
+    desc:'Identifikasi proses yang BISA digeser (klik mesin yang tepat).',
+    why:'Gilingan = proses BATCH dengan silo penampung: hasil gilingan malam ini baru dipakai extruder besok. Ada buffer = bisa pindah jam. Extruder? Kontinu 24 jam, ada operator shift — dia tinggal di tempat.',
+    fx(){toast('✅ Gilingan: batch + silo buffer = BISA digeser. Extruder: tetap.','ok',3000);}},
+   {type:'act',aid:'JADWAL',done:false,targets:()=>[mtf.jadwal],
+    desc:'Susun JADWAL baru bersama kepala produksi (klik papan).',
+    why:'Gilingan pindah ke 01:00–05:00 (LWBP terdalam). Kuncinya kolaborasi: kepala produksi memastikan silo cukup & operator shift malam tersedia. Penghematan yang merusak produksi bukan penghematan.',
+    fx(){draw(2);toast('📋 Jadwal baru: gilingan 01:00-05:00 — produksi aman.','ok',2800);}},
+   {type:'act',aid:'HITUNG',done:false,targets:()=>[mtf.calc],
+    desc:'HITUNG penghematannya (klik kalkulator).',
+    why:'90 kW × 4 jam × 25 hari = 9.000 kWh/bulan pindah dari tarif WBP ke LWBP. Selisihnya ±Rp 6,5 juta per bulan — Rp 78 juta setahun. Tanpa investasi sepeser pun: hanya memindah JAM.',
+    fx(){toast('💸 Hemat ±Rp 6,5 jt/bln (Rp 78 jt/thn) — investasi: NOL.','ok',3200);sfx.big();}},
+  ],()=>{say('🎉 <b>Penghematan termurah sedunia: memindah jam!</b> kWh-nya sama, harganya beda. Auditor yang paham tarif melihat uang di tempat orang lain melihat jadwal.');
+    setTimeout(()=>showWin('tarif'),2200);});
+  say('VOLTA di sini 💸 Lapisan penghematan ketiga: <b>struktur tarif</b>. WBP 18–22 itu mahal — dan tugasmu memindahkan gunung beban keluar dari zona itu tanpa mengganggu produksi. Mulai dari tagihan.');
+  $('#modTitle').textContent='J06·M3 — Analisis Tarif & Load Shifting';
+  $('#taskHead').textContent='GESER JAM, BUKAN PRODUKSI';}
+MISSIONS.tarif.build=buildTarif;
+Object.assign(REAL,{
+ tarif:[
+  'Validasi jam WBP/LWBP & faktor pengali pada tarif yang berlaku di golongan pelanggan tersebut',
+  'Libatkan kepala produksi sejak awal — jadwal yang dipaksakan auditor akan dikembalikan diam-diam',
+  'Perhitungkan biaya ikutan shift malam: lembur operator, keamanan, pencahayaan — netto tetap harus positif',
+  'Pantau 3 bulan pertama dengan logger: pastikan beban benar-benar pindah & penghematan terealisasi'],
+});

@@ -233,3 +233,90 @@ Object.assign(REAL,{
   'Ukur pembumian dengan earth tester terkalibrasi metode 3-titik, catat tren tiap inspeksi',
   'Tutup perbaikan dengan uji transaksi end-to-end & laporan akar masalah ke pemilik aset'],
 });
+
+/* =====================================================================
+   MISI 3 — SITE SELECTION SPKLU
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ site:{lvl:'JALUR 12 · EV & EV CHARGING · MISI 3',icon:'🗺️',title:'Site Selection SPKLU Baru',strict:false,
+  loc:'📍 Kota Indramayu · Studi lokasi SPKLU ke-2',
+  story:'SPKLU rest area-mu sukses — utilisasi 38% dan naik terus. Investor minta lokasi kedua di dalam kota. Tapi SPKLU yang salah tempat adalah besi mahal yang menganggur: dari empat kandidat lokasi, hanya satu yang layak. Kali ini kamu bukan teknisi — kamu perencana.',
+  goal:'Lokasi terbaik terpilih berbasis data (trafik, daya, akses), terverifikasi kapasitas listriknya, dan proposal ber-skor diajukan.',
+  obj:['Analisis peta trafik & pola pergerakan EV','Verifikasi kapasitas trafo & rencana layout di kandidat terkuat','Susun proposal lokasi dengan skor multi-kriteria'],
+  learn:['SPKLU hidup dari LOKASI: trafik EV, durasi parkir alami (mall/kuliner), & akses masuk-keluar mudah','Kapasitas listrik = penentu biaya: dekat trafo longgar berarti hemat ratusan juta biaya penyambungan','Skor multi-kriteria (trafik, daya, sewa, kompetitor) membuat keputusan bisa dipertanggungjawabkan — bukan firasat','Layout menentukan pengalaman: mundur-parkir mudah, kabel sampai port kiri & kanan mobil'],
+  next:['Pelajari analisis spasial GIS untuk jaringan SPKLU se-kota','Dalami model bisnis: utilisasi break-even & skema sewa lahan','Hitung dampak SPKLU ke trafo distribusi (studi pembebanan)']},
+});
+let msl={};
+function buildSite(){
+  freshScene(0x9fb6cc,0x101a26);
+  cam={theta:0,phi:1.15,r:8.5,target:new THREE.Vector3(0,1.8,-1)};
+  const floor=boxT(18,.1,11,TEX.concrete());floor.position.y=-.05;scene.add(floor);
+  const wall=boxT(16,4.4,.2,TEX.plaster());wall.position.set(0,2.2,-3.2);scene.add(wall);
+  /* peta besar di dinding */
+  mslMap();
+  function mslMap(){
+    const frame=boxT(4.6,2.6,.16,TEX.metal(),{metalness:.4});frame.position.set(-2.4,2.4,-3.1);scene.add(frame);
+    frame.add(label('PETA KOTA — KANDIDAT LOKASI',.9).translateY(1.6));
+    msl.D=makeDisplay(4.3,2.3,600,330);
+    msl.D.mesh.position.set(-2.4,2.4,-3.0);scene.add(msl.D.mesh);
+    actMesh(msl.D.mesh,'PETA');}
+  function peta(mode){
+    const g=msl.D.g,W=600,H=330;
+    g.fillStyle='#0e1822';g.fillRect(0,0,W,H);
+    g.strokeStyle='#2a3a4c';g.lineWidth=10;
+    g.beginPath();g.moveTo(0,160);g.lineTo(W,150);g.stroke();
+    g.beginPath();g.moveTo(300,0);g.lineTo(310,H);g.stroke();
+    if(mode>=1){g.strokeStyle='#d8a02080';g.lineWidth=16;
+      g.beginPath();g.moveTo(0,160);g.lineTo(W,150);g.stroke();}
+    const cand=[['A · pasar lama',90,60,'#8aa3bd'],['B · mall+kuliner',430,210,mode>=1?'#46ff8e':'#8aa3bd'],
+      ['C · pinggir kota',520,60,'#8aa3bd'],['D · gang sempit',150,260,'#8aa3bd']];
+    cand.forEach(c=>{g.fillStyle=c[3];g.beginPath();g.arc(c[1],c[2],13,0,7);g.fill();
+      g.font='600 16px Consolas';g.textAlign='left';g.fillText(c[0],c[1]+18,c[2]+5);});
+    g.fillStyle='#ffd23f';g.font='700 16px Consolas';
+    if(mode>=1)g.fillText('Trafik EV tertinggi: koridor timur → B unggul',14,H-16);
+    if(mode>=2){g.fillStyle='#46ff8e';g.fillText('B: trafo 400kVA beban 52% — SIAP',14,28);}
+    msl.D.tex.needsUpdate=true;}
+  peta(0);
+  /* gardu dekat kandidat B */
+  msl.gardu=boxT(1.0,1.1,.8,TEX.metal(),{metalness:.3});msl.gardu.position.set(2.2,.6,-1.4);scene.add(msl.gardu);
+  actMesh(msl.gardu,'TRAFO');
+  scene.add(label('GARDU DEKAT LOKASI B',.65,'#5fd4ff').translateX(2.2).translateY(1.45).translateZ(-1.4));
+  /* maket layout */
+  msl.maket=boxT(1.8,.08,1.2,TEX.concrete());msl.maket.position.set(4.6,1.0,-.6);scene.add(msl.maket);
+  const slot=box(.5,.02,.9,0x2a72c8);slot.position.set(4.3,1.06,-.6);scene.add(slot);
+  actMesh(msl.maket,'LAYOUT');
+  scene.add(label('MAKET LAYOUT',.6,'#5fd4ff').translateX(4.6).translateY(1.4).translateZ(-.6));
+  /* proposal */
+  msl.prop=box(.55,.7,.05,0xe8e4d8);msl.prop.position.set(6.2,1.6,-1.4);scene.add(msl.prop);
+  actMesh(msl.prop,'PROP');
+  scene.add(label('PROPOSAL LOKASI',.6,'#5fd4ff').translateX(6.2).translateY(2.15).translateZ(-1.4));
+  startSeq([
+   {type:'act',aid:'PETA',done:false,targets:()=>[msl.D.mesh],
+    desc:'Analisis PETA: trafik & pola gerak EV kota (klik peta).',
+    why:'Data backend SPKLU-mu sendiri adalah emas: 70% pelanggan datang dari koridor timur, jam ramai 17–21 — jam orang makan & belanja. Kandidat B (mall+kuliner) duduk persis di persilangan pola itu. A ramai tapi parkir 5 menit; D bahkan susah dimasuki.',
+    fx(){peta(1);toast('🗺️ Koridor timur dominan → kandidat B unggul sementara.','ok',3000);}},
+   {type:'act',aid:'TRAFO',done:false,targets:()=>[msl.gardu],
+    desc:'Verifikasi KAPASITAS LISTRIK di kandidat B (klik gardu).',
+    why:'Lokasi bagus tanpa daya = proyek molor setahun. Gardu terdekat: trafo 400 kVA berbeban 52% — ruang cukup untuk 2 charger 25 kW + rencana ekspansi. Jarak tarikan kabel 40 m. Biaya sambung: ringan. B makin kokoh.',
+    fx(){peta(2);toast('⚡ Trafo 400kVA · beban 52% · tarikan 40m — LAYAK.','ok',2800);}},
+   {type:'act',aid:'LAYOUT',done:false,targets:()=>[msl.maket],
+    desc:'Rancang LAYOUT parkir & unit di maket (klik maket).',
+    why:'Dua slot parkir mundur yang lega, unit di antara keduanya agar satu charger melayani port kiri & kanan, kanopi hujan, dan jalur kabel tak memotong pejalan. Pengalaman pelanggan dirancang di maket — bukan ditambal setelah jadi.',
+    fx(){toast('📐 Layout: 2 slot + unit tengah + kanopi — ergonomis.','ok',2600);}},
+   {type:'act',aid:'PROP',done:false,targets:()=>[msl.prop],
+    desc:'Susun PROPOSAL ber-skor & ajukan ke investor (klik proposal).',
+    why:'Matriks 4 lokasi × 5 kriteria berbobot: B menang telak (84 vs 61, 58, 39). Proyeksi: utilisasi 25% tahun pertama, break-even bulan ke-30. Investor tidak membeli lokasi — ia membeli ANALISIS yang bisa dia percaya.',
+    fx(){toast('📊 Lokasi B skor 84/100 — investor setuju, lanjut perizinan!','ok',3200);sfx.big();}},
+  ],()=>{say('🎉 <b>Lokasi kedua terpilih dengan kepala dingin!</b> Trafik dianalisis, daya diverifikasi, layout dirancang, skor bicara. SPKLU yang ramai lahir di atas kertas kerja seperti ini.');
+    setTimeout(()=>showWin('site'),2200);});
+  say('VOLTA di sini 🗺️ Naik jabatan: dari teknisi menjadi <b>perencana</b>. Empat kandidat lokasi, satu keputusan mahal. Senjatamu: data trafik, kapasitas trafo, dan matriks skor. Mulai dari peta.');
+  $('#modTitle').textContent='J12·M3 — Site Selection SPKLU';
+  $('#taskHead').textContent='TRAFIK · DAYA · LAYOUT · SKOR';}
+MISSIONS.site.build=buildSite;
+Object.assign(REAL,{
+ site:[
+  'Minta data resmi rencana jaringan & kapasitas ke PLN setempat — asumsi kapasitas adalah jebakan termahal',
+  'Survei lokasi di jam ramai NYATA (sore-malam), bukan hanya siang saat sepi',
+  'Perjanjian lahan jangka panjang dengan klausul listrik & akses 24 jam — sewa setahun untuk aset 10 tahun itu keliru',
+  'Cek rencana kompetitor & peta SPKLU existing (aplikasi resmi) sebelum memutuskan'],
+});

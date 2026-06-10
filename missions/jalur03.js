@@ -211,3 +211,103 @@ Object.assign(REAL,{
   'Setiap langkah manuver dicatat di formulir manuver + working permit dengan cap waktu',
   'Pastikan sertifikat kompetensi (serkom) & hasil uji APD (sarung tangan 20 kV) masih berlaku'],
 });
+
+/* =====================================================================
+   MISI 3 — PELACAKAN GANGGUAN PENYULANG 20 kV
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ sutm:{lvl:'JALUR 03 · DISTRIBUSI · MISI 3',icon:'🌩️',title:'Pelacakan Gangguan Penyulang 20 kV',strict:true,
+  loc:'📍 Penyulang Karang · Hujan badai semalam, 05:40',
+  story:'Badai semalam meninggalkan oleh-oleh: sebagian penyulang Karang padam, recloser lockout setelah tiga kali gagal menutup, dan telepon pengaduan tak berhenti berdering. Kamu petugas gangguan pagi ini. Pelanggan menunggu — tapi penyulang yang menyimpan dahan di kawatnya tidak boleh dinormalkan buru-buru.',
+  goal:'Penyebab gangguan ditemukan & dibersihkan, fuse link FCO diganti, dan penyulang dinormalkan dengan urutan yang aman.',
+  obj:['Baca status recloser & minta izin penelusuran','Patroli jalur: temukan & amankan penyebab gangguan','Ganti fuse link FCO lalu normalkan dengan izin dispatcher'],
+  learn:['Recloser menutup ulang otomatis untuk gangguan SEMENTARA; tiga kali gagal = gangguan PERMANEN, ia mengunci (lockout)','Jangan pernah menormalkan sebelum penyebab ditemukan — menutup sirkit ke gangguan = merusak peralatan & membahayakan orang','FCO (fuse cut-out) melindungi percabangan: fuse link putus menunjuk arah lokasi gangguan','Urutan normalisasi selalu dengan izin dispatcher & pemberitahuan regu lain di penyulang yang sama'],
+  next:['Pelajari koordinasi proteksi: fuse, recloser, sectionalizer, OCR','Dalami fault indicator & SCADA untuk lokalisasi gangguan cepat','Eksplorasi FDIR/self-healing network pada smart grid']},
+});
+let msu={};
+function buildSUTM(){
+  freshScene(0x6b7f99,0x0f1722); /* mendung pagi */
+  cam={theta:.15,phi:1.2,r:10,target:new THREE.Vector3(0,2.2,-.5)};
+  const ground=boxT(26,.1,14,TEX.gravel());ground.position.y=-.05;scene.add(ground);
+  const road=box(26,.02,2.4,0x39424c);road.position.set(0,.02,2.2);scene.add(road);
+  /* deretan tiang SUTM */
+  msu.poles=[];
+  [-9,-3,3,9].forEach(x=>{
+    const p=cyl(.09,.12,5.6,0x6f7a84);p.position.set(x,2.8,-1.5);scene.add(p);
+    const arm=box(1.4,.1,.1,0x55606a);arm.position.set(x,5.2,-1.5);scene.add(arm);
+    msu.poles.push(p);});
+  const kawat=cyl(.02,.02,24,0x3c4754);kawat.rotation.z=Math.PI/2;
+  kawat.position.set(0,5.3,-1.5);scene.add(kawat);
+  scene.add(label('SUTM 20 kV PENYULANG KARANG',.9).translateY(6.0).translateZ(-1.5));
+  /* recloser di tiang pertama */
+  msu.rec=box(.6,.8,.5,0x8a96a2,{metalness:.3});msu.rec.position.set(-9,3.6,-1.2);scene.add(msu.rec);
+  actMesh(msu.rec,'REC');
+  msu.recInd=new THREE.Mesh(new THREE.SphereGeometry(.07,12,10),
+    new THREE.MeshStandardMaterial({color:0xff3b3b,emissive:0xff3b3b,emissiveIntensity:1}));
+  msu.recInd.position.set(-9,3.0,-1.1);scene.add(msu.recInd);
+  scene.add(label('RECLOSER (LOCKOUT)',.6,'#ff8d8d').translateX(-9).translateY(4.3).translateZ(-1.1));
+  /* radio di mobil */
+  const mobil=box(1.9,.7,.95,0xd8a020);mobil.position.set(-6,.55,2.2);scene.add(mobil);
+  const kabin=box(.8,.55,.9,0xd8a020);kabin.position.set(-6.6,1.15,2.2);scene.add(kabin);
+  msu.radio=box(.16,.3,.1,0x141a20,{emissive:0x06303d,emissiveIntensity:.5});
+  msu.radio.position.set(-5.4,1.05,2.2);scene.add(msu.radio);
+  actMesh(msu.radio,'RADIO');
+  scene.add(label('RADIO HT',.55,'#5fd4ff').translateX(-5.4).translateY(1.4).translateZ(2.2));
+  /* dahan di kawat antara tiang 3-4 + FCO putus */
+  msu.dahan=cyl(.06,.1,1.8,0x4a3624);msu.dahan.rotation.z=.7;
+  msu.dahan.position.set(5.6,4.9,-1.5);scene.add(msu.dahan);
+  const daun=new THREE.Mesh(new THREE.SphereGeometry(.5,10,8),
+    new THREE.MeshStandardMaterial({color:0x2e5a2e,roughness:.9}));
+  daun.position.set(6.1,5.4,-1.5);scene.add(daun);
+  actMesh(msu.dahan,'PATROLI');actMesh(daun,'PATROLI');
+  msu.fco=box(.12,.5,.12,0xc9b08a);msu.fco.rotation.z=.8;
+  msu.fco.position.set(3,4.6,-1.1);scene.add(msu.fco);
+  actMesh(msu.fco,'FUSE');
+  scene.add(label('FCO — fuse PUTUS (menggantung)',.6,'#ffd23f').translateX(3).translateY(4.0).translateZ(-1.0));
+  /* stik teleskopik */
+  msu.stik=cyl(.03,.03,2.2,0xd8a020);msu.stik.rotation.z=.5;
+  msu.stik.position.set(-4.4,1.1,2.2);scene.add(msu.stik);
+  actMesh(msu.stik,'DAHAN');
+  scene.add(label('TELESCOPIC STICK 20kV',.55,'#5fd4ff').translateX(-4.2).translateY(2.0).translateZ(2.2));
+  startSeq([
+   {type:'act',aid:'RADIO',done:false,targets:()=>[msu.radio],
+    desc:'Lapor dispatcher: konfirmasi padam & minta IZIN penelusuran.',
+    why:'Dispatcher mengonfirmasi: recloser Karang lockout 04:55, ±1.800 pelanggan padam. Izin penelusuran membuat semua pihak tahu ada regu di jalur — tak ada yang akan iseng mencoba menormalkan dari jauh.',
+    fx(){toast('📻 "Regu-2 izin telusur penyulang Karang — DICATAT dispatcher."','ok',2800);}},
+   {type:'act',aid:'REC',done:false,targets:()=>[msu.rec],
+    desc:'Baca status RECLOSER di tiang awal (klik recloser).',
+    why:'Log recloser bercerita: trip 04:55, reclose 3 kali, gagal semua → lockout. Pola ini = gangguan permanen di hilir, bukan petir sambaran sesaat. Sesuatu masih MENEMPEL di jaringan.',
+    fx(){toast('📟 3x reclose GAGAL → permanen. Penyebab masih di jaringan!','bad',2800);}},
+   {type:'act',aid:'PATROLI',done:false,targets:()=>[msu.dahan],
+    desc:'Patroli jalur ke arah hilir — temukan penyebabnya (klik objek mencurigakan).',
+    why:'Di antara tiang 3 dan 4: dahan besar menyandar di kawat fasa, dan FCO percabangan menggantung putus. Mata patroli membaca dua bukti yang bersesuaian — lokasi gangguan terkonfirmasi.',
+    fx(){toast('🌳 KETEMU: dahan di kawat + fuse FCO putus — titik gangguan!','bad',2800);}},
+   {type:'act',aid:'DAHAN',done:false,targets:()=>[msu.stik],
+    desc:'Singkirkan DAHAN dengan telescopic stick 20 kV (klik stik).',
+    why:'Walau penyulang padam, perlakukan kawat sebagai bertegangan — bisa ada arus balik atau induksi. Stik isolasi 20 kV menjaga jarak; tangan kosong tidak pernah jadi pilihan.',
+    fx(){msu.dahan.position.y=1.2;msu.dahan.rotation.z=1.4;
+      toast('🪵 Dahan diturunkan — kawat bebas.','ok',2400);}},
+   {type:'act',aid:'FUSE',done:false,targets:()=>[msu.fco],
+    desc:'Ganti FUSE LINK FCO & tutup kembali (klik FCO).',
+    why:'Fuse link diganti sesuai rating percabangan (bukan asal kawat!). Menutup FCO memakai stik dengan gerakan mantap satu arah — ragu-ragu di tengah jalan justru memancing busur.',
+    fx(){msu.fco.rotation.z=0;msu.fco.position.set(3,4.8,-1.1);
+      toast('🔧 Fuse link baru terpasang — FCO tertutup mantap.','ok',2600);}},
+   {type:'act',aid:'RADIO2',done:false,targets:()=>[msu.radio],
+    desc:'Lapor BERSIH ke dispatcher & saksikan penormalan recloser.',
+    why:'"Penyebab ditemukan & dibersihkan, jalur aman." Dispatcher me-reset recloser jarak jauh — tegangan mengalir, 1.800 rumah menyala bersamaan dengan matahari pagi. Itulah bayaran petugas gangguan.',
+    fx(){msu.recInd.material.color.setHex(0x36e07a);msu.recInd.material.emissive.setHex(0x36e07a);
+      toast('💡 PENYULANG NORMAL — 1.800 pelanggan menyala kembali!','ok',3200);sfx.big();}},
+  ],()=>{say('🎉 <b>Gangguan tuntas dengan benar!</b> Lockout dibaca, penyebab dicari (bukan ditebak), dibersihkan, baru dinormalkan. Penyulang yang sehat lahir dari petugas yang tak pernah memotong urutan.');
+    setTimeout(()=>showWin('sutm'),2200);});
+  const s0=seq.steps[0],of0=s0.fx;s0.fx=()=>{of0();msu.radio.userData.aid='RADIO2';};
+  say('VOLTA di sini 🌩️ Badai semalam meninggalkan PR: recloser lockout, ribuan pelanggan gelap. Hukum besi pagi ini: <b>temukan penyebabnya dulu — penyulang tidak pernah dinormalkan ke arah gangguan</b>. Mulai dari radio.');
+  $('#modTitle').textContent='J03·M3 — Pelacakan Gangguan Penyulang';
+  $('#taskHead').textContent='BACA · TELUSURI · BERSIHKAN · NORMALKAN';}
+MISSIONS.sutm.build=buildSUTM;
+Object.assign(REAL,{
+ sutm:[
+  'Patroli gangguan membawa: stik 20kV teruji, voltage detector, grounding lokal, APD lengkap, senter',
+  'Foto setiap temuan sebelum dibersihkan — bahan analisis pola gangguan & usulan ROW (right of way)',
+  'Fuse link diganti sesuai tabel koordinasi (rating & tipe K/T), bukan sekadar yang tersedia di mobil',
+  'Gangguan berulang di titik sama = usulkan perbaikan permanen: rabas pohon, ganti kawat AAAC-S, atau pasang LA'],
+});

@@ -159,3 +159,93 @@ Object.assign(REAL,{
   'Minta data interval konsumsi (AMR/AMI) bila ada — profil 15 menit jauh lebih akurat dari tagihan bulanan',
   'Sertakan asumsi degradasi panel (±0,5%/tahun) & biaya O&M dalam perhitungan ROI'],
 });
+
+/* =====================================================================
+   MISI 3 — MENJAWAB TENDER & COMPLIANCE
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ tender:{lvl:'JALUR 09 · SALES & TECHNICAL MARKETING · MISI 3',icon:'📑',title:'Menjawab Tender: Spesifikasi & Compliance',strict:false,
+  loc:'📍 Kantor vendor · RFQ panel 20 kV, deadline 5 hari',
+  story:'RFQ besar masuk: kawasan industri membutuhkan 8 unit kubikel 20 kV — nilai kontrak miliaran. Banyak vendor gugur bukan karena produknya kalah, tapi karena dokumennya: spek tak terjawab benar, deviasi disembunyikan, atau telat semenit dari deadline. Tender adalah ujian disiplin, bukan hanya harga.',
+  goal:'Penawaran lengkap & jujur terkirim sebelum deadline: spek dibedah, deviasi diklarifikasi resmi, compliance sheet rapi.',
+  obj:['Bedah dokumen RFQ & spesifikasi teknisnya','Temukan gap spek dan ajukan klarifikasi resmi','Susun compliance sheet & submit lengkap sebelum deadline'],
+  learn:['Baca RFQ dua kali: syarat administrasi menggugurkan lebih banyak peserta daripada syarat teknis','Deviasi yang DIUNGKAP + alternatif setara masih bisa menang; deviasi yang disembunyikan = blacklist saat inspeksi','Klarifikasi resmi (aanwijzing) melindungi dua pihak: jawaban tertulis panitia mengikat semua peserta','Compliance sheet: comply / deviasi / alternatif per baris spek — auditor mencintai vendor yang rapi'],
+  next:['Pelajari strategi harga: cost breakdown & komponen TKDN','Dalami kontrak: garansi, LD (liquidated damages), terms of payment','Latih presentasi klarifikasi teknis di hadapan panitia tender']},
+});
+let mtd={};
+function buildTender(){
+  freshScene(0xc6d2dc,0x18222c);
+  cam={theta:0,phi:1.2,r:6.5,target:new THREE.Vector3(0,1.5,-1)};
+  const Z=room(0x6b5a45,0xd8d2c4);
+  /* meja kerja */
+  const desk=boxT(3.4,.08,1.4,TEX.wood());desk.position.set(0,1.0,-.6);scene.add(desk);
+  [[-1.5,-1.1],[1.5,-1.1],[-1.5,-.1],[1.5,-.1]].forEach(p=>{
+    const l=boxT(.08,1,.08,TEX.wood());l.position.set(p[0],.5,p[1]+0.5);scene.add(l);});
+  /* dokumen RFQ tebal */
+  mtd.rfq=box(.55,.1,.75,0xe8e4d8);mtd.rfq.position.set(-1.1,1.1,-.6);scene.add(mtd.rfq);
+  actMesh(mtd.rfq,'RFQ');
+  scene.add(label('DOKUMEN RFQ (84 hal)',.6,'#5fd4ff').translateX(-1.1).translateY(1.45).translateZ(-.6));
+  /* layar perbandingan spek */
+  mtd.D=makeDisplay(2.6,1.5,520,300);
+  mtd.D.mesh.position.set(-2.2,2.4,Z+.08);scene.add(mtd.D.mesh);
+  actMesh(mtd.D.mesh,'SPEK');
+  scene.add(label('TABEL SPEK: RFQ vs PRODUK',.7,'#5fd4ff').translateX(-2.2).translateY(3.3).translateZ(Z+.1));
+  function tabel(hl){
+    const g=mtd.D.g,W=520,H=300;
+    g.fillStyle='#0c141d';g.fillRect(0,0,W,H);
+    g.font='600 17px Consolas';g.textAlign='left';
+    const rows=[['ITEM','RFQ','PRODUK',''],
+      ['Tegangan','24 kV','24 kV','ok'],['Arus busbar','630 A','630 A','ok'],
+      ['Breaking cap.','25 kA','25 kA','ok'],['IP rating','IP4X','IP3X','gap'],
+      ['Interlock','mekanik','mekanik','ok']];
+    rows.forEach((r,i)=>{
+      const y=34+i*44;
+      g.fillStyle=i===0?'#8aa3bd':(r[3]==='gap'?(hl?'#ffd23f':'#ff5a5a'):'#eaf2fb');
+      g.fillText(r[0],14,y);g.fillText(r[1],210,y);g.fillText(r[2],330,y);
+      if(i>0)g.fillText(r[3]==='gap'?(hl?'KLARIF':'✗'):'✓',460,y);});
+    mtd.D.tex.needsUpdate=true;}
+  tabel(false);
+  /* surat klarifikasi + compliance + tombol submit */
+  mtd.surat=box(.5,.66,.04,0xf0ead8);mtd.surat.position.set(1.2,2.2,Z+.06);scene.add(mtd.surat);
+  actMesh(mtd.surat,'KLARIF');
+  scene.add(label('SURAT KLARIFIKASI',.55,'#5fd4ff').translateX(1.2).translateY(2.75).translateZ(Z+.1));
+  mtd.comp=box(.5,.66,.04,0xd8e8d8);mtd.comp.position.set(2.4,2.2,Z+.06);scene.add(mtd.comp);
+  actMesh(mtd.comp,'COMPLY');
+  scene.add(label('COMPLIANCE SHEET',.55,'#5fd4ff').translateX(2.4).translateY(2.75).translateZ(Z+.1));
+  mtd.box=box(.7,.5,.5,0x8a6a3a);mtd.box.position.set(3.8,1.3,-.6);scene.add(mtd.box);
+  actMesh(mtd.box,'SUBMIT');
+  scene.add(label('PAKET PENAWARAN',.6,'#ffd23f').translateX(3.8).translateY(1.75).translateZ(-.6));
+  startSeq([
+   {type:'act',aid:'RFQ',done:false,targets:()=>[mtd.rfq],
+    desc:'Bedah DOKUMEN RFQ halaman demi halaman (klik dokumen).',
+    why:'84 halaman dan yang menggugurkan justru sering di bagian membosankan: syarat admin (SIUJK, pengalaman sejenis, dukungan pabrikan) & deadline 5 hari. Kalender mundur dibuat hari ini, bukan H-1.',
+    fx(){toast('📑 Spek teknis hal. 31-47 · syarat admin lengkap · deadline H-5.','info',3000);}},
+   {type:'act',aid:'SPEK',done:false,targets:()=>[mtd.D.mesh],
+    desc:'Bandingkan spek RFQ vs produkmu — temukan GAP (klik tabel).',
+    why:'Empat baris hijau, satu merah: RFQ minta IP4X, produk standar IP3X. Vendor amatir pura-pura tidak lihat. Vendor profesional tahu: gap yang ditemukan H-5 adalah peluang, gap yang ditemukan saat inspeksi pabrik adalah bencana.',
+    fx(){toast('⚠️ GAP ditemukan: IP rating IP3X vs permintaan IP4X.','bad',2800);}},
+   {type:'act',aid:'KLARIF',done:false,targets:()=>[mtd.surat],
+    desc:'Ajukan KLARIFIKASI resmi ke panitia (klik surat).',
+    why:'Surat resmi: "Apakah IP3X + pintu berkunci dapat diterima, mengingat ruangan panel indoor terkunci?" Jawaban panitia tertulis & mengikat semua peserta. Bertanya itu gratis; berasumsi harganya satu kontrak.',
+    fx(){toast('✉️ Jawaban panitia: IP3X DITERIMA untuk ruang indoor terkunci ✓','ok',3000);}},
+   {type:'act',aid:'COMPLY',done:false,targets:()=>[mtd.comp],
+    desc:'Susun COMPLIANCE SHEET baris per baris (klik lembar hijau).',
+    why:'Tiap baris spek dijawab: comply / comply dengan catatan / deviasi + alternatif. Baris IP dilampiri jawaban klarifikasi resmi. Evaluator menilai puluhan penawaran — yang rapi dibaca lebih dulu dan dipercaya lebih cepat.',
+    fx(){tabel(true);toast('📋 47 baris: 46 comply + 1 klarifikasi terlampir.','ok',2800);}},
+   {type:'act',aid:'SUBMIT',done:false,targets:()=>[mtd.box],
+    desc:'Finalkan & SUBMIT paket penawaran (klik paket).',
+    why:'Checklist akhir: admin ✓ teknis ✓ harga ✓ tanda tangan ✓ — submit H-1, bukan menit terakhir (sistem e-proc punya kebiasaan tumbang di detik akhir). Sisanya milik evaluasi: kamu sudah memberi dirimu peluang terbaik.',
+    fx(){toast('📦 TERKIRIM H-1, lengkap & jujur. Menunggu pengumuman!','ok',3000);sfx.big();}},
+  ],()=>{say('🎉 <b>Penawaran profesional terkirim!</b> Spek dibedah, gap diklarifikasi (bukan disembunyikan), dokumen rapi, submit tak menunggu detik akhir. Menang-kalah urusan nanti — reputasi sudah menang duluan.');
+    setTimeout(()=>showWin('tender'),2200);});
+  say('VOLTA di sini 📑 Tender miliaran di meja. Dengar rahasianya: <b>kebanyakan vendor gugur oleh dokumennya sendiri</b>, bukan produknya. Teliti, jujur soal deviasi, dan jangan pernah berkencan dengan deadline. Mulai dari RFQ.');
+  $('#modTitle').textContent='J09·M3 — Menjawab Tender';
+  $('#taskHead').textContent='TELITI · KLARIFIKASI · LENGKAP';}
+MISSIONS.tender.build=buildTender;
+Object.assign(REAL,{
+ tender:[
+  'Buat checklist dokumen dari halaman syarat RFQ & centang fisik — gugur admin itu menyakitkan',
+  'Semua komunikasi dengan panitia lewat jalur resmi tertulis; jawaban lisan tidak mengikat',
+  'Arsipkan jawaban klarifikasi/aanwijzing — itu bagian sah dari kontrak bila menang',
+  'Hitung harga dari cost breakdown nyata + risiko (kurs, delivery) — menang rugi lebih buruk dari kalah'],
+});

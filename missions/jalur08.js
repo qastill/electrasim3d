@@ -189,3 +189,92 @@ Object.assign(REAL,{
   'Korban sengatan wajib evaluasi medis walau tampak pulih — gangguan irama jantung bisa muncul terlambat',
   'Laporkan ke sistem manajemen K3; investigasi mencari akar sistemik, bukan kambing hitam'],
 });
+
+/* =====================================================================
+   MISI 3 — BEKERJA DI KETINGGIAN
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ tinggi:{lvl:'JALUR 08 · K3 LISTRIK · MISI 3',icon:'🪜',title:'Bekerja di Ketinggian: Panjat Tower',strict:true,
+  loc:'📍 Tower SUTT 150 kV · Penggantian lampu aviasi',
+  story:'Lampu aviasi di puncak tower 40 meter mati — pesawat latih sering melintas, ini harus diganti hari ini. Statistik tidak berbohong: jatuh dari ketinggian adalah pembunuh nomor satu pekerja konstruksi & ketenagalistrikan. Dan hampir semua korbannya punya satu kesamaan: SEDANG tidak terkait saat jatuh.',
+  goal:'Pekerjaan di puncak tower selesai dengan disiplin 100% tie-off: dari inspeksi alat, harness benar, sampai positioning di atas.',
+  obj:['Izin kerja & inspeksi alat pelindung jatuh','Kenakan full body harness dengan benar','Panjat dengan 100% tie-off & bekerja dengan work positioning'],
+  learn:['100% tie-off: dua lanyard berpindah bergantian — SELALU ada minimal satu yang terkait, tanpa jeda sedetik pun','Harness diinspeksi sebelum TIAP pemakaian: jahitan, webbing, hook — alat yang pernah menahan jatuh harus pensiun','Anchor point harus di ATAS kepala & mampu menahan beban kejut (minimal 15 kN) — bukan sekadar tempat nyantol','Alat kerja diikat (tool lanyard): kunci 0,5 kg yang jatuh 40 meter tiba di bawah seperti peluru'],
+  next:['Pelajari perhitungan fall clearance: jarak aman di bawah pekerja','Dalami rencana penyelamatan: korban menggantung wajib diturunkan < 15 menit (suspension trauma)','Sertifikasi TKBT/TKPK — bekerja di ketinggian wajib kompetensi resmi']},
+});
+let mti={};
+function buildTinggi(){
+  freshScene(0x9fc0dc,0x12202e);
+  cam={theta:.1,phi:1.05,r:12,target:new THREE.Vector3(0,4,-1)};
+  const ground=boxT(24,.1,16,TEX.gravel());ground.position.y=-.05;scene.add(ground);
+  /* tower */
+  [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(o=>{
+    const kaki=boxT(.18,9,.18,TEX.metal(),{metalness:.5});
+    kaki.position.set(o[0]*(1.2),4.5,-2+o[1]*1.2);kaki.rotation.z=o[0]*-.04;scene.add(kaki);});
+  [2,4,6,8].forEach(y=>{
+    const palang=boxT(2.6,.12,.12,TEX.metal(),{metalness:.5});palang.position.set(0,y,-.85);scene.add(palang);
+    const palang2=palang.clone();palang2.position.z=-3.15;scene.add(palang2);});
+  scene.add(label('TOWER SUTT · 40 m',.9).translateY(9.6).translateZ(-2));
+  /* lampu aviasi mati di puncak */
+  mti.lamp=new THREE.Mesh(new THREE.SphereGeometry(.16,14,12),
+    new THREE.MeshStandardMaterial({color:0x553322,emissive:0x000000}));
+  mti.lamp.position.set(0,9.1,-2);scene.add(mti.lamp);
+  actMesh(mti.lamp,'KERJA');
+  scene.add(label('LAMPU AVIASI (MATI)',.6,'#ff8d8d').translateY(8.7).translateZ(-1.8));
+  /* meja alat: papan izin, harness, lanyard */
+  const tbl=boxT(2.6,.08,.9,TEX.wood());tbl.position.set(-5.2,.95,1.6);scene.add(tbl);
+  const tleg=boxT(.08,.95,.08,TEX.wood());tleg.position.set(-5.2,.47,1.6);scene.add(tleg);
+  mti.permit=box(.5,.66,.04,0xe8e4d8);mti.permit.position.set(-6.0,1.35,1.4);scene.add(mti.permit);
+  actMesh(mti.permit,'IZIN');
+  scene.add(label('IZIN KERJA KETINGGIAN',.55,'#5fd4ff').translateX(-6.0).translateY(1.85).translateZ(1.4));
+  mti.harness=box(.4,.5,.12,0xd87a20);mti.harness.position.set(-5.2,1.1,1.6);scene.add(mti.harness);
+  actMesh(mti.harness,'CEK');
+  scene.add(label('FULL BODY HARNESS',.55,'#5fd4ff').translateX(-5.2).translateY(1.7).translateZ(1.6));
+  mti.lanyard=new THREE.Mesh(new THREE.TorusGeometry(.16,.04,10,22),
+    new THREE.MeshStandardMaterial({color:0xd8b020,roughness:.5}));
+  mti.lanyard.position.set(-4.4,1.15,1.6);scene.add(mti.lanyard);
+  actMesh(mti.lanyard,'PAKAI');
+  scene.add(label('DOUBLE LANYARD',.55,'#5fd4ff').translateX(-4.3).translateY(1.6).translateZ(1.6));
+  /* anchor point di tower */
+  mti.anchor=new THREE.Mesh(new THREE.TorusGeometry(.14,.035,10,20),
+    new THREE.MeshStandardMaterial({color:0x46a06a,metalness:.5}));
+  mti.anchor.position.set(0,5.2,-.85);scene.add(mti.anchor);
+  actMesh(mti.anchor,'PANJAT');
+  scene.add(label('ANCHOR POINT (di atas kepala)',.6,'#8df0b8').translateX(1.8).translateY(5.3).translateZ(-.8));
+  startSeq([
+   {type:'act',aid:'IZIN',done:false,targets:()=>[mti.permit],
+    desc:'Urus IZIN KERJA ketinggian + cek cuaca (klik dokumen).',
+    why:'Izin ketinggian memeriksa: kompetensi TKBT pemanjat, rencana penyelamatan, dan CUACA — angin di atas 25 km/jam atau awan petir = pekerjaan ditunda. Tower selalu bisa menunggu; nyawa tidak bisa diulang.',
+    fx(){toast('📋 Izin terbit · angin 12 km/jam · cerah — GO.','ok',2600);}},
+   {type:'act',aid:'CEK',done:false,targets:()=>[mti.harness],
+    desc:'INSPEKSI harness & lanyard sebelum dipakai (klik harness).',
+    why:'Telusuri jengkal demi jengkal: webbing tak tersayat, jahitan utuh, D-ring tak berkarat, hook mengunci mantap, absorber masih tersegel. Alat yang gagal di tanah hanya mengecewakan; yang gagal di 40 meter, membunuh.',
+    fx(){toast('🔍 Webbing ✓ jahitan ✓ hook ✓ absorber tersegel ✓','ok',2600);}},
+   {type:'act',aid:'PAKAI',done:false,targets:()=>[mti.lanyard],
+    desc:'Kenakan harness + double lanyard dengan benar (klik lanyard).',
+    why:'Tali dada sejajar dada, tali paha pas dua jari, D-ring punggung tepat di antara belikat — harness yang kendor membuat tubuh terlepas saat menggantung terbalik. Dua lanyard terpasang di sisi pinggang, siap bergantian.',
+    fx(){mti.harness.material.color.setHex(0x46a06a);
+      toast('🦺 Harness terpasang pas + double lanyard siap.','ok',2400);}},
+   {type:'act',aid:'PANJAT',done:false,targets:()=>[mti.anchor],
+    desc:'Panjat dengan 100% TIE-OFF: kaitkan lanyard ke anchor (klik anchor hijau).',
+    why:'Ritme panjat yang benar: kait lanyard A di atas → naik → kait lanyard B lebih tinggi → LEPAS A → naik. Selalu ada satu yang menggenggam tower. Detik tanpa kaitan adalah detik di mana statistik mencari nama baru.',
+    fx(){toast('🧗 Tie-off A → naik → tie-off B → lepas A... 40 meter dengan selamat.','ok',3000);}},
+   {type:'act',aid:'KERJA',done:false,targets:()=>[mti.lamp],
+    desc:'Di puncak: work positioning, alat terikat, ganti LAMPU AVIASI.',
+    why:'Work positioning belt menahan tubuh agar KEDUA tangan bebas bekerja — menggantung di lanyard sambil kerja itu bukan teknik, itu kelelahan. Kunci & lampu diikat tool lanyard: di bawah ada rekan kerjamu.',
+    fx(){mti.lamp.material.color.setHex(0xff3b3b);mti.lamp.material.emissive.setHex(0xff3b3b);
+      mti.lamp.material.emissiveIntensity=1;
+      toast('🔴 Lampu aviasi MENYALA — pesawat melihat tower lagi!','ok',3000);sfx.big();}},
+  ],()=>{say('🎉 <b>Turun dengan jumlah anggota tubuh yang sama seperti saat naik — itulah definisi sukses bekerja di ketinggian.</b> 100% tie-off bukan slogan: ia kebiasaan yang menua bersamamu.');
+    setTimeout(()=>showWin('tinggi'),2200);});
+  say('VOLTA di sini 🪜 Hari ini musuh kita bukan listrik — tapi <b>gravitasi</b>, pembunuh nomor satu di industri ini. Satu hukum yang tak bisa ditawar: <b>100% tie-off, selalu ada satu kaitan</b>. Mulai dari izin kerja.');
+  $('#modTitle').textContent='J08·M3 — Bekerja di Ketinggian';
+  $('#taskHead').textContent='100% TIE-OFF, TANPA JEDA';}
+MISSIONS.tinggi.build=buildTinggi;
+Object.assign(REAL,{
+ tinggi:[
+  'Wajib sertifikat TKBT/TKPK sesuai jenis akses — bukan sekadar pernah ikut briefing',
+  'Rencana penyelamatan disiapkan SEBELUM naik: korban menggantung di harness wajib turun <15 menit',
+  'Harness yang pernah menahan jatuh atau melewati masa pakai pabrikan langsung dimusnahkan',
+  'Area di bawah diberi barikade & rambu — kepala di bawah tidak memilih kapan kunci jatuh'],
+});

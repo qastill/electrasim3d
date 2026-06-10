@@ -196,3 +196,106 @@ Object.assign(REAL,{
   'Area dispensing = zona ATEX: dilarang HP/sumber api, kendaraan mati total selama pengisian',
   'Pelajari prosedur emergency shutdown (ESD) stasiun & titik kumpulnya sebelum shift pertama'],
 });
+
+/* =====================================================================
+   MISI 3 — TANGGAP DARURAT KEBOCORAN H2
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ leak:{lvl:'JALUR 14 · HYDROGEN ENERGY · MISI 3',icon:'🚨',title:'Tanggap Darurat Kebocoran H₂',strict:true,
+  loc:'📍 Pilot plant H₂ · Alarm zona kompresor, 10:42',
+  story:'Sirine memekik: detektor zona kompresor membaca 8.000 ppm H₂ — 20% menuju batas bawah ledakan dan naik. Hidrogen tak terlihat, tak tercium, dan apinya pun nyaris tak tampak di siang hari. Detik-detik berikutnya menentukan apakah ini catatan insiden... atau berita nasional.',
+  goal:'Kebocoran tertangani tanpa penyulutan: ESD aktif, area aman, ventilasi bekerja, sumber bocor ditemukan & diamankan.',
+  obj:['Respon alarm TANPA menciptakan sumber api','Aktifkan ESD & evakuasi-amankan area','Pantau konsentrasi turun lalu lacak sumber bocor'],
+  learn:['Respon pertama kebocoran gas: JANGAN menyalakan/mematikan apapun di zona — saklar pun bisa memercik','ESD menutup valve sumber & menghentikan kompresor dari titik AMAN di luar zona — itulah gunanya diletakkan di sana','H₂ 14x lebih ringan dari udara: ia lari ke atas — ventilasi atap adalah jalur pelariannya, beri dia jalan','Masuk kembali ke zona hanya setelah konsentrasi jauh di bawah LFL & dengan detector menyala di tangan'],
+  next:['Pelajari klasifikasi zona ATEX & pemilihan peralatan Ex-proof','Latih emergency drill rutin — respon yang benar lahir dari latihan, bukan bakat','Dalami deteksi api H₂ (flame detector UV/IR) — api yang tak terlihat mata']},
+});
+let mlk={};
+function buildLeak(){
+  freshScene(0xa8c4d8,0x0e1a22);
+  cam={theta:-.1,phi:1.18,r:9,target:new THREE.Vector3(0,1.7,-.8)};
+  const ground=boxT(20,.1,12,TEX.concrete());ground.position.y=-.05;scene.add(ground);
+  /* zona kompresor dgn garis hazard */
+  const zona=boxT(5,.04,4,TEX.hazard());zona.position.set(-1.5,.05,-1.5);scene.add(zona);
+  mlk.comp=boxT(1.2,1.0,.9,TEX.metal(),{metalness:.35});mlk.comp.position.set(-2.2,.55,-1.8);scene.add(mlk.comp);
+  scene.add(label('KOMPRESOR 350 bar',.7).translateX(-2.2).translateY(1.3).translateZ(-1.8));
+  const pipa=cyl(.06,.06,2.4,0x8a96a2);pipa.rotation.z=Math.PI/2;pipa.position.set(-.6,1.0,-1.8);scene.add(pipa);
+  mlk.fitting=cyl(.09,.09,.18,0xc9b08a);mlk.fitting.rotation.z=Math.PI/2;
+  mlk.fitting.position.set(.2,1.0,-1.8);scene.add(mlk.fitting);
+  actMesh(mlk.fitting,'SUMBER');
+  /* detektor & sirine */
+  mlk.det=box(.22,.3,.12,0xffd23f);mlk.det.position.set(-1.5,2.6,-3.0);scene.add(mlk.det);
+  actMesh(mlk.det,'ALARM');
+  mlk.lampu=new THREE.Mesh(new THREE.SphereGeometry(.09,12,10),
+    new THREE.MeshStandardMaterial({color:0xff3b3b,emissive:0xff3b3b,emissiveIntensity:1}));
+  mlk.lampu.position.set(-1.5,3.0,-3.0);scene.add(mlk.lampu);
+  scene.add(label('DETEKTOR ZONA — ALARM!',.65,'#ff8d8d').translateX(-1.5).translateY(3.4).translateZ(-3.0));
+  /* tombol ESD di luar zona */
+  const tiang=cyl(.04,.04,1.3,0x666666);tiang.position.set(3.6,.65,1.2);scene.add(tiang);
+  mlk.esd=cyl(.14,.14,.1,0xd83a3a);mlk.esd.rotation.x=Math.PI/2;
+  mlk.esd.position.set(3.6,1.4,1.2);scene.add(mlk.esd);
+  actMesh(mlk.esd,'ESD');
+  scene.add(label('ESD (luar zona)',.6,'#ff9d9d').translateX(3.6).translateY(1.8).translateZ(1.2));
+  /* barikade + ventilasi atap + handheld detector */
+  mlk.barikade=box(.5,.35,.06,0xffd23f);mlk.barikade.position.set(2.2,.9,.6);scene.add(mlk.barikade);
+  actMesh(mlk.barikade,'AMANKAN');
+  scene.add(label('BARIKADE & RAMBU',.55,'#5fd4ff').translateX(2.2).translateY(1.35).translateZ(.6));
+  const atap=boxT(6,.12,4.4,TEX.metal(),{metalness:.4});atap.position.set(-1.5,3.6,-1.5);scene.add(atap);
+  mlk.vent=box(.8,.3,.8,0x8a96a2);mlk.vent.position.set(-1.5,3.85,-1.5);scene.add(mlk.vent);
+  actMesh(mlk.vent,'VENT');
+  scene.add(label('VENTILASI ATAP',.6,'#5fd4ff').translateX(-1.5).translateY(4.3).translateZ(-1.5));
+  mlk.hand=box(.18,.26,.1,0xffd23f);mlk.hand.position.set(4.6,1.0,.2);scene.add(mlk.hand);
+  actMesh(mlk.hand,'LACAK');
+  scene.add(label('HANDHELD DETECTOR',.55,'#5fd4ff').translateX(4.6).translateY(1.35).translateZ(.2));
+  mlk.ppm=8000;mlk.esdOn=false;mlk.ventOn=false;
+  mlk.D=makeDisplay(1.2,.55,300,140);
+  mlk.D.mesh.position.set(-1.5,2.1,-2.94);scene.add(mlk.D.mesh);
+  function layar(){dispText(mlk.D,[Math.round(mlk.ppm)+' ppm',
+    mlk.ppm>4000?'⚠ EVAKUASI ZONA':(mlk.ppm>800?'TURUN…':'AMAN MASUK')],
+    [mlk.ppm>4000?'#ff5a5a':(mlk.ppm>800?'#ffd23f':'#46ff8e'),'#8aa3bd']);}
+  layar();
+  moduleTick=(dt,T)=>{
+    if(mlk.esdOn&&mlk.ventOn)mlk.ppm=Math.max(300,mlk.ppm-dt*900);
+    else if(mlk.esdOn)mlk.ppm=Math.max(2500,mlk.ppm-dt*350);
+    else mlk.ppm=Math.min(12000,mlk.ppm+dt*220);
+    if(mlk.ppm>4000)mlk.lampu.material.emissiveIntensity=.5+Math.sin(T*8)*.5;
+    else mlk.lampu.material.emissiveIntensity=.3;
+    layar();};
+  startSeq([
+   {type:'act',aid:'ALARM',done:false,targets:()=>[mlk.det],
+    desc:'Baca DETEKTOR dari jarak aman — JANGAN sentuh saklar apapun!',
+    why:'8.000 ppm = 20% LFL dan menanjak. Naluri orang panik: matikan lampu, cabut alat — SALAH: setiap saklar adalah pemantik. Membaca situasi dari luar zona adalah tindakan pertama yang benar.',
+    fx(){toast('📟 8.000 ppm, naik — zona TIDAK disentuh, bergerak ke ESD.','bad',2800);}},
+   {type:'act',aid:'ESD',done:false,targets:()=>[mlk.esd],
+    desc:'Tekan ESD — tombol merah di LUAR zona (klik tombol).',
+    why:'Satu tekanan: valve sumber menutup, kompresor berhenti, suplai gas terpenggal di hulu. ESD diletakkan jauh dari zona persis untuk momen ini — kamu mengeksekusinya tanpa melangkah ke dalam awan gas.',
+    fx(){mlk.esdOn=true;beep(440,.3,'square',.1);beep(440,.3,'square',.1,.4);
+      toast('🛑 ESD AKTIF — valve tertutup, kompresor berhenti.','ok',2600);}},
+   {type:'act',aid:'AMANKAN',done:false,targets:()=>[mlk.barikade],
+    desc:'EVAKUASI & amankan perimeter (klik barikade).',
+    why:'Semua personel keluar zona, barikade & rambu terpasang, lalu lintas kendaraan dihentikan — mesin bensin yang lewat adalah korek api berjalan. Hitung kepala: semua lengkap.',
+    fx(){toast('🚧 Perimeter aman · personel lengkap · lalu lintas distop.','ok',2600);}},
+   {type:'act',aid:'VENT',done:false,targets:()=>[mlk.vent],
+    desc:'Pastikan VENTILASI ATAP bekerja maksimal (klik ventilasi).',
+    why:'H₂ ingin pergi ke atas — tugasmu hanya membukakan pintu. Exhaust atap mode darurat: gas ringan itu terbang dan terdilusi ke atmosfer. Perhatikan ppm di layar mulai terjun.',
+    fx(){mlk.ventOn=true;
+      toast('🌬️ Ventilasi maksimal — konsentrasi turun cepat.','ok',2600);}},
+   {type:'act',aid:'LACAK',done:false,targets:()=>[mlk.hand],
+    check:()=>mlk.ppm<=800,
+    checkFail:'Masih terlalu pekat! Tunggu layar menunjukkan konsentrasi jauh turun sebelum masuk melacak.',
+    desc:'Setelah ppm rendah: masuk dengan HANDHELD, lacak sumber bocor.',
+    why:'Detector menuntun seperti hidung: pembacaan menguat di fitting kompresi outlet kompresor — kendor termakan getaran. Di-tag, di-LOTO, dijadwalkan perbaikan + re-torque seluruh fitting sejenis. Insiden ditutup dengan pelajaran, bukan hanya napas lega.',
+    fx(){spark(worldPos(mlk.fitting),0xffd23f);
+      toast('🔍 Sumber: fitting outlet kendor — TAG & LOTO terpasang.','ok',3000);sfx.big();}},
+  ],()=>{say('🎉 <b>Nol penyulutan, nol korban.</b> Tanpa saklar disentuh, ESD dari titik aman, gas diberi jalan pulang ke langit, dan sumber ditemukan dengan sabar. Begitulah profesional hidrogen menulis cerita yang membosankan — dan membosankan itu sempurna.');
+    setTimeout(()=>showWin('leak'),2200);});
+  say('VOLTA di sini, tegang sedikit boleh 🚨 <b>Kebocoran H₂ zona kompresor!</b> Aturan emasnya berlawanan dengan naluri: <b>jangan nyalakan atau matikan APAPUN di dalam zona</b>. ESD ada di luar — mulai dari membaca detektor.');
+  $('#modTitle').textContent='J14·M3 — Tanggap Darurat H₂';
+  $('#taskHead').textContent='TANPA PERCIKAN · ESD · VENTILASI';}
+MISSIONS.leak.build=buildLeak;
+Object.assign(REAL,{
+ leak:[
+  'Drill tanggap darurat H₂ dilatih berkala dengan skenario & evaluasi — bukan sekali saat komisioning',
+  'Peralatan respon (detector, radio) harus rating Ex/intrinsically safe — alat biasa = pemantik',
+  'Investigasi akar: fitting kendor karena getaran → jadwal re-torque & dudukan anti-vibrasi',
+  'Laporkan sesuai ketentuan K3: near-miss hari ini adalah data pencegah fatality besok'],
+});
