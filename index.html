@@ -95,7 +95,8 @@
   /* ---------- BRIEFING ---------- */
   #brief{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;
     background:#0b1420e6;padding:18px;overflow:auto}
-  .briefCard{background:var(--panel);border:1px solid var(--yellow);max-width:600px;width:100%;
+  .briefCard{border-radius:12px;backdrop-filter:blur(12px);box-shadow:0 18px 50px #000b;
+    background:var(--panel);border:1px solid var(--yellow);max-width:600px;width:100%;
     padding:26px 28px;position:relative;margin:auto}
   .briefCard::before{content:"";position:absolute;left:0;top:0;width:100%;height:5px;
     background:repeating-linear-gradient(135deg,var(--yellow) 0 12px,#0b1420 12px 24px)}
@@ -116,9 +117,13 @@
 
   /* ---------- HUD ---------- */
   #hud{position:fixed;inset:0;z-index:20;pointer-events:none;display:none}
+  /* vignette sinematik di atas kanvas 3D */
+  #hud::before{content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(120% 95% at 50% 42%,transparent 58%,#04070bb8 100%)}
   #topbar{position:absolute;top:0;left:0;right:0;display:flex;align-items:stretch;gap:1px;
     background:var(--line);border-bottom:1px solid var(--line)}
-  .tb{background:var(--panel);padding:9px 13px;display:flex;align-items:center;gap:10px}
+  .tb{background:var(--panel);padding:9px 13px;display:flex;align-items:center;gap:10px;
+    backdrop-filter:blur(10px)}
   #btnBack{pointer-events:auto;cursor:pointer;color:var(--yellow);font-family:var(--mono);
     font-size:12px;letter-spacing:.12em;border:none;background:var(--panel)}
   #btnBack:hover{background:#16263a}
@@ -128,9 +133,11 @@
   #progWrap{position:absolute;top:42px;left:0;right:0;height:5px;background:#13202f}
   #prog{height:100%;width:0%;background:linear-gradient(90deg,var(--cyan),var(--yellow));transition:width .4s}
   #stepBadge{position:absolute;top:54px;right:12px;background:var(--panel);border:1px solid var(--yellow);
-    font-family:var(--mono);font-size:12px;color:var(--yellow);padding:6px 12px;letter-spacing:.15em}
+    font-family:var(--mono);font-size:12px;color:var(--yellow);padding:6px 12px;letter-spacing:.15em;
+    border-radius:7px;backdrop-filter:blur(10px);box-shadow:0 8px 22px #0007}
   #tasks{position:absolute;left:12px;top:56px;width:min(300px,76vw);background:var(--panel);
-    border:1px solid var(--line);pointer-events:auto;max-height:46vh;overflow:auto}
+    border:1px solid var(--line);pointer-events:auto;max-height:46vh;overflow:auto;
+    border-radius:10px;backdrop-filter:blur(12px);box-shadow:0 12px 32px #0008}
   #tasks header{padding:8px 12px;border-bottom:1px solid var(--line);font-family:var(--mono);
     font-size:10px;letter-spacing:.26em;color:var(--cyan);display:flex;justify-content:space-between;align-items:center;
     position:sticky;top:0;background:var(--panel)}
@@ -146,7 +153,8 @@
 
   /* ---------- TUTOR ---------- */
   #tutor{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;width:min(680px,95vw);
-    background:var(--panel);border:1px solid var(--line);pointer-events:auto;display:flex}
+    background:var(--panel);border:1px solid var(--line);pointer-events:auto;display:flex;
+    border-radius:12px;backdrop-filter:blur(12px);box-shadow:0 14px 40px #000a}
   #tutorMin{position:absolute;top:-25px;right:-1px;background:var(--panel);border:1px solid var(--line);
     border-bottom:none;color:var(--cyan);font-family:var(--mono);font-size:10px;padding:4px 12px;
     cursor:pointer;letter-spacing:.1em}
@@ -154,6 +162,7 @@
   #tutor.min{width:auto}
   #tutor.min #tutorBody{display:none}
   #avatar{width:72px;flex:none;background:#0a1623;border-right:1px solid var(--line);
+    border-radius:12px 0 0 12px;
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:8px 4px}
   #avFace{width:42px;height:42px;border:2px solid var(--cyan);border-radius:50%;display:flex;
     align-items:center;justify-content:center;font-size:22px;background:#0e2236;
@@ -175,7 +184,8 @@
     padding:7px 10px;font-size:12.5px;outline:none}
   #askInput:focus{border-color:var(--cyan)}
 
-  #toast{position:absolute;left:50%;top:78px;transform:translateX(-50%);padding:10px 20px;z-index:25;
+  #toast{border-radius:9px;backdrop-filter:blur(10px);box-shadow:0 10px 26px #0008;
+    position:absolute;left:50%;top:78px;transform:translateX(-50%);padding:10px 20px;z-index:25;
     font-weight:600;font-size:14px;border:1px solid;opacity:0;transition:opacity .25s;max-width:92vw;text-align:center}
   #toast.ok{background:#0d2b1d;border-color:var(--ok);color:var(--ok)}
   #toast.bad{background:#2d1212;border-color:var(--bad);color:var(--bad)}
@@ -185,7 +195,8 @@
   /* ---------- WIN ---------- */
   #winBox{position:absolute;inset:0;display:none;align-items:center;justify-content:center;
     background:#0b1420d9;pointer-events:auto;padding:16px;overflow:auto;z-index:30}
-  .winCard{background:var(--panel);border:1px solid var(--yellow);padding:26px 30px;max-width:560px;width:100%;margin:auto}
+  .winCard{background:var(--panel);border:1px solid var(--yellow);padding:26px 30px;max-width:560px;width:100%;margin:auto;
+    border-radius:12px;backdrop-filter:blur(12px);box-shadow:0 18px 50px #000b}
   .winCard .eyebrow{color:var(--ok)}
   .winCard h2{font-size:22px;margin:6px 0 2px}
   #winStars{font-size:30px;letter-spacing:6px;margin:6px 0 10px;color:var(--yellow)}
@@ -271,6 +282,7 @@
       <div id="tutorRow">
         <button id="btnHint">💡 HINT</button>
         <button id="btnWhy">❓ KENAPA</button>
+        <button id="btnVoice" title="Suara VOLTA on/off">🔊</button>
         <input id="askInput" placeholder="Tanya VOLTA apa saja… (Enter)">
       </div>
     </div>
@@ -458,6 +470,10 @@ function initGL(){
   renderer.setSize(innerWidth,innerHeight);
   renderer.shadowMap.enabled=true;
   renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  /* rendering sinematik: tone mapping film + warna sRGB */
+  renderer.outputEncoding=THREE.sRGBEncoding;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=1.15;
   document.body.appendChild(renderer.domElement);
   camera=new THREE.PerspectiveCamera(58,innerWidth/innerHeight,.1,200);
   raycaster=new THREE.Raycaster(); clock=new THREE.Clock();
@@ -476,14 +492,45 @@ function freshScene(bgTop,bgBot){
   grd.addColorStop(1,'#'+bgBot.toString(16).padStart(6,'0'));
   sg.fillStyle=grd;sg.fillRect(0,0,2,256);
   scene.background=new THREE.CanvasTexture(sc);
-  scene.add(new THREE.HemisphereLight(bgTop,0x0c1420,.9));
-  const sun=new THREE.DirectionalLight(0xffffff,.85);
-  sun.position.set(4,8,6); sun.castShadow=true;
-  sun.shadow.mapSize.set(1024,1024); scene.add(sun);
+  /* pencahayaan 3 titik: key hangat + fill dingin + rim, bayangan halus */
+  scene.add(new THREE.HemisphereLight(bgTop,0x0c1420,.7));
+  const sun=new THREE.DirectionalLight(0xfff2dd,1.0);
+  sun.position.set(5,9,6); sun.castShadow=true;
+  sun.shadow.mapSize.set(2048,2048);
+  sun.shadow.bias=-.0004; sun.shadow.radius=4;
+  sun.shadow.camera.left=-12;sun.shadow.camera.right=12;
+  sun.shadow.camera.top=12;sun.shadow.camera.bottom=-12;
+  scene.add(sun);
+  const fill=new THREE.DirectionalLight(0x9fc4ff,.32);
+  fill.position.set(-6,4,-3); scene.add(fill);
+  const rim=new THREE.PointLight(0xffd9a0,.4,26);
+  rim.position.set(-3,5.5,7); scene.add(rim);
   wiresGroup=new THREE.Group(); scene.add(wiresGroup);
   fxGroup=new THREE.Group(); scene.add(fxGroup);
-  clickables=[]; sparks=[]; markers=[]; moduleTick=null;}
+  clickables=[]; sparks=[]; markers=[]; moduleTick=null; hovObj=null;}
 let ptr={down:false,x:0,y:0,moved:0,btn:0}, pinch0=0;
+/* ---------- hover highlight: objek klikabel menyala saat disorot ---------- */
+let hovObj=null, hovT=0;
+function setHover(o){
+  if(hovObj===o)return;
+  if(hovObj){
+    if(hovObj.material&&hovObj.material.emissive&&hovObj!==selTerm)
+      hovObj.material.emissiveIntensity=hovObj.userData._he||0;
+    hovObj=null;}
+  if(o){
+    hovObj=o;
+    if(o.material&&o.material.emissive&&o!==selTerm){
+      o.userData._he=o.material.emissiveIntensity||0;
+      if(o.material.emissive.getHex()===0)o.material.emissive.setHex(0x5fd4ff);
+      o.material.emissiveIntensity=Math.max(o.userData._he,.4);}}
+  renderer.domElement.style.cursor=o?'pointer':'';}
+function hoverCheck(x,y){
+  const now=performance.now(); if(now-hovT<60)return; hovT=now;
+  if(!curModule||!seq){setHover(null);return;}
+  const v=new THREE.Vector2((x/innerWidth)*2-1,-(y/innerHeight)*2+1);
+  raycaster.setFromCamera(v,camera);
+  const hits=raycaster.intersectObjects(clickables,false);
+  setHover(hits.length?hits[0].object:null);}
 function bindControls(){
   const el=renderer.domElement;
   el.addEventListener('pointerdown',e=>{audio();ptr={down:true,x:e.clientX,y:e.clientY,moved:0,btn:e.button};});
@@ -491,7 +538,7 @@ function bindControls(){
     if(ptr.down && ptr.moved<7 && e.target===renderer.domElement) onClick(e.clientX,e.clientY);
     ptr.down=false;});
   addEventListener('pointermove',e=>{
-    if(!ptr.down)return;
+    if(!ptr.down){if(e.target===renderer.domElement)hoverCheck(e.clientX,e.clientY);return;}
     const dx=e.clientX-ptr.x, dy=e.clientY-ptr.y;
     ptr.moved+=Math.abs(dx)+Math.abs(dy);
     if(ptr.btn===2||e.shiftKey){
@@ -598,11 +645,41 @@ function say(html){
   el.innerHTML=''; av.classList.add('talk');
   const tmp=document.createElement('div'); tmp.innerHTML=html;
   const full=html; let i=0; const plain=tmp.textContent;
+  speak(plain);
   (function tick(){
     i+=5;
     if(i>=plain.length){el.innerHTML=full;av.classList.remove('talk');return;}
     el.textContent=plain.slice(0,i);
     typeTO=setTimeout(tick,12);})();}
+
+/* =====================================================================
+   SUARA VOLTA — text-to-speech Bahasa Indonesia (Web Speech API)
+   ===================================================================== */
+let ttsOn=true, ttsVoice=null;
+try{ttsOn=window.localStorage.getItem('esim_tts')!=='0';}catch(e){}
+function pickVoice(){
+  try{
+    const vs=window.speechSynthesis.getVoices();
+    ttsVoice=vs.find(v=>/id[-_]ID/i.test(v.lang))||vs.find(v=>/^id/i.test(v.lang))||null;
+  }catch(e){}}
+if(typeof window!=='undefined'&&'speechSynthesis' in window){
+  pickVoice(); window.speechSynthesis.onvoiceschanged=pickVoice;}
+function speak(text){
+  if(!ttsOn||typeof window==='undefined'||!('speechSynthesis' in window))return;
+  try{
+    window.speechSynthesis.cancel();
+    /* buang emoji & simbol agar tidak ikut dibaca */
+    const clean=text.replace(/[\u{1F000}-\u{1FAFF}\u{2190}-\u{27BF}✓×▼·—…⚡⏚]/gu,' ')
+      .replace(/\s+/g,' ').trim();
+    if(!clean)return;
+    const u=new SpeechSynthesisUtterance(clean);
+    if(ttsVoice)u.voice=ttsVoice;
+    u.lang='id-ID'; u.rate=1.05; u.pitch=1.0; u.volume=.95;
+    window.speechSynthesis.speak(u);
+  }catch(e){}}
+function stopSpeak(){try{window.speechSynthesis.cancel();}catch(e){}}
+function updVoiceBtn(){const b=$('#btnVoice');if(b)b.textContent=ttsOn?'🔊':'🔇';}
+
 
 /* =====================================================================
    MISSION ENGINE (urut terpandu)
@@ -667,6 +744,12 @@ function actClicked(aid,mesh){
   addMiss(); addScore(strict?-10:-5); sfx.bad(); spark(worldPos(mesh),0xff5a5a);
   toast(strict?'⛔ PELANGGARAN SOP! Salah urutan.':'✗ Belum waktunya untuk itu.','bad',2600);
   say(`⚠️ ${isFuture?'Langkah itu ada di prosedur, tapi <b>belum urutannya</b>.':'Itu bukan langkah yang diminta.'} ${strict?'Pada pekerjaan ini, urutan = nyawa.':''} Sekarang: <b>${s.desc}</b>`);}
+$('#btnVoice').onclick=()=>{
+  ttsOn=!ttsOn; if(!ttsOn)stopSpeak();
+  else speak('Suara VOLTA aktif. Aku akan memandumu di setiap langkah.');
+  try{window.localStorage.setItem('esim_tts',ttsOn?'1':'0');}catch(e){}
+  updVoiceBtn(); sfx.click();};
+updVoiceBtn();
 $('#btnHint').onclick=()=>{const s=cur();if(!s)return;sfx.click();
   introStep(); markers.forEach(m=>m.scale.setScalar(1.8));
   toast('Lihat penanda kuning ▼ pada objek target','info');};
@@ -789,7 +872,7 @@ function showWin(k){
 $('#winMenu').onclick=()=>{$('#winBox').style.display='none';backToMenu();};
 $('#winRetry').onclick=()=>{$('#winBox').style.display='none';startModule(curModule);};
 $('#btnBack').onclick=backToMenu;
-function backToMenu(){curModule=null;timerOn=false;seq=null;moduleTick=null;
+function backToMenu(){curModule=null;timerOn=false;seq=null;moduleTick=null;stopSpeak();setHover(null);
   $('#hud').style.display='none';$('#menu').style.display='block';renderMenu();}
 
 function onClick(x,y){
