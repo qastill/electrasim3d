@@ -316,3 +316,114 @@ Object.assign(REAL,{
   'Bandingkan SoH terukur dengan jaminan degradasi vendor — selisih besar = bahan klaim garansi',
   'Rack augmentasi beda umur tidak diparalel langsung dengan rack lama — perlu manajemen PCS/string terpisah'],
 });
+
+/* =====================================================================
+   MISI 4 — BESS GRID SERVICE: FREQUENCY RESPONSE
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ freq:{lvl:'JALUR 15 · BATERAI & BESS · MISI 4',icon:'⚡',title:'BESS Grid Service: Frequency Response',strict:false,
+  loc:'📍 BESS container · Kontrak layanan frekuensi dimulai',
+  story:'BESS-mu naik pangkat: selain peak shaving, kini ia dikontrak sebagai PENJAGA FREKUENSI jaringan. Saat pembangkit besar tersandung dan frekuensi terjun, baterai harus menyuntik daya dalam HITUNGAN MILIDETIK — lebih cepat dari governor pembangkit mana pun berputar. Hari ini kamu mengaktifkan refleks tercepat di sistem tenaga.',
+  goal:'Mode frequency response aktif dengan parameter droop benar, dan teruji: BESS merespons gangguan frekuensi otomatis dalam milidetik.',
+  obj:['Pahami kontrak layanan & parameter droop','Set deadband, droop & batas SoC di EMS','Uji simulasi gangguan — saksikan respon milidetik'],
+  learn:['Inersia sistem menurun saat PLTS/PLTB menggantikan mesin berputar — frekuensi kini jatuh LEBIH CEPAT saat gangguan; baterai mengisi kekosongan refleks itu','Droop control: makin dalam frekuensi jatuh, makin besar daya disuntik — proporsional, otomatis, tanpa menunggu perintah manusia','Deadband (±0,02 Hz) mencegah baterai bereaksi pada riak normal — menghemat siklus untuk gangguan sungguhan','SoC dijaga di tengah (±50%): penjaga frekuensi harus siap mendorong DAN menyerap kapan pun'],
+  next:['Pelajari spesifikasi layanan frekuensi & skema kompensasinya','Dalami grid-forming vs grid-following inverter','Eksplorasi virtual power plant: agregasi banyak BESS kecil']},
+});
+let mfq={};
+function buildFreq(){
+  freshScene(0x9fb0c4,0x101822);
+  cam={theta:.1,phi:1.18,r:8,target:new THREE.Vector3(0,1.7,-1)};
+  const ground=boxT(18,.1,11,TEX.concrete());ground.position.y=-.05;scene.add(ground);
+  const cont=boxT(3.6,2.4,1.6,TEX.metal(),{metalness:.3});cont.position.set(-3.2,1.2,-2.0);scene.add(cont);
+  cont.add(label('BESS 1 MWh · GRID SERVICE',.9).translateY(1.5));
+  /* layar kontrak */
+  mfq.K=makeDisplay(1.5,.9,340,200);
+  mfq.K.mesh.position.set(-3.2,1.4,-1.18);scene.add(mfq.K.mesh);
+  dispText(mfq.K,['KONTRAK FR','baca dulu…'],['#ffd23f','#7d8f84']);
+  actMesh(mfq.K.mesh,'KONTRAK');
+  /* EMS parameter */
+  mfq.E=makeDisplay(1.6,1.0,360,220);
+  mfq.E.mesh.position.set(0,2.2,-2.9);scene.add(mfq.E.mesh);
+  dispText(mfq.E,['EMS — PARAM','belum diset'],['#5fd4ff','#7d8f84']);
+  actMesh(mfq.E.mesh,'PARAM');
+  scene.add(label('EMS PARAMETER',.65,'#5fd4ff').translateX(0).translateY(2.95).translateZ(-2.9));
+  /* layar frekuensi + grafik respon */
+  const frame=boxT(3.4,2.0,.16,TEX.metal(),{metalness:.4});frame.position.set(3.8,2.1,-2.9);scene.add(frame);
+  frame.add(label('FREKUENSI & RESPON BESS',.8).translateY(1.25));
+  mfq.D=makeDisplay(3.1,1.7,520,300);
+  mfq.D.mesh.position.set(3.8,2.1,-2.8);scene.add(mfq.D.mesh);
+  actMesh(mfq.D.mesh,'UJI');
+  mfq.t=0;mfq.event=false;mfq.hist=[];
+  function grafik(){
+    const g=mfq.D.g,W=520,H=300;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.strokeStyle='#2a3a4c';g.lineWidth=2;
+    g.beginPath();g.moveTo(40,20);g.lineTo(40,H-30);g.lineTo(W-10,H-30);g.stroke();
+    g.font='600 14px Consolas';g.fillStyle='#8aa3bd';g.textAlign='left';
+    g.fillText('50,00',2,84);g.fillText('49,80',2,180);
+    g.strokeStyle='#445970';g.setLineDash([5,5]);
+    g.beginPath();g.moveTo(40,80);g.lineTo(W-10,80);g.stroke();g.setLineDash([]);
+    /* freq line & P line */
+    g.strokeStyle='#5fd4ff';g.lineWidth=3;g.beginPath();
+    mfq.hist.forEach((h,i)=>{const x=40+i*2.4,y=80+(50-h.f)*500;
+      i===0?g.moveTo(x,y):g.lineTo(x,y);});
+    g.stroke();
+    g.strokeStyle='#46ff8e';g.lineWidth=3;g.beginPath();
+    mfq.hist.forEach((h,i)=>{const x=40+i*2.4,y=H-30-h.p*.35;
+      i===0?g.moveTo(x,y):g.lineTo(x,y);});
+    g.stroke();
+    g.fillStyle='#5fd4ff';g.fillText('— frekuensi',60,34);
+    g.fillStyle='#46ff8e';g.fillText('— daya BESS (kW)',180,34);
+    if(mfq.event&&mfq.hist.length>40){g.fillStyle='#ffd23f';g.font='700 16px Consolas';
+      g.fillText('respon: 180 ms · puncak 420 kW',60,H-8);}
+    mfq.D.tex.needsUpdate=true;}
+  mfq.armed=false;
+  moduleTick=(dt)=>{
+    mfq.t+=dt;
+    let f=50+Math.sin(mfq.t*1.7)*.012;
+    let p=0;
+    if(mfq.event){
+      const te=mfq.t-mfq.t0;
+      if(te<6){f=50-.22*Math.exp(-Math.pow((te-1.6),2)/1.4)-(te<1.6?te*.1:.16*Math.exp(-(te-1.6)*.8));
+        f=Math.max(49.78,f);
+        if(mfq.armed&&f<49.98)p=Math.min(420,(50-f)*2100);}
+      else mfq.event=false;}
+    mfq.hist.push({f,p});if(mfq.hist.length>195)mfq.hist.shift();
+    if((mfq.t*10|0)%2===0)grafik();};
+  startSeq([
+   {type:'act',aid:'KONTRAK',done:false,targets:()=>[mfq.K.mesh],
+    desc:'Baca KONTRAK layanan frekuensi: apa yang dijanjikan? (klik layar)',
+    why:'Kontrak: siaga 500 kW, aktif penuh < 1 detik bila frekuensi keluar 49,98–50,02, dibayar per MW-jam KESIAPAN — dibayar untuk berjaga, bukan hanya bekerja. Model bisnis kedua dari aset yang sama: stacking revenue.',
+    fx(){dispText(mfq.K,['500 kW · <1 dtk','bayar per kesiapan'],['#46ff8e','#eaf2fb']);
+      toast('📜 Kontrak dipahami: refleks 500 kW yang dibayar siaga.','ok',2800);}},
+   {type:'act',aid:'PARAM',done:false,targets:()=>[mfq.E.mesh],
+    desc:'Set PARAMETER di EMS: deadband, droop, batas SoC.',
+    why:'Deadband ±0,02 Hz (riak normal diabaikan — hemat siklus), droop 2% (49,90 Hz = suntik penuh), SoC dijaga 40–60% (siap mendorong DAN menyerap). Tiga angka ini adalah kepribadian sang penjaga: tak gugupan, tapi sigap.',
+    fx(){dispText(mfq.E,['db±0,02 · droop2%','SoC 40-60% ✓'],['#46ff8e','#46ff8e']);
+      mfq.armed=true;
+      toast('⚙️ Parameter terkunci — mode frequency response AKTIF.','ok',2800);}},
+   {type:'act',aid:'UJI',done:false,targets:()=>[mfq.D.mesh],
+    desc:'UJI: suntikkan gangguan simulasi — pembangkit 100 MW "trip".',
+    why:'Frekuensi terjun... dan dalam 180 milidetik garis hijau melonjak: BESS menyuntik hingga 420 kW mengikuti dalamnya jatuh — droop bekerja persis seperti diset. Governor pembangkit lain baru mulai membuka katup ketika baterai sudah selesai menahan jurang.',
+    fx(){mfq.event=true;mfq.t0=mfq.t;sfx.click();
+      toast('⚡ Gangguan disuntik — saksikan respon milidetik di grafik!','ok',3000);}},
+   {type:'act',aid:'LAPOR',done:false,targets:()=>[mfq.K.mesh],
+    check:()=>!mfq.event&&mfq.hist.some(h=>h.p>300),
+    checkFail:'Tunggu kejadian selesai — biarkan grafik merekam respon penuh dulu.',
+    desc:'Kejadian usai: kirim LAPORAN kinerja ke pengelola sistem.',
+    why:'Rekaman terkirim otomatis: deteksi 49,97 Hz, respon 180 ms, puncak 420 kW, energi 9,8 kWh — frekuensi pulih tanpa satu pun pelanggan menyadari ada pembangkit tumbang. Laporan ini adalah invoice-mu: bukti kesiapan = bukti bayaran.',
+    fx(){toast('📤 Laporan kinerja terkirim — kontrak FR terverifikasi LULUS!','ok',3200);sfx.big();}},
+  ],()=>{say('🎉 <b>Refleks tercepat di sistem kini milikmu!</b> 180 milidetik dari deteksi ke ratusan kW — tak ada mesin berputar yang bisa menyaingi. Baterai bukan lagi sekadar penyimpan: ia penjaga detak jantung jaringan.');
+    setTimeout(()=>showWin('freq'),2200);});
+  const s0=seq.steps[0],of0=s0.fx;s0.fx=()=>{of0();mfq.K.mesh.userData.aid='LAPOR';};
+  say('VOLTA di sini ⚡ BESS-mu naik jabatan: <b>penjaga frekuensi jaringan</b>. Saat pembangkit tumbang, kamu punya milidetik — dan baterai adalah satu-satunya yang sanggup. Set droop-nya, lalu kita uji dengan gangguan sungguhan (simulasi).');
+  $('#modTitle').textContent='J15·M4 — Frequency Response';
+  $('#taskHead').textContent='MILIDETIK YANG MENYELAMATKAN';}
+MISSIONS.freq.build=buildFreq;
+Object.assign(REAL,{
+ freq:[
+  'Uji kinerja FR disaksikan & disertifikasi pengelola sistem sebelum kontrak aktif',
+  'Telemetri kontinu ke pusat pengatur: kesiapan diaudit dari data, bukan pengakuan',
+  'Manajemen SoC harian harus menyeimbangkan FR vs peak shaving — dua kontrak satu baterai perlu prioritas jelas',
+  'Hitung degradasi tambahan dari siklus FR dalam ekonomi proyek — refleks juga ada harganya'],
+});

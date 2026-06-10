@@ -297,3 +297,84 @@ Object.assign(REAL,{
   'Perhitungkan biaya ikutan shift malam: lembur operator, keamanan, pencahayaan — netto tetap harus positif',
   'Pantau 3 bulan pertama dengan logger: pastikan beban benar-benar pindah & penghematan terealisasi'],
 });
+
+/* =====================================================================
+   MISI 4 — AUDIT EFISIENSI BOILER
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ boiler:{lvl:'JALUR 06 · ENERGY AUDITOR · MISI 4',icon:'🔥',title:'Audit Efisiensi Boiler',strict:false,
+  loc:'📍 PT Maju Plastik · Ruang boiler 4 ton/jam',
+  story:'Listrik sudah dijinakkan — kini auditormu menengok pemakan energi satunya: boiler gas 4 ton/jam yang menelan 40% biaya energi pabrik. Boiler tua jarang berteriak; ia hanya diam-diam membuang uangmu lewat cerobong. Hari ini kamu membawa flue gas analyzer dan satu pertanyaan: berapa persen rupiah yang terbang jadi asap?',
+  goal:'Efisiensi boiler terukur dengan metode tak langsung, dua pemborosan ditemukan & dikoreksi, dan potensi penghematan terhitung.',
+  obj:['Ukur gas buang: O2, suhu cerobong, CO','Diagnosa: excess air & kerak — lalu koreksi','Hitung kenaikan efisiensi & nilai rupiahnya'],
+  learn:['Efisiensi boiler diukur dari KERUGIANNYA (metode tak langsung): rugi cerobong + radiasi + blowdown — yang tersisa itulah efisiensi','O2 gas buang tinggi = excess air berlebih: udara yang tak ikut bereaksi tetap MINTA dipanaskan lalu kabur lewat cerobong','Suhu cerobong naik dari baseline = kerak/jelaga di pipa: isolator yang menghalangi panas masuk ke air','Aturan praktis: tiap turun 20°C suhu cerobong ≈ efisiensi naik 1%'],
+  next:['Pelajari ekonomizer: memanen panas cerobong untuk air umpan','Audit blowdown & TDS control otomatis','Dalami steam trap survey — uap bocor senyap di ratusan trap']},
+});
+let mbo={};
+function buildBoiler(){
+  freshScene(0xb8c6d4,0x141d28);
+  cam={theta:.1,phi:1.18,r:8,target:new THREE.Vector3(0,1.8,-.8)};
+  const Z=room(0x55606a,0xb9c4bd,16,11);
+  /* boiler besar */
+  mbo.body=cyl(1.1,1.1,3.2,0x8a6a4a,24,{metalness:.25,roughness:.6});
+  mbo.body.rotation.z=Math.PI/2;mbo.body.position.set(-2.2,1.5,-1.8);scene.add(mbo.body);
+  scene.add(label('BOILER GAS 4 t/j',.85).translateX(-2.2).translateY(3.0).translateZ(-1.8));
+  /* burner + damper udara */
+  mbo.damper=box(.5,.4,.3,0x8a96a2);mbo.damper.position.set(-4.2,1.5,-1.8);scene.add(mbo.damper);
+  actMesh(mbo.damper,'DAMPER');
+  scene.add(label('BURNER + DAMPER UDARA',.6,'#5fd4ff').translateX(-4.2).translateY(2.2).translateZ(-1.8));
+  /* cerobong + port sampling */
+  const stack=cyl(.3,.38,3.6,0xb8b0a8);stack.position.set(0,3.2,-1.8);scene.add(stack);
+  mbo.port=cyl(.07,.07,.3,0xd8b020);mbo.port.rotation.z=Math.PI/2;
+  mbo.port.position.set(.35,3.6,-1.8);scene.add(mbo.port);
+  actMesh(mbo.port,'UKUR');
+  scene.add(label('PORT SAMPLING',.55,'#5fd4ff').translateX(1.1).translateY(3.85).translateZ(-1.8));
+  /* analyzer di meja */
+  const tbl=boxT(1.2,.07,.7,TEX.wood());tbl.position.set(2.6,.95,.4);scene.add(tbl);
+  const tleg=boxT(.08,.95,.08,TEX.wood());tleg.position.set(2.6,.47,.4);scene.add(tleg);
+  mbo.ana=box(.34,.24,.26,0xd8b020);mbo.ana.position.set(2.6,1.1,.4);scene.add(mbo.ana);
+  scene.add(label('FLUE GAS ANALYZER',.55,'#5fd4ff').translateX(2.6).translateY(1.45).translateZ(.4));
+  /* display hasil */
+  mbo.D=makeDisplay(2.0,1.1,420,240);
+  mbo.D.mesh.position.set(4.6,2.2,-1.8);mbo.D.mesh.rotation.y=-.3;scene.add(mbo.D.mesh);
+  dispText(mbo.D,['ANALISIS BOILER','menunggu sampel…'],['#5fd4ff','#7d8f84']);
+  actMesh(mbo.D.mesh,'HASIL');
+  const pole=cyl(.04,.04,1.6,0x666666);pole.position.set(4.6,.8,-1.8);scene.add(pole);
+  /* tube cleaning tool */
+  mbo.sikat=cyl(.04,.04,1.6,0x2a72c8);mbo.sikat.rotation.z=.5;
+  mbo.sikat.position.set(.6,1.0,.6);scene.add(mbo.sikat);
+  actMesh(mbo.sikat,'KERAK');
+  scene.add(label('TUBE BRUSH',.5,'#5fd4ff').translateX(.9).translateY(1.5).translateZ(.6));
+  startSeq([
+   {type:'act',aid:'UKUR',done:false,targets:()=>[mbo.port],
+    desc:'Masukkan probe analyzer ke PORT SAMPLING cerobong.',
+    why:'Hasil: O2 = 9,2% · suhu cerobong 285°C · CO rendah. Dua angka itu adalah dua dakwaan: O2 sebegitu tinggi berarti udara berlebih jauh; 285°C (baseline komisioning: 215°C) berarti ada isolator liar di dalam pipa — kerak.',
+    fx(){dispText(mbo.D,['O2 9,2% · 285°C','eff: 78% — ada 2 masalah'],['#ff5a5a','#ffd23f']);
+      toast('📏 O2 9,2% & 285°C — efisiensi cuma 78%. Dua tersangka!','bad',3000);}},
+   {type:'act',aid:'DAMPER',done:false,targets:()=>[mbo.damper],
+    desc:'Koreksi #1: tala DAMPER udara — turunkan excess air.',
+    why:'O2 ideal gas alam: 2-3% (excess air ±15%). Damper dirapatkan bertahap sambil mengawasi CO — udara kurang membuat CO meledak naik (bahan bakar tak terbakar tuntas). Berhenti tepat sebelum CO bangun: di sanalah titik manis pembakaran.',
+    fx(){dispText(mbo.D,['O2 2,8% ✓ · 282°C','CO aman — udara pas'],['#46ff8e','#ffd23f']);
+      toast('💨 O2 turun ke 2,8%, CO tetap rendah — pembakaran pas.','ok',3000);}},
+   {type:'act',aid:'KERAK',done:false,targets:()=>[mbo.sikat],
+    desc:'Koreksi #2: jadwalkan TUBE CLEANING — buang keraknya.',
+    why:'Kerak 1 mm di sisi air bisa mencuri 2-5% efisiensi: panas yang harusnya mendidihkan air malah numpang lewat ke cerobong. Setelah cleaning (dijadwalkan akhir pekan) suhu cerobong diproyeksikan turun 285→225°C ≈ efisiensi +3%.',
+    fx(){toast('🧹 Tube cleaning terjadwal — cerobong akan turun ±60°C.','ok',2800);}},
+   {type:'act',aid:'HASIL',done:false,targets:()=>[mbo.D.mesh],
+    desc:'Hitung HASIL akhir: efisiensi & rupiah (klik layar).',
+    why:'Damper: +2,5% · cleaning: +3% → efisiensi 78% → 83,5%. Pada konsumsi gas Rp 320 jt/bulan, tiap persen ≈ Rp 3,8 jt — total hemat ±Rp 21 jt/bulan. Modalnya: satu probe, satu obeng damper, satu sikat. Auditor terbaik memang murah meriah.',
+    fx(){dispText(mbo.D,['EFISIENSI 83,5% ✓','hemat ±Rp 21 jt/bln'],['#46ff8e','#46ff8e']);
+      toast('💰 78% → 83,5% = Rp 21 jt/bulan kembali dari cerobong!','ok',3200);sfx.big();}},
+  ],()=>{say('🎉 <b>Cerobong berhenti membakar uang!</b> O2 ditata, kerak diusir, 5,5% efisiensi pulang kembali. Boiler tak pernah bohong — ia hanya menunggu ditanya dengan alat yang benar.');
+    setTimeout(()=>showWin('boiler'),2200);});
+  say('VOLTA di sini 🔥 Target audit berikutnya: <b>boiler</b>, pemakan 40% biaya energi pabrik. Dua angka akan membuka semuanya: O2 dan suhu cerobong. Tusukkan probe-mu!');
+  $('#modTitle').textContent='J06·M4 — Audit Efisiensi Boiler';
+  $('#taskHead').textContent='UKUR ASAP, TEMUKAN UANG';}
+MISSIONS.boiler.build=buildBoiler;
+Object.assign(REAL,{
+ boiler:[
+  'Pengukuran gas buang pada beban representatif & stabil (bukan saat start/low fire)',
+  'Kalibrasi analyzer sebelum survey; sel O2/CO punya umur & drift',
+  'Penalaan damper dilakukan teknisi burner kompeten — CO tinggi berbahaya bagi ruangan',
+  'Pasang termometer cerobong permanen: kenaikan suhu = alarm dini kerak, bukan temuan tahunan'],
+});

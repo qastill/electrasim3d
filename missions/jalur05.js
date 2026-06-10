@@ -313,3 +313,99 @@ Object.assign(REAL,{
   'Re-train berkala: pola beban berubah (EV, PLTS atap, pelanggan baru) dan model membusuk diam-diam',
   'Sajikan interval keyakinan, bukan angka tunggal — keputusan investasi butuh skenario, bukan kepastian palsu'],
 });
+
+/* =====================================================================
+   MISI 4 — DETEKSI ANOMALI AMI REAL-TIME
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ ami:{lvl:'JALUR 05 · ENERGY ANALYST · MISI 4',icon:'📶',title:'Deteksi Anomali AMI Real-Time',strict:false,
+  loc:'📍 Command center AMI · 50.000 smart meter online',
+  story:'Era baru telah tiba: 50.000 smart meter melapor tiap 15 menit — manusia mana pun tenggelam membaca semuanya. Maka mesin yang membaca, manusia yang MEMUTUSKAN. Pagi ini dashboard anomali memunculkan tiga alert dengan skor berbeda. Tugas analis modern bukan mencari jarum di jerami; jarum sudah disodorkan — tinggal menentukan mana yang benar-benar tajam.',
+  goal:'Tiga alert tertriase benar: satu dieskalasi ke P2TL, satu ke pemeliharaan, satu ditutup sebagai false positive — dengan alasan berbasis data.',
+  obj:['Pahami cara kerja deteksi anomali & skornya','Bedah tiga alert satu per satu dari datanya','Triase: eskalasi yang tepat ke tim yang tepat'],
+  learn:['Smart meter mengirim interval 15 menit + event (power loss, tutup dibuka, arus balik) — anomali kini terlihat HARI INI, bukan di tagihan bulan depan','Skor anomali = seberapa jauh perilaku menyimpang dari baseline pelanggan itu sendiri & kelompok sejenisnya','Tidak semua anomali = pencurian: meter rusak, pelanggan pindah, atau renovasi juga menyimpang — konteks memutuskan','Triase yang baik menghemat dua arah: P2TL tak diutus ke false positive, dan kasus nyata tak menunggu sebulan'],
+  next:['Bangun pipeline streaming (event-driven) untuk alert real-time','Pelajari event tamper meter & kombinasinya dengan pola konsumsi','Ukur presisi/recall model anomali dari hasil lapangan — tutup loop-nya']},
+});
+let mam={};
+function buildAMI(){
+  freshScene(0x1d2a3a,0x0a121c);
+  cam={theta:0,phi:1.15,r:8,target:new THREE.Vector3(0,2.1,-1)};
+  const floor=boxT(16,.1,10,TEX.concrete());floor.position.y=-.05;scene.add(floor);
+  const wall=boxT(14,4.6,.2,TEX.metal(),{metalness:.2});wall.position.set(0,2.3,-3.3);scene.add(wall);
+  /* dashboard utama */
+  const frame=boxT(5.4,2.8,.16,TEX.metal(),{metalness:.4});frame.position.set(-1.6,2.4,-3.2);scene.add(frame);
+  frame.add(label('AMI ANOMALY DASHBOARD',.9).translateY(1.7));
+  mam.D=makeDisplay(5.0,2.4,640,330);
+  mam.D.mesh.position.set(-1.6,2.4,-3.1);scene.add(mam.D.mesh);
+  actMesh(mam.D.mesh,'DASH');
+  mam.status=['?','?','?'];
+  function dash(detail){
+    const g=mam.D.g,W=640,H=330;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.font='700 19px Consolas';g.textAlign='left';
+    g.fillStyle='#5fd4ff';g.fillText('ALERT HARI INI — 50.000 meter · 3 anomali',18,32);
+    const rows=[
+      ['A · skor 0,96','konsumsi −72% + event TUTUP DIBUKA',mam.status[0]],
+      ['B · skor 0,81','kWh kirim=0 sejak 3 hari + comm OK',mam.status[1]],
+      ['C · skor 0,64','konsumsi −58% mendadak',mam.status[2]]];
+    rows.forEach((r,i)=>{
+      const y=78+i*78;
+      g.fillStyle='#13202f';g.fillRect(14,y-26,W-28,62);
+      g.fillStyle=r[2]==='P2TL'?'#ff5a5a':(r[2]==='HAR'?'#ffd23f':(r[2]==='CLOSE'?'#46ff8e':'#8aa3bd'));
+      g.font='700 18px Consolas';g.fillText(r[0]+(r[2]==='?'?'':' → '+r[2]),26,y);
+      g.fillStyle='#aebdcc';g.font='600 15px Consolas';g.fillText(r[1],26,y+24);});
+    if(detail){g.fillStyle='#ffd23f';g.font='600 15px Consolas';
+      g.fillText(detail,18,H-14);}
+    mam.D.tex.needsUpdate=true;}
+  dash();
+  /* tiga tombol kasus */
+  mam.bA=box(.6,.34,.14,0x5a2b2b);mam.bA.position.set(2.6,2.9,-3.1);scene.add(mam.bA);
+  actMesh(mam.bA,'KA');
+  scene.add(label('KASUS A',.55,'#ff8d8d').translateX(2.6).translateY(3.25).translateZ(-3.0));
+  mam.bB=box(.6,.34,.14,0x5a4b2b);mam.bB.position.set(2.6,2.2,-3.1);scene.add(mam.bB);
+  actMesh(mam.bB,'KB');
+  scene.add(label('KASUS B',.55,'#ffe28d').translateX(2.6).translateY(2.55).translateZ(-3.0));
+  mam.bC=box(.6,.34,.14,0x2b5a3b);mam.bC.position.set(2.6,1.5,-3.1);scene.add(mam.bC);
+  actMesh(mam.bC,'KC');
+  scene.add(label('KASUS C',.55,'#8df0b8').translateX(2.6).translateY(1.85).translateZ(-3.0));
+  /* tombol kirim laporan */
+  mam.send=box(.7,.4,.14,0x2a5a8a);mam.send.position.set(4.2,2.2,-3.1);scene.add(mam.send);
+  actMesh(mam.send,'KIRIM');
+  scene.add(label('KIRIM TRIASE',.55,'#5fd4ff').translateX(4.2).translateY(2.6).translateZ(-3.0));
+  startSeq([
+   {type:'act',aid:'DASH',done:false,targets:()=>[mam.D.mesh],
+    desc:'Buka DASHBOARD: tiga alert menunggu triase (klik layar).',
+    why:'Mesin sudah menyaring 50.000 menjadi 3 — pekerjaan sebulan tim analis lima tahun lalu. Tapi skor hanyalah prioritas antrian, bukan vonis: 0,96 berarti "periksa aku duluan", bukan "aku pasti pencuri".',
+    fx(){dash();toast('📶 3 alert terangkat dari 50.000 meter. Mulai dari skor tertinggi.','info',3000);}},
+   {type:'act',aid:'KA',done:false,targets:()=>[mam.bA],
+    desc:'Bedah KASUS A (skor 0,96): konsumsi anjlok + event tamper.',
+    why:'Dua bukti saling menguatkan: konsumsi −72% DAN event "tutup meter dibuka" pukul 02:13 — smart meter melaporkan tangan yang menyentuhnya. Kombinasi pola + event fisik = sinyal terkuat di dunia AMI. Eskalasi: P2TL dengan prioritas.',
+    fx(){mam.status[0]='P2TL';dash('A: pola+event fisik = eskalasi P2TL');
+      toast('🚨 KASUS A → P2TL (bukti ganda: pola + tamper event).','bad',3000);}},
+   {type:'act',aid:'KB',done:false,targets:()=>[mam.bB],
+    desc:'Bedah KASUS B (0,81): kWh nol tapi komunikasi sehat.',
+    why:'Meter rajin melapor… angka nol terus, tiga hari. Rumah berpenghuni (malam ada beban kecil sebelumnya). Ini bukan pencurian — ini meter SAKIT: register/sensor arusnya wafat. Eskalasi: tim pemeliharaan meter, bukan P2TL.',
+    fx(){mam.status[1]='HAR';dash('B: meter rusak = tim pemeliharaan');
+      toast('🔧 KASUS B → PEMELIHARAAN (meter rusak, bukan pelanggaran).','ok',3000);}},
+   {type:'act',aid:'KC',done:false,targets:()=>[mam.bC],
+    desc:'Bedah KASUS C (0,64): konsumsi turun 58% mendadak.',
+    why:'Cek data pendukung: ada permohonan PINDAH RUMAH di sistem pelayanan minggu lalu, dan profil sisa = kulkas + standby khas rumah kosong. Anomali? Ya. Pelanggaran? Bukan — kehidupan pelanggan memang berubah. Tutup: false positive, catat untuk pembelajaran model.',
+    fx(){mam.status[2]='CLOSE';dash('C: pelanggan pindah = false positive');
+      toast('✅ KASUS C → DITUTUP (pindah rumah) — dicatat untuk model.','ok',3000);}},
+   {type:'act',aid:'KIRIM',done:false,targets:()=>[mam.send],
+    desc:'KIRIM hasil triase ke masing-masing tim (klik kirim).',
+    why:'P2TL berangkat membawa bukti kuat, pemeliharaan membawa meter pengganti, dan model belajar dari label barumu. Loop tertutup: lapangan memberi makan model, model menajamkan lapangan. Begitulah analitik yang hidup.',
+    fx(){toast('📤 Triase terkirim — tiga tim bergerak dengan tepat sasaran.','ok',3200);sfx.big();}},
+  ],()=>{say('🎉 <b>Triase sempurna!</b> Satu ke P2TL, satu ke pemeliharaan, satu ditutup — semua dengan alasan data. Mesin menyaring, kamu memutuskan: itulah analis di era AMI.');
+    setTimeout(()=>showWin('ami'),2200);});
+  say('VOLTA di sini 📶 Selamat datang di era <b>50.000 meter yang bicara tiap 15 menit</b>. Mesin sudah memilih 3 tersangka — tapi vonis tetap milikmu. Ingat: skor tinggi = periksa duluan, bukan pasti bersalah.');
+  $('#modTitle').textContent='J05·M4 — Deteksi Anomali AMI';
+  $('#taskHead').textContent='SARING · BEDAH · TRIASE';}
+MISSIONS.ami.build=buildAMI;
+Object.assign(REAL,{
+ ami:[
+  'Gabungkan minimal dua sumber bukti sebelum eskalasi P2TL: pola konsumsi + event meter + data pelayanan',
+  'Bangun SLA triase: alert skor tinggi wajib diputuskan < 24 jam — antrian basi menurunkan nilai sistem',
+  'Label hasil lapangan dikembalikan ke model (terbukti/false) — tanpa umpan balik, model membusuk',
+  'Jaga privasi data interval pelanggan: akses berjenjang & audit log siapa membuka data siapa'],
+});

@@ -362,3 +362,159 @@ Object.assign(REAL,{
   'Beri dead-time transisi (0,1-0,3 dtk) di logika — kontaktor butuh waktu melepas busur',
   'Simpan backup program + komentar rung yang jelas; ladder tanpa komentar = teka-teki bagi teknisi berikutnya'],
 });
+
+/* =====================================================================
+   MISI 4 — SORTIR KONVEYOR OTOMATIS (gaya Factory I/O)
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ sortir:{lvl:'JALUR 16 · KONTROL & OTOMASI · MISI 4',icon:'📦',title:'Sortir Konveyor Otomatis',strict:false,
+  loc:'📍 Gudang distribusi · Line sortir paket baru',
+  story:'Gudang distribusi kebanjiran paket: kotak TINGGI harus masuk jalur palet khusus, kotak pendek lurus ke truk. Selama ini dua orang berdiri seharian memindahkan kotak — punggung mereka menyerah duluan. Solusinya berdiri di depanmu: konveyor, sensor fotoelektrik, lengan diverter… dan PLC yang menunggu logikamu.',
+  goal:'Line sortir bekerja penuh otomatis: sensor mendeteksi kotak tinggi, diverter mendorongnya ke ramp tepat waktu, counter menghitung — terbukti minimal 3 kotak tersortir benar.',
+  obj:['Periksa & sejajarkan sensor fotoelektrik','Susun ladder: sensor → delay → diverter + counter','Download, jalankan line, dan saksikan sortir hidup'],
+  learn:['Sensor fotoelektrik through-beam dipasang pada KETINGGIAN selektif: hanya kotak tinggi yang memotong sinar — pemilahan dimulai dari mounting, bukan dari program','Delay (TON) antara deteksi dan dorongan = jarak sensor-diverter dibagi kecepatan belt; salah hitung = mendorong udara atau kotak yang salah','Counter (CTU) memberi mata pada produksi: jumlah tersortir per shift adalah data, bukan kira-kira','Logika di simulasi & kenyataan sama persis — yang berbeda hanya konsekuensi kesalahannya'],
+  next:['Tambah sensor kedua untuk verifikasi sortir (reject confirm)','Pelajari pemilahan multi-kriteria: tinggi + berat (load cell)','Naik ke palletizing: robot menyusun kotak hasil sortir']},
+});
+let mso={};
+function buildSortir(){
+  freshScene(0xb8c4cc,0x10181e);
+  cam={theta:.35,phi:1.1,r:10,target:new THREE.Vector3(0,1.2,-.6)};
+  const floor=boxT(26,.1,15,TEX.concrete());floor.position.y=-.05;scene.add(floor);
+  /* pagar pengaman belakang (gaya factory) */
+  for(let x=-7;x<=7;x+=2.8){
+    const post=cyl(.05,.05,1.6,0x2a5a9a);post.position.set(x,.8,-4.2);scene.add(post);}
+  const mesh1=box(14.2,1.3,.04,0x9fb6c8,{transparent:true,opacity:.25});
+  mesh1.position.set(0,.85,-4.2);scene.add(mesh1);
+  /* belt utama */
+  const belt=box(12,.22,1.2,0x222a31,{roughness:.85});belt.position.set(0,.85,-1.5);scene.add(belt);
+  [-5,-2.5,0,2.5,5].forEach(x=>{
+    const leg=boxT(.12,.78,1.0,TEX.metal(),{metalness:.4});leg.position.set(x,.39,-1.5);scene.add(leg);});
+  const rail=box(12,.08,.06,0x4a6a8a);rail.position.set(0,1.02,-2.12);scene.add(rail);
+  const rail2=rail.clone();rail2.position.z=-.88;scene.add(rail2);
+  scene.add(label('LINE SORTIR PAKET',.85).translateY(2.0).translateZ(-1.5));
+  /* sensor fotoelektrik */
+  const spost=cyl(.04,.04,1.5,0x666666);spost.position.set(1.0,.75,-2.4);scene.add(spost);
+  mso.sensor=box(.16,.16,.16,0xd8b020);mso.sensor.position.set(1.0,1.42,-2.3);scene.add(mso.sensor);
+  actMesh(mso.sensor,'SENSOR');
+  mso.beam=cyl(.015,.015,1.3,0xff5a5a,8,{transparent:true,opacity:.35,emissive:0xff5a5a,emissiveIntensity:.3});
+  mso.beam.rotation.x=Math.PI/2;mso.beam.position.set(1.0,1.42,-1.5);scene.add(mso.beam);
+  scene.add(label('SENSOR FOTOELEKTRIK',.55,'#5fd4ff').translateX(1.0).translateY(1.85).translateZ(-2.3));
+  /* diverter arm */
+  mso.arm=box(.9,.3,.14,0xd83a3a,{metalness:.3});
+  mso.arm.position.set(2.1,1.1,-2.05);scene.add(mso.arm);
+  scene.add(label('DIVERTER',.55,'#5fd4ff').translateX(2.1).translateY(1.6).translateZ(-2.1));
+  /* ramp sortir ke depan */
+  const ramp=boxT(1.1,.08,2.2,TEX.metal(),{metalness:.5});
+  ramp.position.set(2.3,.55,-.15);ramp.rotation.x=.3;scene.add(ramp);
+  [-.45,.45].forEach(dx=>{const rr=box(.05,.12,2.2,0x4a6a8a);
+    rr.position.set(2.3+dx,.66,-.15);rr.rotation.x=.3;scene.add(rr);});
+  scene.add(label('RAMP PALET TINGGI ▼',.6,'#8df0b8').translateX(2.6).translateY(1.15).translateZ(.4));
+  /* stack light */
+  const lpost=cyl(.035,.035,1.7,0x666666);lpost.position.set(3.4,.85,-2.5);scene.add(lpost);
+  mso.lr=cyl(.09,.09,.14,0x552222,12,{emissive:0x000000});mso.lr.position.set(3.4,1.95,-2.5);scene.add(mso.lr);
+  mso.ly=cyl(.09,.09,.14,0x554d22,12,{emissive:0xd8b020,emissiveIntensity:.8});mso.ly.position.set(3.4,1.78,-2.5);scene.add(mso.ly);
+  mso.lg=cyl(.09,.09,.14,0x225522,12,{emissive:0x000000});mso.lg.position.set(3.4,1.61,-2.5);scene.add(mso.lg);
+  /* layar PLC + slot */
+  const frame=boxT(2.9,1.9,.16,TEX.metal(),{metalness:.4});frame.position.set(-4.2,2.2,-4.0);scene.add(frame);
+  frame.add(label('PLC — LINE SORTIR',.8).translateY(1.2));
+  mso.L=makeDisplay(2.6,1.5,460,280);
+  mso.L.mesh.position.set(-4.2,2.2,-3.9);scene.add(mso.L.mesh);
+  mso.st={rung:false,ctu:false,dl:false};
+  function ladder(){
+    dispText(mso.L,[
+      mso.st.rung?'I0.2─TON 0,55s─(Q0.1)':'rung kosong…',
+      mso.st.ctu?'Q0.1↑ → CTU C1':'',
+      mso.st.dl?'● RUN':'○ EDIT'],
+      [mso.st.rung?'#46ff8e':'#7d8f84',mso.st.ctu?'#46ff8e':'#7d8f84',mso.st.dl?'#46ff8e':'#7d8f84']);}
+  ladder();
+  mso.slots=[];
+  [['RUNG SORTIR','RUNG',-5.4],['COUNTER','CTU',-4.2],['⬇ DOWNLOAD','DL',-3.0]].forEach(o=>{
+    const b=box(.95,.34,.14,0x2b3a4a);b.position.set(o[2],1.0,-3.96);scene.add(b);
+    actMesh(b,o[1]);mso.slots.push(b);
+    scene.add(label(o[0],.48,'#5fd4ff').translateX(o[2]).translateY(1.32).translateZ(-3.9));});
+  /* tombol start + counter display */
+  mso.btn=cyl(.11,.11,.09,0x2ec06a);mso.btn.rotation.x=Math.PI/2;
+  mso.btn.position.set(-6.4,1.1,-1.5);scene.add(mso.btn);
+  actMesh(mso.btn,'START');
+  scene.add(label('START LINE',.55,'#7af0a8').translateX(-6.4).translateY(1.45).translateZ(-1.5));
+  mso.C=makeDisplay(1.2,.6,280,140);
+  mso.C.mesh.position.set(4.6,1.7,-2.6);scene.add(mso.C.mesh);
+  actMesh(mso.C.mesh,'VERIF');
+  function updC(){dispText(mso.C,['SORTIR: '+mso.count,'LOLOS: '+mso.pass],
+    [mso.count>=3?'#46ff8e':'#ffd23f','#8aa3bd']);}
+  mso.count=0;mso.pass=0;updC();
+  scene.add(label('COUNTER',.55,'#5fd4ff').translateX(4.6).translateY(2.15).translateZ(-2.6));
+  /* sistem kotak berjalan */
+  mso.items=[];mso.run=false;mso.spawnT=1.2;mso.n=0;mso.armT=0;
+  function spawnBox(){
+    const tall=mso.n%2===0; mso.n++;
+    const h=tall?.62:.3;
+    const b=box(.52,h,.52,tall?0xc8893a:0x8a6a4a,{roughness:.8});
+    b.position.set(-5.7,0.96+h/2,-1.5);scene.add(b);
+    mso.items.push({mesh:b,tall,h,flag:false,divert:false,done:false,tDelay:0});}
+  moduleTick=(dt)=>{
+    if(mso.run){
+      mso.spawnT-=dt;
+      if(mso.spawnT<=0){mso.spawnT=2.4;spawnBox();}
+      mso.lg.material.emissive.setHex(0x2ee87a);mso.lg.material.emissiveIntensity=1;
+      mso.ly.material.emissiveIntensity=0;}
+    if(mso.armT>0){mso.armT-=dt;
+      mso.arm.position.z=-2.05+Math.sin(Math.min(1,(0.5-mso.armT)/.5)*Math.PI)*.5;}
+    for(let i=mso.items.length-1;i>=0;i--){
+      const b=mso.items[i],p=b.mesh.position;
+      if(!b.divert)p.x+=dt*1.1;
+      if(b.tall&&mso.st.dl&&!b.flag&&p.x>=1.0){b.flag=true;b.tDelay=.55;
+        mso.beam.material.opacity=.9;setTimeout(()=>{mso.beam.material.opacity=.35;},220);}
+      if(b.flag&&!b.divert){b.tDelay-=dt;
+        if(b.tDelay<=0){b.divert=true;mso.armT=.5;sfx.click();}}
+      if(b.divert){p.z+=dt*1.7;p.x+=dt*.15;
+        if(p.z>-.9)p.y=Math.max(.35,p.y-dt*1.1);
+        if(p.z>.6&&!b.done){b.done=true;mso.count++;updC();spark(p.clone(),0x3ddc84);}}
+      if(p.x>5.9){if(!b.done&&!b.tall){mso.pass++;updC();}
+        scene.remove(b.mesh);mso.items.splice(i,1);}
+      if(p.z>1.6){scene.remove(b.mesh);mso.items.splice(i,1);}}};
+  startSeq([
+   {type:'act',aid:'SENSOR',done:false,targets:()=>[mso.sensor],
+    desc:'Periksa & sejajarkan SENSOR fotoelektrik (klik sensor kuning).',
+    why:'Sensor through-beam dipasang pada ketinggian 45 cm: kotak tinggi (60 cm) memotong sinar, kotak pendek (30 cm) lewat di bawahnya tanpa terdeteksi. Pemilahan paling elegan justru terjadi di dudukan baut — sebelum satu baris program pun ditulis.',
+    fx(){mso.beam.material.emissiveIntensity=.8;
+      toast('📡 Sensor sejajar — sinar bersih ke reflektor, I0.2 siap.','ok',2600);}},
+   {type:'act',aid:'RUNG',done:false,targets:()=>[mso.slots[0]],
+    desc:'Susun RUNG SORTIR: I0.2 → TON 0,55 s → coil diverter (klik slot).',
+    why:'Sensor di x sensor, diverter 1,1 m kemudian; belt 2 m/s? Bukan — belt ini 1,1 m/s, jadi kotak butuh ±0,55 detik untuk tiba di depan lengan. TON menahan dorongan tepat selama itu: matematika sederhana yang membuat lengan mendorong KOTAK, bukan udara.',
+    fx(){mso.st.rung=true;ladder();
+      toast('✓ Rung: deteksi → tunda 0,55s → DORONG.','ok',2400);}},
+   {type:'act',aid:'CTU',done:false,targets:()=>[mso.slots[1]],
+    desc:'Tambah COUNTER: tiap dorongan menambah hitungan (klik slot).',
+    why:'CTU menghitung sisi naik Q0.1 — satu dorongan, satu hitungan. Di akhir shift angka ini menjadi laporan produksi otomatis; supervisor berhenti menghitung manual, mulai menganalisis.',
+    fx(){mso.st.ctu=true;ladder();
+      toast('✓ CTU C1 terpasang — produksi kini terhitung.','ok',2400);}},
+   {type:'act',aid:'DL',done:false,targets:()=>[mso.slots[2]],
+    desc:'DOWNLOAD program ke PLC (klik ⬇).',
+    why:'Compile → transfer → RUN. Logika kini men-scan input ribuan kali per detik, jauh lebih rajin dari mata manusia mana pun yang berdiri di samping belt seharian.',
+    fx(){mso.st.dl=true;ladder();
+      toast('⬇ Program ONLINE — line siap dijalankan.','ok',2400);}},
+   {type:'act',aid:'START',done:false,targets:()=>[mso.btn],
+    desc:'START LINE — saksikan sortir bekerja sendiri!',
+    why:'Kotak mengalir... yang pendek lolos lurus ke truk, yang tinggi: sinar terpotong → 0,55 detik → DORONG → meluncur di ramp. Tidak ada tangan manusia. Inilah momen ketika logika menjadi tenaga kerja.',
+    fx(){mso.run=true;beep(110,.5,'sawtooth',.07);
+      toast('▶ LINE BERJALAN — perhatikan kotak tinggi di sensor!','ok',2800);sfx.big();}},
+   {type:'act',aid:'VERIF',done:false,targets:()=>[mso.C.mesh],
+    check:()=>mso.count>=3,
+    checkFail:'Belum cukup bukti! Biarkan line bekerja sampai minimal 3 kotak tinggi tersortir (lihat counter).',
+    desc:'Setelah 3+ kotak tersortir: VERIFIKASI di counter (klik display).',
+    why:'Tiga dorongan, tiga di ramp, nol salah sortir — commissioning lulus dengan data, bukan perasaan. Dua pekerja tadi? Dipromosikan jadi operator line: mengawasi angka, bukan mengangkat kotak.',
+    fx(){toast('🏆 SORTIR OTOMATIS TERVERIFIKASI — line diserahterimakan!','ok',3200);sfx.big();}},
+  ],()=>{say('🎉 <b>Line sortir hidup!</b> Sensor melihat, TON menghitung, diverter mendorong, counter mencatat — dan kamu yang mengajari semuanya. Selamat datang di level otomasi yang sesungguhnya.');
+    setTimeout(()=>showWin('sortir'),2200);});
+  say('VOLTA di sini 📦 Misi paling hidup sejauh ini: <b>line sortir otomatis</b>. Kotak akan benar-benar mengalir di belt — tugasmu mengajari PLC memilahnya. Mulai dari sensor: pemilahan lahir di ketinggian pemasangan.');
+  $('#modTitle').textContent='J16·M4 — Sortir Konveyor Otomatis';
+  $('#taskHead').textContent='DETEKSI · TUNDA · DORONG · HITUNG';}
+MISSIONS.sortir.build=buildSortir;
+Object.assign(REAL,{
+ sortir:[
+  'Kecepatan belt diukur aktual (bukan nameplate) untuk menghitung delay sensor-diverter',
+  'Sensor diberi mounting kokoh + pelindung — getaran konveyor menggeser alignment pelan-pelan',
+  'Diverter pneumatik butuh interlock area: pagar + sensor pintu, lengan yang mendorong tidak memilih sasaran',
+  'Sediakan mode MANUAL/BYPASS untuk maintenance — line tak boleh tersandera program'],
+});

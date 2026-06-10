@@ -252,3 +252,94 @@ Object.assign(REAL,{
   'Jangan tanda tangani kontrak verifikasi dengan pihak yang juga konsultan penyusun laporanmu (konflik kepentingan)',
   'Temuan & koreksi didokumentasikan dalam log — verifikasi tahun depan dimulai dari log ini'],
 });
+
+/* =====================================================================
+   MISI 4 — PERDAGANGAN KARBON & IDXCARBON
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ trading:{lvl:'JALUR 11 · SUSTAINABILITY & CARBON · MISI 4',icon:'💱',title:'Perdagangan Karbon: Dari Reduksi ke Revenue',strict:false,
+  loc:'📍 PT Maju Plastik · Setahun setelah roadmap berjalan',
+  story:'Kabar baik datang setahun kemudian: PLTS & efisiensi bekerja melebihi target — reduksi nyata 612 tCO₂e, terverifikasi. Direktur bertanya dengan mata berbinar: "Katanya karbon bisa DIJUAL?" Bisa — di bursa karbon. Tapi antara reduksi dan rupiah ada jembatan yang harus dilalui dengan benar: metodologi, verifikasi, registrasi, baru perdagangan.',
+  goal:'Kelebihan reduksi menjadi unit karbon yang sah & terjual di bursa: metodologi dipilih, kredit terverifikasi & teregistrasi, transaksi tuntas.',
+  obj:['Pahami jenis unit & syarat kelayakan kredit karbon','Registrasi proyek di SRN & verifikasi reduksi','Listing & jual di bursa karbon dengan harga wajar'],
+  learn:['Kredit karbon lahir dari reduksi MELEBIHI baseline yang wajib (additionality) — usaha biasa-biasa saja tidak bisa dijual','SRN-PPI adalah buku besar nasional: tanpa registrasi, reduksimu tak punya identitas & rawan dihitung ganda','Satu unit = 1 tCO₂e terverifikasi; vintage (tahun reduksi) & metodologi menentukan harga pasarnya','Penjual yang baik menjual SEBAGIAN: sisakan untuk klaim net zero sendiri — menjual semua = membeli lagi kelak dengan lebih mahal'],
+  next:['Pelajari mekanisme NEK: perdagangan emisi, offset, pungutan','Dalami harga karbon global vs domestik & arah regulasinya','Eksplorasi carbon project development sebagai lini bisnis baru']},
+});
+let mcd={};
+function buildTrading(){
+  freshScene(0xb8d0c0,0x121d18);
+  cam={theta:0,phi:1.18,r:7,target:new THREE.Vector3(0,1.8,-1)};
+  const Z=room(0x6b5a45,0xd8d2c4);
+  /* papan reduksi */
+  const base=box(1.5,1.0,.06,0x2b3a4a);base.position.set(-4.2,2.4,Z);scene.add(base);
+  base.add(label('REDUKSI 2027: 612 tCO₂e ✓ verified',.6,'#8df0b8').translateY(.7));
+  /* meja + dokumen metodologi */
+  const desk=boxT(3.2,.08,1.3,TEX.wood());desk.position.set(-1,1.0,-.5);scene.add(desk);
+  [[-1.4,-1.0],[1.4,-1.0],[-1.4,0],[1.4,0]].forEach(p=>{
+    const l=boxT(.08,1,.08,TEX.wood());l.position.set(-1+p[0],.5,p[1]+0.45-.5);scene.add(l);});
+  mcd.met=box(.5,.02,.7,0xf0ead8);mcd.met.position.set(-1.9,1.06,-.5);scene.add(mcd.met);
+  actMesh(mcd.met,'METODE');
+  scene.add(label('DOKUMEN METODOLOGI',.55,'#5fd4ff').translateX(-1.9).translateY(1.4).translateZ(-.5));
+  /* layar SRN */
+  mcd.S=makeDisplay(1.8,1.1,380,230);
+  mcd.S.mesh.position.set(-1.4,2.6,Z+.08);scene.add(mcd.S.mesh);
+  dispText(mcd.S,['SRN-PPI','belum terdaftar'],['#5fd4ff','#7d8f84']);
+  actMesh(mcd.S.mesh,'SRN');
+  scene.add(label('SISTEM REGISTRI NASIONAL',.65,'#5fd4ff').translateX(-1.4).translateY(3.35).translateZ(Z+.1));
+  /* layar bursa */
+  mcd.B=makeDisplay(2.6,1.5,480,280);
+  mcd.B.mesh.position.set(2.6,2.5,Z+.08);scene.add(mcd.B.mesh);
+  actMesh(mcd.B.mesh,'LISTING');
+  scene.add(label('BURSA KARBON',.75,'#ffd23f').translateX(2.6).translateY(3.45).translateZ(Z+.1));
+  function bursa(mode){
+    const g=mcd.B.g,W=480,H=280;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.font='700 19px Consolas';g.textAlign='left';
+    g.fillStyle='#ffd23f';g.fillText('IDX CARBON — papan perdagangan',16,32);
+    g.font='600 16px Consolas';g.fillStyle='#8aa3bd';
+    g.fillText('harga terakhir: Rp 58.000 /tCO2e',16,66);
+    if(mode>=1){g.fillStyle='#eaf2fb';
+      g.fillText('LISTING: 400 unit · vintage 2027',16,110);
+      g.fillText('ask: Rp 59.500',16,138);}
+    if(mode>=2){g.fillStyle='#46ff8e';g.font='700 18px Consolas';
+      g.fillText('MATCHED ✓ 400 unit @ Rp 59.000',16,182);
+      g.fillText('total: Rp 23,6 juta',16,210);
+      g.fillStyle='#8aa3bd';g.font='600 15px Consolas';
+      g.fillText('212 unit disimpan utk klaim sendiri',16,244);}
+    mcd.B.tex.needsUpdate=true;}
+  bursa(0);
+  /* kontrak penjualan */
+  mcd.deal=box(.5,.66,.04,0xe8d8a0);mcd.deal.position.set(5.2,2.0,Z+.06);scene.add(mcd.deal);
+  actMesh(mcd.deal,'JUAL');
+  scene.add(label('EKSEKUSI JUAL',.55,'#ffd23f').translateX(5.2).translateY(2.55).translateZ(Z+.1));
+  startSeq([
+   {type:'act',aid:'METODE',done:false,targets:()=>[mcd.met],
+    desc:'Pilih METODOLOGI & uji kelayakan kredit (klik dokumen).',
+    why:'Reduksi 612 t diuji tiga saringan: additionality (melebihi kewajiban? ya — baseline wajib sudah terlampaui), permanence (PLTS beroperasi jangka panjang? ya), MRV (terukur meter exim? ya). Metodologi pembangkit EBT dipilih — 612 t LOLOS jadi kandidat kredit.',
+    fx(){toast('📐 Additionality ✓ permanence ✓ MRV ✓ — layak jadi kredit.','ok',3000);}},
+   {type:'act',aid:'SRN',done:false,targets:()=>[mcd.S.mesh],
+    desc:'REGISTRASI proyek & reduksi di SRN-PPI (klik layar registri).',
+    why:'Registri nasional memberi tiap ton identitas unik — nomor seri yang membuatnya mustahil dijual dua kali (double counting, dosa terbesar pasar karbon). Verifikator menandatangani; 612 unit SPE-GRK terbit atas nama perusahaan.',
+    fx(){dispText(mcd.S,['TERDAFTAR ✓','612 unit SPE-GRK'],['#46ff8e','#46ff8e']);
+      toast('🗂️ 612 unit resmi bernomor seri — tak bisa dihitung ganda.','ok',3000);}},
+   {type:'act',aid:'LISTING',done:false,targets:()=>[mcd.B.mesh],
+    desc:'LISTING di bursa: berapa unit dijual, berapa disimpan?',
+    why:'Keputusan strategis: jual 400, SIMPAN 212 untuk klaim net zero sendiri (ingat roadmap-mu!). Menjual semua = tahun depan membeli punya orang dengan harga lebih mahal demi klaim sendiri. Ask dipasang Rp 59.500 — sedikit di atas pasar, vintage muda pantas premium.',
+    fx(){bursa(1);toast('📋 400 unit listed @ Rp 59.500 · 212 disimpan.','ok',3000);}},
+   {type:'act',aid:'JUAL',done:false,targets:()=>[mcd.deal],
+    desc:'Order masuk — EKSEKUSI penjualan (klik kontrak).',
+    why:'Pembeli: perusahaan energi yang butuh offset residualnya. Matched di Rp 59.000 × 400 = Rp 23,6 juta — uang nyata dari udara yang TIDAK jadi kotor. Direktur tersenyum: program hijau kini punya baris pendapatan, bukan hanya baris biaya.',
+    fx(){bursa(2);toast('💱 TERJUAL: Rp 23,6 jt — reduksi resmi jadi revenue!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Lingkaran penuh!</b> Dari inventarisasi → reduksi → verifikasi → registrasi → REVENUE. Karbon yang dikelola serius bukan beban kepatuhan — ia lini bisnis. Direkturmu kini penggemar net zero garis keras.');
+    setTimeout(()=>showWin('trading'),2200);});
+  say('VOLTA di sini 💱 Setahun kerja kerasmu berbuah: reduksi MELEBIHI target — dan kelebihannya bisa dijual. Tapi pasar karbon punya gerbang ketat: metodologi, registri, baru bursa. Satu ton pun tak boleh dihitung dua kali. Mulai!');
+  $('#modTitle').textContent='J11·M4 — Perdagangan Karbon';
+  $('#taskHead').textContent='REDUKSI → REGISTRI → REVENUE';}
+MISSIONS.trading.build=buildTrading;
+Object.assign(REAL,{
+ trading:[
+  'Pelajari regulasi NEK terkini (kepmen & aturan bursa) — pasar karbon Indonesia masih berevolusi cepat',
+  'Biaya validasi-verifikasi signifikan: hitung kelayakan proyek sebelum berkomitmen jadi kredit',
+  'Vintage & metodologi menentukan likuiditas — konsultasikan permintaan pasar sebelum listing',
+  'Pisahkan jelas unit untuk dijual vs klaim sendiri di registri — tumpang tindih klaim = reputasi hancur'],
+});

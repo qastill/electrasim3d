@@ -249,3 +249,85 @@ Object.assign(REAL,{
   'Arsipkan jawaban klarifikasi/aanwijzing — itu bagian sah dari kontrak bila menang',
   'Hitung harga dari cost breakdown nyata + risiko (kurs, delivery) — menang rugi lebih buruk dari kalah'],
 });
+
+/* =====================================================================
+   MISI 4 — NEGOSIASI & OBJECTION HANDLING
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ nego:{lvl:'JALUR 09 · SALES & TECHNICAL MARKETING · MISI 4',icon:'🗣️',title:'Negosiasi & Objection Handling',strict:false,
+  loc:'📍 PT Sinar Logam · Meeting final, direktur hadir',
+  story:'Proposal kapasitor bank-mu (misi 1) sampai di meja final — tapi kali ini direktur keuangan ikut duduk, dan ia datang membawa tiga peluru: "kemahalan", "kompetitor lebih murah 30%", dan "tahun depan saja". Sales amatir menurunkan harga saat ditembak; sales engineer menjawab dengan struktur: dengar, akui, jawab dengan angka, konfirmasi.',
+  goal:'Tiga keberatan terjawab dengan data tanpa banting harga, dan kesepakatan ditutup dengan syarat yang sehat untuk dua pihak.',
+  obj:['Tangani keberatan harga dengan TCO, bukan diskon','Bedah penawaran kompetitor secara objektif','Hitung biaya menunda, lalu tutup kesepakatan'],
+  learn:['Keberatan adalah sinyal minat: orang yang tak tertarik tidak repot-repot keberatan — sambut, jangan bertahan','Jawaban harga selalu TCO (total cost of ownership): harga beli + rugi + umur + garansi, bukan angka di kolom paling bawah','Membandingkan kompetitor: jangan menjelekkan — bedah spesifikasi berdampingan & biarkan selisihnya bicara','Biaya MENUNDA adalah angka nyata: denda berjalan tiap bulan adalah diskon yang dibuang'],
+  next:['Pelajari teknik klarifikasi keberatan (isolate the objection)','Susun battle card produk vs kompetitor untuk timmu','Latih negosiasi syarat: termin, garansi, retensi — bukan hanya harga']},
+});
+let mng={};
+function buildNego(){
+  freshScene(0xc6d2dc,0x18222c);
+  cam={theta:0,phi:1.2,r:6.5,target:new THREE.Vector3(0,1.5,-1)};
+  const Z=room(0x6b5a45,0xd8d2c4);
+  /* meja meeting panjang */
+  const desk=boxT(4.2,.08,1.6,TEX.wood());desk.position.set(0,1.0,-.5);scene.add(desk);
+  [[-1.9,-1.15],[1.9,-1.15],[-1.9,.15],[1.9,.15]].forEach(p=>{
+    const l=boxT(.08,1,.08,TEX.wood());l.position.set(p[0],.5,p[1]+0.35);scene.add(l);});
+  /* layar keberatan (dialog) */
+  const frame=boxT(4.0,2.2,.16,TEX.metal(),{metalness:.4});frame.position.set(-1.4,2.5,Z+.05);scene.add(frame);
+  mng.D=makeDisplay(3.7,1.9,560,300);
+  mng.D.mesh.position.set(-1.4,2.5,Z+.15);scene.add(mng.D.mesh);
+  actMesh(mng.D.mesh,'DENGAR');
+  scene.add(label('RUANG MEETING — DIREKTUR KEUANGAN',.8).translateX(-1.4).translateY(3.85).translateZ(Z+.1));
+  function dialog(t1,t2,warna){dispText(mng.D,[t1,t2||''],[warna||'#ff8d8d','#eaf2fb']);}
+  dialog('"Proposalmu KEMAHALAN."','— Direktur Keuangan');
+  /* tiga kartu jawaban */
+  mng.tco=box(.95,.65,.07,0x2a5a8a);mng.tco.position.set(2.2,2.9,Z+.08);scene.add(mng.tco);
+  actMesh(mng.tco,'TCO');
+  scene.add(label('KARTU TCO',.55,'#9cc4ff').translateX(2.2).translateY(3.45).translateZ(Z+.1));
+  mng.comp=box(.95,.65,.07,0x5a8a2a);mng.comp.position.set(3.4,2.9,Z+.08);scene.add(mng.comp);
+  actMesh(mng.comp,'BANDING');
+  scene.add(label('TABEL BANDING',.55,'#b8e890').translateX(3.4).translateY(3.45).translateZ(Z+.1));
+  mng.delay=box(.95,.65,.07,0x8a5a2a);mng.delay.position.set(2.2,1.9,Z+.08);scene.add(mng.delay);
+  actMesh(mng.delay,'TUNDA');
+  scene.add(label('BIAYA MENUNDA',.55,'#e8c890').translateX(2.2).translateY(1.45).translateZ(Z+.1));
+  /* dokumen kontrak */
+  mng.deal=box(.5,.02,.7,0xf0ead8);mng.deal.position.set(.9,1.06,-.5);scene.add(mng.deal);
+  actMesh(mng.deal,'DEAL');
+  scene.add(label('KONTRAK',.55,'#ffd23f').translateX(.9).translateY(1.4).translateZ(-.5));
+  startSeq([
+   {type:'act',aid:'DENGAR',done:false,targets:()=>[mng.D.mesh],
+    desc:'Keberatan #1 meluncur: "KEMAHALAN." — dengarkan utuh dulu (klik layar).',
+    why:'Jangan menyela, jangan langsung membela. "Saya paham, Pak — boleh tahu dibandingkan dengan apa?" Klarifikasi membuka isi sebenarnya: ternyata dibanding penawaran kompetitor & anggaran tahun berjalan. Dua keberatan berbeda — dan keduanya bisa dijawab.',
+    fx(){dialog('"Mahal dibanding kompetitor','& anggaran tahun ini," — oke, jelas.','#ffd23f');
+      toast('👂 Keberatan diklarifikasi — bukan satu, tapi dua isu. Bagus.','ok',3000);}},
+   {type:'act',aid:'TCO',done:false,targets:()=>[mng.tco],
+    desc:'Jawab dengan KARTU TCO — bukan diskon (klik kartu biru).',
+    why:'"Harga kami Rp 110 jt; denda yang hilang Rp 8,4 jt/bulan — sistem ini MEMBAYAR dirinya 13 bulan, lalu menghasilkan Rp 100 jt/tahun selama 10+ tahun umur kapasitor. Pertanyaannya bukan berapa harganya, tapi berapa biayanya bila TIDAK dipasang." Harga turun merusak nilai; TCO menaikkan pemahaman.',
+    fx(){dialog('TCO 10 thn: +Rp 890 jt NET','vs tanpa pasang: −Rp 1 M denda','#46ff8e');
+      toast('🧮 Direktur mengangguk pelan — bahasa ROI dipahami.','ok',3200);}},
+   {type:'act',aid:'BANDING',done:false,targets:()=>[mng.comp],
+    desc:'Keberatan #2: "kompetitor 30% lebih murah" — buka TABEL BANDING.',
+    why:'Berdampingan tanpa menjelekkan: penawaran murah itu kapasitor polos TANPA detuned reactor — di pabrik penuh VFD ini, resonansi harmonisa bisa meledakkan kapasitor polos dalam setahun. Plus: garansi 1 vs 3 tahun, tanpa kontrak kinerja cosφ. "Murahnya di awal, mahalnya menyusul."',
+    fx(){dialog('Banding: reactor ✓vs✗ · garansi 3vs1','kontrak kinerja cosφ ✓vs✗','#46ff8e');
+      toast('📊 Selisih 30% kini punya penjelasan teknis yang jujur.','ok',3200);}},
+   {type:'act',aid:'TUNDA',done:false,targets:()=>[mng.delay],
+    desc:'Keberatan #3: "tahun depan saja" — tunjukkan BIAYA MENUNDA.',
+    why:'"Tentu bisa, Pak. Namun denda berjalan terus: menunda 12 bulan = Rp 100 jt melayang — hampir seharga sistemnya. Bila anggaran tahun ini ketat, kami siap termin 3 pembayaran mengikuti penghematan yang masuk." Penundaan diberi harga; jalan keluar diberi pintu.',
+    fx(){dialog('Menunda 12 bln = −Rp 100 jt','solusi: termin 3x dari penghematan','#46ff8e');
+      toast('⏳ "Termin dari penghematan?" — direktur mencondongkan badan.','ok',3200);}},
+   {type:'act',aid:'DEAL',done:false,targets:()=>[mng.deal],
+    desc:'Momen menutup: konfirmasi & sodorkan KONTRAK (klik dokumen).',
+    why:'"Jadi bila termin disetujui dan kinerja cosφ kami garansi tertulis — apakah ada hal lain yang menahan Bapak?" Hening dua detik. "Tidak ada. Siapkan kontraknya." Ditutup TANPA satu rupiah pun diskon: nilai dipertahankan, hubungan dimulai sehat.',
+    fx(){toast('🤝 DEAL — harga utuh, termin sehat, garansi kinerja. Tanda tangan!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Closing tanpa banting harga!</b> Dengar → klarifikasi → jawab dengan angka → beri jalan keluar → konfirmasi. Tiga peluru dijawab tiga kartu — dan nilai produkmu pulang dengan utuh.');
+    setTimeout(()=>showWin('nego'),2200);});
+  say('VOLTA di sini 🗣️ Meeting final — direktur keuangan membawa tiga keberatan klasik. Ingat strukturnya: <b>dengar utuh, klarifikasi, jawab dengan angka, jangan pernah panik-diskon</b>. Mulai dari mendengarkan.');
+  $('#modTitle').textContent='J09·M4 — Negosiasi & Objection';
+  $('#taskHead').textContent='DENGAR · ANGKA · TUTUP';}
+MISSIONS.nego.build=buildNego;
+Object.assign(REAL,{
+ nego:[
+  'Siapkan battle card sebelum meeting: TCO, tabel banding, biaya menunda — amunisi disiapkan, bukan diimprovisasi',
+  'Jangan pernah menjelekkan kompetitor dengan opini — hanya fakta spesifikasi yang bisa diverifikasi',
+  'Diskon (bila terpaksa) selalu ditukar konsesi: volume, termin lebih cepat, atau referensi — tidak pernah gratis',
+  'Tulis semua kesepakatan verbal ke dalam kontrak hari itu juga — ingatan meeting memudar, dokumen tidak'],
+});

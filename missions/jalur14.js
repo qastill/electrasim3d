@@ -299,3 +299,91 @@ Object.assign(REAL,{
   'Investigasi akar: fitting kendor karena getaran → jadwal re-torque & dudukan anti-vibrasi',
   'Laporkan sesuai ketentuan K3: near-miss hari ini adalah data pencegah fatality besok'],
 });
+
+/* =====================================================================
+   MISI 4 — BLENDING H2 KE JARINGAN GAS
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ blend:{lvl:'JALUR 14 · HYDROGEN ENERGY · MISI 4',icon:'🌀',title:'Blending H₂ ke Jaringan Gas',strict:true,
+  loc:'📍 Stasiun blending · Pilot 5% H₂ ke jaringan gas kota',
+  story:'Proyek percontohan nasional mendarat di plant-mu: menyuntikkan hidrogen hijau ke jaringan gas kota — mulai 5%. Ribuan kompor & boiler pelanggan di ujung pipa tidak boleh merasakan perubahan apa pun: nyala harus tetap biru, alat tetap aman. Di dunia gas, perubahan harus tak terasa — dan kunci tak terasanya bernama Wobbe Index.',
+  goal:'Blending 5% berjalan stabil: kualitas gas dalam batas Wobbe, injeksi termonitor real-time, dan uji nyala pelanggan lolos.',
+  obj:['Verifikasi kesiapan & batas kualitas gas campuran','Mulai injeksi bertahap dengan kontrol rasio','Monitor Wobbe Index & uji nyala di titik pelanggan'],
+  learn:['Wobbe Index = ukuran kesetaraan panas burner: dua gas ber-Wobbe sama memberi nyala setara di alat yang sama — paspor kualitas gas','H₂ berkalor rendah per m³ tapi ringan: blending kecil menggeser Wobbe sedikit — itulah kenapa dimulai 5%, bukan 20%','Rasio injeksi mengikuti ALIRAN gas utama secara dinamis: aliran turun, injeksi ikut turun — rasio konstan, bukan debit konstan','Material pipa & seal diverifikasi untuk H₂ (embrittlement); pipa polietilen distribusi umumnya lebih toleran dari baja tua'],
+  next:['Pelajari dampak blending pada alat pelanggan di rasio lebih tinggi','Dalami deblending & pemisahan H₂ di titik industri','Eksplorasi jaringan H₂ murni: kapan pipa khusus layak dibangun']},
+});
+let mbl={};
+function buildBlend(){
+  freshScene(0xa8c4d8,0x0e1a22);
+  cam={theta:-.1,phi:1.18,r:9,target:new THREE.Vector3(0,1.7,-.8)};
+  const ground=boxT(20,.1,12,TEX.concrete());ground.position.y=-.05;scene.add(ground);
+  /* pipa gas utama */
+  const pipa=cyl(.22,.22,14,0xd8c23a,18,{metalness:.4});pipa.rotation.z=Math.PI/2;
+  pipa.position.set(0,1.0,-2.6);scene.add(pipa);
+  scene.add(label('JARINGAN GAS KOTA →',.8).translateY(1.6).translateZ(-2.6));
+  /* storage H2 + injector */
+  mbl.tank=cyl(.5,.5,2.0,0x9aa7b4,18,{metalness:.4});mbl.tank.position.set(-4.6,1.6,.4);scene.add(mbl.tank);
+  scene.add(label('STORAGE H₂ HIJAU',.65).translateX(-4.6).translateY(2.85).translateZ(.4));
+  const pipaH=cyl(.08,.08,2.4,0x8a96a2);pipaH.rotation.x=.6;
+  pipaH.position.set(-4.6,.9,-.9);scene.add(pipaH);
+  mbl.inj=box(.5,.6,.4,0x2a5a8a);mbl.inj.position.set(-4.6,.95,-2.3);scene.add(mbl.inj);
+  actMesh(mbl.inj,'INJEKSI');
+  scene.add(label('INJECTOR + FLOW CONTROL',.6,'#5fd4ff').translateX(-4.6).translateY(.45).translateZ(-1.9));
+  /* analyzer Wobbe */
+  mbl.wob=box(.6,.8,.4,0xcc8830);mbl.wob.position.set(-.8,1.0,-1.6);scene.add(mbl.wob);
+  actMesh(mbl.wob,'CEKLIST');
+  scene.add(label('GAS CHROMATOGRAPH + WOBBE',.6,'#5fd4ff').translateX(-.8).translateY(1.7).translateZ(-1.6));
+  /* display monitor */
+  mbl.D=makeDisplay(2.2,1.2,440,250);
+  mbl.D.mesh.position.set(2.6,2.3,-2.8);scene.add(mbl.D.mesh);
+  actMesh(mbl.D.mesh,'MONITOR');
+  const pole=cyl(.04,.04,1.7,0x666666);pole.position.set(2.6,.85,-2.8);scene.add(pole);
+  mbl.h2=0;mbl.wobbe=51.2;mbl.inject=false;
+  function layar(){
+    dispText(mbl.D,[mbl.h2.toFixed(1)+'% H₂ · Wobbe '+mbl.wobbe.toFixed(1),
+      (mbl.wobbe>=47.5&&mbl.wobbe<=53)?'DALAM BATAS ✓ (47,5-53)':'⚠ LUAR BATAS'],
+      [(mbl.wobbe>=47.5&&mbl.wobbe<=53)?'#46ff8e':'#ff5a5a','#8aa3bd']);}
+  layar();
+  moduleTick=(dt)=>{if(mbl.inject&&mbl.h2<5){mbl.h2=Math.min(5,mbl.h2+dt*.9);
+    mbl.wobbe=51.2-mbl.h2*.22;layar();}};
+  /* kompor pelanggan */
+  const kompor=boxT(.9,.5,.7,TEX.metal(),{metalness:.4});kompor.position.set(6.2,.3,-1.0);scene.add(kompor);
+  mbl.api=new THREE.Mesh(new THREE.ConeGeometry(.12,.3,12),
+    new THREE.MeshStandardMaterial({color:0x3a8aff,emissive:0x000000,transparent:true,opacity:.85}));
+  mbl.api.position.set(6.2,.7,-1.0);scene.add(mbl.api);
+  actMesh(kompor,'NYALA');
+  scene.add(label('TITIK UJI PELANGGAN',.65).translateX(6.2).translateY(1.2).translateZ(-1.0));
+  startSeq([
+   {type:'act',aid:'CEKLIST',done:false,targets:()=>[mbl.wob],
+    desc:'Verifikasi KESIAPAN: kualitas gas dasar & batas regulasi (klik analyzer).',
+    why:'Gas kota saat ini: Wobbe 51,2 MJ/m³ — batas regulasi 47,5–53. Simulasi: tiap persen H₂ menggeser ±0,22 turun, jadi 5% mendarat di 50,1 — masih nyaman di tengah. Material pipa PE distribusi: kompatibel. Lampu hijau ilmiah untuk memulai.',
+    fx(){toast('📋 Wobbe 51,2 · proyeksi 5% → 50,1 (aman) · pipa PE ✓','ok',3000);}},
+   {type:'act',aid:'INJEKSI',done:false,targets:()=>[mbl.inj],
+    desc:'Mulai INJEKSI bertahap — flow control mengikuti aliran utama.',
+    why:'Valve membuka perlahan; controller membaca aliran gas utama tiap detik dan menyesuaikan injeksi agar rasio TETAP — malam saat kota memasak sedikit, injeksi ikut mengecil. Rasio konstan adalah janji pada setiap kompor di ujung pipa.',
+    fx(){mbl.inject=true;beep(180,.6,'sine',.07);
+      toast('🌀 Injeksi dimulai — amati persen H₂ merangkak ke 5%.','ok',2800);}},
+   {type:'act',aid:'MONITOR',done:false,targets:()=>[mbl.D.mesh],
+    check:()=>mbl.h2>=5,
+    checkFail:'Belum stabil di 5%! Tunggu rasio mencapai target di layar monitor.',
+    desc:'Saat stabil 5%: verifikasi WOBBE di monitor (klik layar).',
+    why:'5,0% H₂ · Wobbe 50,1 — persis seperti proyeksi, dan masih jauh dari kedua tepi batas. Gas chromatograph memeriksa tiap menit, alarm dua tingkat berjaga. Perubahan terbesar di jaringan ini adalah... tidak ada yang berubah.',
+    fx(){toast('📊 5% stabil · Wobbe 50,1 DALAM BATAS — pelanggan tak merasakan apa pun.','ok',3000);}},
+   {type:'act',aid:'NYALA',done:false,targets:()=>[kompor],
+    desc:'Uji pamungkas: NYALAKAN kompor di titik uji pelanggan.',
+    why:'Nyala biru stabil, tinggi normal, tanpa flashback — burner tak tahu bahwa 5% dari yang ia bakar lahir dari matahari & air di plant-mu. Tiap m³ H₂ menggantikan gas fosil: dekarbonisasi yang mengalir diam-diam ke ribuan dapur.',
+    fx(){mbl.api.material.emissive.setHex(0x3a8aff);mbl.api.material.emissiveIntensity=1;
+      toast('🔵 Nyala biru sempurna — pilot blending RESMI beroperasi!','ok',3200);sfx.big();}},
+  ],()=>{say('🎉 <b>Hidrogen mengalir ke kota — tanpa ada yang sadar!</b> Wobbe terjaga, rasio terkunci, nyala tetap biru. Begitulah transisi energi terbaik bekerja: revolusioner di hulu, tak terasa di hilir.');
+    setTimeout(()=>showWin('blend'),2200);});
+  say('VOLTA di sini 🌀 Proyek nasional di tanganmu: <b>menyuntik H₂ 5% ke jaringan gas kota</b>. Hukumnya satu: ribuan kompor di ujung pipa tak boleh merasakan apa pun — dan penjaganya bernama <b>Wobbe Index</b>. Mulai dari analyzer.');
+  $('#modTitle').textContent='J14·M4 — Blending H₂ ke Jaringan Gas';
+  $('#taskHead').textContent='JAGA WOBBE, JAGA NYALA BIRU';}
+MISSIONS.blend.build=buildBlend;
+Object.assign(REAL,{
+ blend:[
+  'Studi dampak ke SEMUA tipe alat pelanggan (kompor, boiler, genset gas) sebelum menaikkan rasio',
+  'Gas chromatograph online + alarm dua tingkat pada batas Wobbe — kualitas dipantau, bukan diasumsikan',
+  'Inventarisasi material jaringan: segmen baja tua & seal lama diaudit untuk kompatibilitas H₂',
+  'Sosialisasi & jalur pengaduan pelanggan disiapkan — kepercayaan publik adalah infrastruktur juga'],
+});
