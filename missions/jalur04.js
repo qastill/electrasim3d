@@ -421,3 +421,97 @@ Object.assign(REAL,{
   'Cocokkan waktu kejadian dengan data lightning detector untuk konfirmasi penyebab',
   'Temuan patroli (jejak flashover) ditutup dalam laporan yang sama — loop analisis-lapangan harus menutup'],
 });
+
+/* =====================================================================
+   MISI 5 — INSPEKSI JALUR & THERMOVISION
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ thermo:{lvl:'JALUR 04 · TRANSMISI · MISI 5',icon:'🎥',title:'Inspeksi Jalur & Thermovision',strict:false,
+  loc:'📍 SUTT 150 kV Kosambi–Sukamandi · Patroli terjadwal',
+  story:'Penghantar yang kamu rawat lewat switching kini minta dirawat lewat MATA: patroli jalur terjadwal. Bersenjata teropong, kamera thermovision, dan form inspeksi, kamu menyusuri tower demi tower. Sambungan yang memburuk tak terlihat mata biasa — tapi ia DEMAM, dan demam tak bisa bersembunyi dari kamera infra merah.',
+  goal:'Patroli tuntas dengan tiga temuan terdokumentasi: klem panas terukur thermovision, isolator retak, dan pohon mendekati ROW — semua masuk prioritas perbaikan.',
+  obj:['Periksa kondisi tower & kelengkapannya','Scan thermovision sambungan & klem berbeban','Periksa isolator, ROW, dan susun laporan prioritas'],
+  learn:['Sambungan memburuk = resistansi naik = panas (I²R): thermovision melihat selisih suhu klem vs konduktor — delta-T adalah bahasa diagnosisnya','Delta-T punya kasta: <10°C pantau, 10-35°C rencanakan, >35°C segera — diukur saat beban tinggi agar jujur','Isolator retak/terpolusi terlihat dari pola: flashover mark, korona terdengar mendesis di kelembapan tinggi','ROW (right of way) adalah jarak hidup: pohon tumbuh diam-diam menuju konduktor — patroli adalah alarm tumbuhnya'],
+  next:['Pelajari inspeksi drone + AI untuk jalur ratusan kilometer','Dalami corona camera (UV) — kakak ipar thermovision','Susun prioritas anggaran pemeliharaan dari data patroli']},
+});
+let mpv={};
+function buildThermo(){
+  freshScene(0x9fc0dc,0x12202e);
+  cam={theta:.2,phi:1.08,r:12,target:new THREE.Vector3(0,4,-1)};
+  const ground=boxT(26,.1,16,TEX.gravel());ground.position.y=-.05;scene.add(ground);
+  /* tower */
+  [[-1.1,-1.1],[1.1,-1.1],[-1.1,1.1],[1.1,1.1]].forEach(o=>{
+    const kaki=boxT(.16,8.5,.16,TEX.metal(),{metalness:.5});
+    kaki.position.set(o[0],4.25,-2+o[1]);kaki.rotation.z=o[0]*-.035;scene.add(kaki);});
+  [2.5,4.5,6.5,8].forEach(y=>{
+    const pl=boxT(2.4,.1,.1,TEX.metal(),{metalness:.5});pl.position.set(0,y,-1);scene.add(pl);
+    const pl2=pl.clone();pl2.position.z=-3;scene.add(pl2);});
+  const cross=boxT(5,.18,.18,TEX.metal(),{metalness:.5});cross.position.set(0,7.6,-2);scene.add(cross);
+  actMesh(cross,'TOWER');
+  scene.add(label('TOWER 57',.8).translateY(8.9).translateZ(-2));
+  /* konduktor + klem panas */
+  const kw1=cyl(.02,.02,22,0x3c4754);kw1.rotation.z=Math.PI/2;kw1.position.set(0,7.2,-2);scene.add(kw1);
+  mpv.klem=box(.16,.12,.12,0x8a939e,{metalness:.5});mpv.klem.position.set(2.3,7.2,-2);scene.add(mpv.klem);
+  actMesh(mpv.klem,'SCAN');
+  /* isolator string */
+  mpv.iso=new THREE.Group();
+  for(let i=0;i<5;i++){const disc=cyl(.16,.16,.05,0x9aa7b4,16);disc.position.y=-i*.14;mpv.iso.add(disc);}
+  mpv.iso.position.set(-2.3,7.5,-2);scene.add(mpv.iso);
+  actMesh(mpv.iso.children[2],'ISO');
+  scene.add(label('STRING ISOLATOR',.55,'#5fd4ff').translateX(-2.6).translateY(6.6).translateZ(-2));
+  /* pohon di ROW */
+  const batang=cyl(.12,.18,2.4,0x4a3624);batang.position.set(5.4,1.2,-2);scene.add(batang);
+  mpv.daun=new THREE.Mesh(new THREE.SphereGeometry(1.1,12,10),
+    new THREE.MeshStandardMaterial({color:0x2e5a2e,roughness:.9}));
+  mpv.daun.position.set(5.4,3.0,-2);scene.add(mpv.daun);
+  actMesh(mpv.daun,'ROW');
+  scene.add(label('POHON DI TEPI ROW',.6,'#ffd23f').translateX(5.4).translateY(4.4).translateZ(-2));
+  /* kamera thermovision + layar */
+  mpv.cam=box(.3,.22,.2,0x18242f);mpv.cam.position.set(-4.6,1.1,1.4);scene.add(mpv.cam);
+  scene.add(label('THERMOVISION',.55,'#5fd4ff').translateX(-4.6).translateY(1.45).translateZ(1.4));
+  const tbl=boxT(1.0,.07,.6,TEX.wood());tbl.position.set(-4.6,.95,1.4);scene.add(tbl);
+  const tleg=boxT(.08,.95,.08,TEX.wood());tleg.position.set(-4.6,.47,1.4);scene.add(tleg);
+  mpv.D=makeDisplay(1.9,1.1,400,230);
+  mpv.D.mesh.position.set(-6.4,2.4,-1.4);mpv.D.mesh.rotation.y=.4;scene.add(mpv.D.mesh);
+  dispText(mpv.D,['IR VIEW','arahkan ke objek…'],['#5fd4ff','#7d8f84']);
+  const pole2=cyl(.04,.04,1.7,0x666666);pole2.position.set(-6.4,1.0,-1.4);scene.add(pole2);
+  /* form laporan */
+  mpv.form=box(.5,.66,.04,0xe8e4d8);mpv.form.position.set(-2.8,1.3,1.8);scene.add(mpv.form);
+  actMesh(mpv.form,'LAPOR');
+  scene.add(label('FORM INSPEKSI',.55,'#5fd4ff').translateX(-2.8).translateY(1.85).translateZ(1.8));
+  startSeq([
+   {type:'act',aid:'TOWER',done:false,targets:()=>[cross],
+    desc:'Mulai dari struktur: periksa TOWER 57 (klik cross-arm).',
+    why:'Mata menyapu dari kaki ke pucuk: baut lengkap (pencuri besi tower itu nyata), tidak ada karat parah, pondasi utuh, penghalang panjat & rambu terpasang. Struktur sehat — lanjut ke yang dialiri arus.',
+    fx(){toast('🗼 Tower 57: baut ✓ pondasi ✓ rambu ✓ — struktur sehat.','ok',2600);}},
+   {type:'act',aid:'SCAN',done:false,targets:()=>[mpv.klem],
+    desc:'Arahkan THERMOVISION ke klem & sambungan (klik klem).',
+    why:'Layar IR menyala: konduktor 42°C... tapi klem jumper fasa R membara 78°C — delta-T 36°C, kasta SEGERA. Resistansi kontaknya memburuk; dibiarkan sebulan lagi = klem putus berbeban = penghantar jatuh. Demam tertangkap sebelum jadi tumbang.',
+    fx(){mpv.klem.material.color.setHex(0xff5a3a);
+      dispText(mpv.D,['KLEM R: 78°C ⚠','ΔT 36°C — SEGERA'],['#ff5a5a','#ffd23f']);
+      toast('🌡️ Klem fasa R: ΔT 36°C — prioritas SEGERA!','bad',3000);}},
+   {type:'act',aid:'ISO',done:false,targets:()=>[mpv.iso.children[2]],
+    desc:'Teropong STRING ISOLATOR: ada yang retak? (klik string)',
+    why:'Piringan ketiga dari atas: retak rambut + jejak flashover kecoklatan — kemungkinan bekas sambaran yang ditangani relay tempo hari (ingat analisis distance-mu: tower 57-58!). Loop analisis menutup: prediksi kantor, bukti lapangan.',
+    fx(){toast('🔍 Isolator #3 retak + jejak flashover — cocok dengan analisis DFR!','bad',2800);}},
+   {type:'act',aid:'ROW',done:false,targets:()=>[mpv.daun],
+    desc:'Ukur jarak POHON ke konduktor (klik pohon).',
+    why:'Laser distance: 4,2 m dari konduktor terdekat — batas aman 150 kV minimal 5 m, dan pohon sengon ini menambah 2 m per tahun. Hari ini aman, enam bulan lagi tidak. Patroli yang baik melihat masa depan dari laju tumbuh.',
+    fx(){toast('🌳 Jarak 4,2 m (< 5 m aman) — masuk daftar rabas segera.','bad',2800);}},
+   {type:'act',aid:'LAPOR',done:false,targets:()=>[mpv.form],
+    desc:'Susun LAPORAN prioritas + foto & koordinat (klik form).',
+    why:'Tiga temuan, tiga prioritas: klem (SEGERA — jadwalkan hotline/PDKB), isolator (TINGGI — ganti saat pembebasan berikut), pohon (rabas bulan ini, surati pemilik lahan). Foto + koordinat + delta-T: laporan yang membuat anggaran tak bisa menolak.',
+    fx(){toast('📋 3 temuan terdokumentasi — masuk rencana pemeliharaan!','ok',3200);sfx.big();}},
+  ],()=>{say('🎉 <b>Patroli yang menyelamatkan penghantar!</b> Klem demam tertangkap IR, isolator retak melengkapi cerita DFR, dan pohon kena tilang sebelum menyentuh. Transmisi andal dirawat oleh kaki yang berjalan dan mata yang melihat panas.');
+    setTimeout(()=>showWin('thermo'),2200);});
+  say('VOLTA di sini 🎥 Hari patroli! Senjata utamamu kamera <b>thermovision</b>: sambungan yang memburuk itu DEMAM, dan demam tak bisa sembunyi dari infra merah. Tiga hal menunggu ditemukan — mulai dari struktur tower.');
+  $('#modTitle').textContent='J04·M5 — Inspeksi & Thermovision';
+  $('#taskHead').textContent='LIHAT PANAS SEBELUM PUTUS';}
+MISSIONS.thermo.build=buildThermo;
+Object.assign(REAL,{
+ thermo:[
+  'Thermovision diukur saat beban tinggi (>40%) — klem dingin saat beban rendah bisa menipu',
+  'Catat emisivitas & jarak ukur di tiap foto IR; angka tanpa parameter = angka yang bisa dibantah',
+  'Temuan SEGERA dieksekusi dengan PDKB (pekerjaan dalam keadaan bertegangan) bila padam tak memungkinkan',
+  'Bangun database temuan per tower — pola berulang menunjuk masalah desain, bukan kebetulan'],
+});

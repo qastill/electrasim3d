@@ -427,3 +427,104 @@ Object.assign(REAL,{
   'Manajemen SoC harian harus menyeimbangkan FR vs peak shaving — dua kontrak satu baterai perlu prioritas jelas',
   'Hitung degradasi tambahan dari siklus FR dalam ekonomi proyek — refleks juga ada harganya'],
 });
+
+/* =====================================================================
+   MISI 5 — SOLAR SHIFTING: BESS + PLTS CO-LOCATED
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ shift:{lvl:'JALUR 15 · BATERAI & BESS · MISI 5',icon:'🌗',title:'Solar Shifting: BESS + PLTS Co-Located',strict:false,
+  loc:'📍 Kawasan industri · PLTS 2 MWp + BESS 1 MWh satu pagar',
+  story:'Tetangga BESS-mu kini sebuah PLTS 2 MWp — dan keduanya dijodohkan dalam satu kontrak baru: SOLAR SHIFTING. Masalah abadi tenaga surya: produksi memuncak siang saat tarif murah, lalu pulang tidur tepat ketika beban (dan harga) memuncak sore-malam. Tugas baterai: menculik matahari siang, melepasnya saat senja dihargai mahal.',
+  goal:'Mode solar shifting beroperasi: kelebihan produksi siang tersimpan, dilepas di jam puncak sore, dan ramp rate PLTS terhaluskan saat awan lewat.',
+  obj:['Analisis profil produksi vs beban & tarif','Set jadwal charge-discharge & smoothing di EMS','Uji sehari penuh: simpan siang, lepas senja'],
+  learn:['Solar shifting = arbitrase waktu: energi yang sama bernilai beda tergantung JAM — baterai memindahkan kWh dari jam murah ke jam mahal','Charge dari kelebihan PLTS (bukan grid) menjaga klaim hijau: tiap kWh yang dilepas senja tetap bertanda tangan matahari','Cloud smoothing: awan bikin PLTS terjun ratusan kW dalam detik — baterai mengisi lembahnya, jaringan melihat kurva halus','EMS co-located mengelola SATU titik interkoneksi untuk dua aset: PLTS + BESS tampil ke grid sebagai satu pembangkit yang sopan'],
+  next:['Pelajari sizing rasio BESS:PLTS untuk shifting optimal','Dalami clipping recapture: panen energi di atas batas inverter','Eksplorasi kontrak hybrid: shifting + frequency response sekaligus']},
+});
+let msf={};
+function buildShift(){
+  freshScene(0xcfe2f0,0x14242c);
+  cam={theta:.1,phi:1.15,r:9.5,target:new THREE.Vector3(0,1.6,-.8)};
+  const ground=boxT(22,.1,13,TEX.gravel());ground.position.y=-.05;scene.add(ground);
+  /* array PLTS */
+  for(let r=0;r<2;r++)for(let c=0;c<3;c++){
+    const p=box(1.7,.06,1.1,0x16263e,{roughness:.25,metalness:.5});
+    p.position.set(-6+c*1.9,1.1+0,-3+r*1.4);p.rotation.x=-.22;scene.add(p);
+    const leg=cyl(.05,.05,.9,0x8a8a8a);leg.position.set(-6+c*1.9,.45,-3+r*1.4);scene.add(leg);}
+  scene.add(label('PLTS 2 MWp',.8).translateX(-4.1).translateY(2.2).translateZ(-2.4));
+  /* BESS container */
+  const cont=boxT(2.8,2.0,1.4,TEX.metal(),{metalness:.3});cont.position.set(1.4,1.0,-2.2);scene.add(cont);
+  cont.add(label('BESS 1 MWh',.8).translateY(1.3));
+  /* layar profil besar */
+  const frame=boxT(4.4,2.5,.16,TEX.metal(),{metalness:.4});frame.position.set(5.6,2.3,-2.8);scene.add(frame);
+  frame.add(label('PROFIL 24 JAM — PLTS · BEBAN · BESS',.8).translateY(1.55));
+  msf.D=makeDisplay(4.1,2.2,600,330);
+  msf.D.mesh.position.set(5.6,2.3,-2.7);scene.add(msf.D.mesh);
+  actMesh(msf.D.mesh,'PROFIL');
+  function grafik(mode){
+    const g=msf.D.g,W=600,H=330;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.strokeStyle='#2a3a4c';g.lineWidth=2;
+    g.beginPath();g.moveTo(40,16);g.lineTo(40,H-36);g.lineTo(W-12,H-36);g.stroke();
+    g.font='600 13px Consolas';g.fillStyle='#8aa3bd';g.textAlign='center';
+    [0,6,12,18,24].forEach(h=>g.fillText(h+':00',40+h/24*(W-66),H-16));
+    /* zona tarif mahal 17-21 */
+    const x17=40+17/24*(W-66),x21=40+21/24*(W-66);
+    g.fillStyle='#3a2a1a';g.fillRect(x17,16,x21-x17,H-52);
+    g.fillStyle='#ffd23f';g.fillText('TARIF PUNCAK',x17+(x21-x17)/2,30);
+    function kurva(col,fn,dash){g.strokeStyle=col;g.lineWidth=3;
+      if(dash)g.setLineDash([6,5]);g.beginPath();
+      for(let h=0;h<=24;h+=.5){const x=40+h/24*(W-66),y=H-36-fn(h)*(H-80);
+        h===0?g.moveTo(x,y):g.lineTo(x,y);}
+      g.stroke();g.setLineDash([]);}
+    const pv=h=>Math.max(0,Math.sin((h-6)/12*Math.PI))*.95;
+    kurva('#ffd23f',pv);
+    if(mode>=1){ /* dengan shifting: ekspor terpotong siang, terangkat sore */
+      kurva('#46ff8e',h=>{
+        if(h>=9&&h<=15)return pv(h)*.55;       /* sebagian masuk baterai */
+        if(h>=17&&h<=21)return .42;            /* discharge senja */
+        return pv(h);},false);}
+    g.font='600 14px Consolas';g.textAlign='left';
+    g.fillStyle='#ffd23f';g.fillText('— PLTS mentah',50,30);
+    if(mode>=1){g.fillStyle='#46ff8e';g.fillText('— ekspor dgn BESS (shifted)',50,50);}
+    if(mode>=2){g.fillStyle='#5fd4ff';g.fillText('cloud smoothing AKTIF: ramp <10%/menit ✓',50,72);}
+    msf.D.tex.needsUpdate=true;}
+  grafik(0);
+  /* EMS panel */
+  msf.E=makeDisplay(1.5,.9,340,200);
+  msf.E.mesh.position.set(1.4,2.6,-2.2);scene.add(msf.E.mesh);
+  dispText(msf.E,['EMS','mode: idle'],['#5fd4ff','#7d8f84']);
+  actMesh(msf.E.mesh,'JADWAL');
+  scene.add(label('EMS CO-LOCATED',.6,'#5fd4ff').translateX(1.4).translateY(3.25).translateZ(-2.2));
+  startSeq([
+   {type:'act',aid:'PROFIL',done:false,targets:()=>[msf.D.mesh],
+    desc:'Baca PROFIL: di mana matahari & uang tidak bertemu? (klik layar)',
+    why:'Kurva kuning memuncak jam 12 — tarif ekspor sedang murah-murahnya. Zona oranye (17–21) bertarif premium... dan di sanalah PLTS sudah nyaris tidur. Dua puncak yang saling merindukan tapi tak pernah bertemu: pekerjaan klasik untuk baterai.',
+    fx(){toast('📊 Puncak produksi 12:00 vs puncak harga 17-21 — mismatch jelas.','info',3000);}},
+   {type:'act',aid:'JADWAL',done:false,targets:()=>[msf.E.mesh],
+    desc:'Set JADWAL di EMS: charge siang dari PLTS, discharge senja (klik EMS).',
+    why:'Aturan ditulis: 09–15 serap kelebihan PLTS sampai SoC 95% (charge HANYA dari surya — kWh senja tetap bertanda tangan matahari), 17–21 discharge mengikuti kurva tarif, sisakan 15% untuk cloud smoothing. Baterai kini punya jam kerja.',
+    fx(){dispText(msf.E,['SHIFTING SET','chg 9-15 · dis 17-21'],['#46ff8e','#eaf2fb']);
+      toast('🗓️ Jadwal terkunci — matahari siang dipesan untuk senja.','ok',2800);}},
+   {type:'act',aid:'SMOOTH',done:false,targets:()=>[msf.E.mesh],
+    desc:'Aktifkan CLOUD SMOOTHING — jaga ramp rate (klik EMS lagi).',
+    why:'Awan tebal bisa menjatuhkan 2 MWp ratusan kW dalam sepuluh detik — jaringan kecil terhuyung oleh hentakan begitu. Mode smoothing: baterai menambal tiap lembah seketika, ekspor berubah maksimal 10% per menit. Grid melihat pembangkit yang berperilaku santun.',
+    fx(){grafik(2);toast('☁️ Smoothing ON — awan boleh lewat, kurva tetap halus.','ok',2800);}},
+   {type:'act',aid:'UJI',done:false,targets:()=>[msf.D.mesh],
+    desc:'Jalankan UJI 24 jam (simulasi dipercepat) — baca hasilnya.',
+    why:'Kurva hijau bercerita: siang terpotong rapi (masuk baterai), senja TERANGKAT 420 kW tepat di zona premium. Pendapatan harian naik 31% dari energi matahari yang SAMA — tak ada panel baru, hanya waktu yang dipindahkan. Arbitrase paling elegan: melawan jam, bukan pasar.',
+    fx(){grafik(2);
+      toast('🌗 Uji lolos: pendapatan +31% dari kWh yang sama!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Matahari berhasil diculik ke senja!</b> Siang menabung, senja memanen, dan awan tak lagi bisa mengejutkan jaringan. PLTS + BESS satu pagar: pembangkit surya yang akhirnya bisa janjian dengan jam mahal.');
+    setTimeout(()=>showWin('shift'),2200);});
+  const s1=seq.steps[1],of1=s1.fx;s1.fx=()=>{of1();msf.E.mesh.userData.aid='SMOOTH';};
+  say('VOLTA di sini 🌗 Perjodohan baru: <b>PLTS 2 MWp + BESS-mu</b>. Masalah abadi surya: berproduksi saat murah, tidur saat mahal. Solusinya satu kata — shifting. Baca dulu profilnya, lalu ajari baterai jam kerjanya.');
+  $('#modTitle').textContent='J15·M5 — Solar Shifting';
+  $('#taskHead').textContent='SIMPAN SIANG, PANEN SENJA';}
+MISSIONS.shift.build=buildShift;
+Object.assign(REAL,{
+ shift:[
+  'Validasi struktur tarif/PPA aktual — nilai shifting hidup-mati oleh selisih harga antar jam',
+  'Charge dari PLTS vs grid punya implikasi kontrak & klaim hijau — atur di EMS dan dokumentasikan',
+  'Sisakan headroom SoC untuk smoothing — baterai penuh tak bisa menyerap hentakan awan',
+  'Evaluasi bulanan: cuaca berubah musiman, jadwal charge-discharge ikut dikalibrasi ulang'],
+});

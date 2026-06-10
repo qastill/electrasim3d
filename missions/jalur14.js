@@ -387,3 +387,93 @@ Object.assign(REAL,{
   'Inventarisasi material jaringan: segmen baja tua & seal lama diaudit untuk kompatibilitas H₂',
   'Sosialisasi & jalur pengaduan pelanggan disiapkan — kepercayaan publik adalah infrastruktur juga'],
 });
+
+/* =====================================================================
+   MISI 5 — LOGISTIK H2: TUBE TRAILER
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ trailer:{lvl:'JALUR 14 · HYDROGEN ENERGY · MISI 5',icon:'🚛',title:'Logistik H₂: Loading Tube Trailer',strict:true,
+  loc:'📍 Plant H₂ · Bay loading, pengiriman perdana ke industri',
+  story:'Pelanggan industri di kawasan sebelah meneken kontrak: 300 kg H₂ per minggu. Pipa belum ada — jalurnya darat: TUBE TRAILER, truk berisi deretan tabung raksasa 250 bar. Hari ini loading perdana, dan logistik hidrogen punya hukum acaranya sendiri: grounding sebelum selang, leak test sebelum aliran, dokumen sebelum roda berputar.',
+  goal:'Tube trailer terisi 300 kg dengan aman: bonding-grounding, leak test, transfer terkontrol dengan pemantauan suhu, dan dokumen pengangkutan B3 lengkap.',
+  obj:['Posisikan trailer & bonding-grounding','Sambung selang transfer + leak test','Transfer terkontrol lalu lengkapi dokumen pengangkutan'],
+  learn:['Tube trailer = baterai hidrogen beroda: deretan tabung panjang 250 bar — kapasitas dihitung dari selisih tekanan awal-akhir','Transfer gas bertekanan MEMANASKAN tabung penerima (kompresi): laju diatur agar suhu tabung tak melampaui batas desain','Bonding dulu, selang kemudian, leak test sebelum aliran — urutan ritual yang sama di darat maupun stasiun','H₂ di jalan raya = pengangkutan B3: dokumen, placard, rute & sopir bersertifikat — kecelakaan administrasi sama mahalnya dengan kecelakaan fisik'],
+  next:['Bandingkan ekonomi tube trailer vs pipa vs liquid H₂ per jarak','Pelajari regulasi pengangkutan B3 & sertifikasi pengemudi','Dalami desain loading bay: zona, ESD, & fire protection']},
+});
+let mtt={};
+function buildTrailer(){
+  freshScene(0xa8c4d8,0x0e1a22);
+  cam={theta:.2,phi:1.15,r:10,target:new THREE.Vector3(0,1.5,-.8)};
+  const ground=boxT(24,.1,14,TEX.concrete());ground.position.y=-.05;scene.add(ground);
+  const bay=boxT(8,.04,5,TEX.hazard());bay.position.set(1,.05,-1.5);scene.add(bay);
+  /* truk + tube trailer */
+  mtt.truk=new THREE.Group();
+  const kabin=box(1.2,1.1,1.3,0x2a5a8a);kabin.position.set(-2.2,.85,0);mtt.truk.add(kabin);
+  const chasis=box(4.4,.25,1.3,0x444b55);chasis.position.set(.6,.45,0);mtt.truk.add(chasis);
+  for(let i=0;i<4;i++){
+    const tube=cyl(.22,.22,4.0,0x9aa7b4,16,{metalness:.5});tube.rotation.z=Math.PI/2;
+    tube.position.set(.6,.85+Math.floor(i/2)*.5,(i%2)*.55-.27);mtt.truk.add(tube);}
+  [[-1.6],[1.2],[2.4]].forEach(o=>{[-.6,.6].forEach(z=>{
+    const wh=cyl(.3,.3,.22,0x14181d);wh.rotation.x=Math.PI/2;
+    wh.position.set(o[0],.3,z);mtt.truk.add(wh);});});
+  mtt.truk.position.set(1,0,-1.5);scene.add(mtt.truk);
+  scene.add(label('TUBE TRAILER 250 bar',.8).translateX(1).translateY(2.3).translateZ(-1.5));
+  /* kabel bonding */
+  mtt.bond=box(.3,.1,.12,0xd8b020);mtt.bond.position.set(-1.4,.35,.8);scene.add(mtt.bond);
+  actMesh(mtt.bond,'BOND');
+  scene.add(label('KABEL BONDING',.55,'#5fd4ff').translateX(-1.6).translateY(.75).translateZ(1.0));
+  /* manifold + selang */
+  mtt.mani=boxT(.7,1.2,.5,TEX.metal(),{metalness:.4});mtt.mani.position.set(4.8,.65,-1.5);scene.add(mtt.mani);
+  actMesh(mtt.mani,'SELANG');
+  scene.add(label('MANIFOLD LOADING + SELANG',.6,'#5fd4ff').translateX(4.8).translateY(1.55).translateZ(-1.5));
+  /* display transfer */
+  mtt.D=makeDisplay(1.6,.9,360,200);
+  mtt.D.mesh.position.set(4.8,2.4,-2.4);scene.add(mtt.D.mesh);
+  dispText(mtt.D,['SIAP','0 kg · 20 bar'],['#7d8f84','#8aa3bd']);
+  actMesh(mtt.D.mesh,'TRANSFER');
+  /* dokumen */
+  mtt.dok=box(.5,.66,.04,0xe8e4d8);mtt.dok.position.set(-4.6,1.4,-2.2);scene.add(mtt.dok);
+  actMesh(mtt.dok,'DOKUMEN');
+  const tiang=cyl(.03,.03,1.4,0x666666);tiang.position.set(-4.6,.7,-2.2);scene.add(tiang);
+  scene.add(label('DOKUMEN ANGKUT B3',.6,'#5fd4ff').translateX(-4.6).translateY(2.0).translateZ(-2.2));
+  mtt.kg=0;mtt.bar=20;mtt.fill=false;
+  moduleTick=(dt)=>{if(mtt.fill&&mtt.kg<300){
+    mtt.kg=Math.min(300,mtt.kg+dt*24);mtt.bar=20+(mtt.kg/300)*230;
+    dispText(mtt.D,[Math.round(mtt.kg)+' kg · '+Math.round(mtt.bar)+' bar',
+      'suhu tabung '+(28+mtt.kg/300*22).toFixed(0)+'°C'+(mtt.kg>=300?' · PENUH ✓':'')],
+      [mtt.kg>=300?'#46ff8e':'#5fd4ff','#ffd23f']);}};
+  startSeq([
+   {type:'act',aid:'BOND',done:false,targets:()=>[mtt.bond],
+    desc:'Trailer parkir, mesin MATI, roda diganjal — pasang BONDING (klik kabel).',
+    why:'Ritual pembuka yang tak pernah berubah: potensial trailer & plant disamakan SEBELUM benda apa pun saling menyentuh. Truk yang berjalan ratusan kilometer membawa muatan statis — dan di bay loading hidrogen, satu percikan adalah satu berita nasional.',
+    fx(){mtt.bond.position.set(2.8,.4,-.6);
+      toast('🔗 Mesin off · ganjal ✓ · bonding tersambung.','ok',2800);}},
+   {type:'act',aid:'SELANG',done:false,targets:()=>[mtt.mani],
+    desc:'Sambung SELANG transfer + LEAK TEST sambungan (klik manifold).',
+    why:'Selang high-pressure flex dikunci ke manifold trailer, lalu diuji dengan N₂ & detector sebelum setetes H₂ pun lewat: nol ppm di semua fitting. Breakaway coupling terpasang — bila truk bergerak tak sengaja, sambungan putus aman, bukan robek liar.',
+    fx(){toast('🔌 Selang terkunci · leak test 0 ppm · breakaway siap.','ok',2800);}},
+   {type:'act',aid:'TRANSFER',done:false,targets:()=>[mtt.D.mesh],
+    desc:'Mulai TRANSFER terkontrol — pantau tekanan & SUHU (klik display).',
+    why:'Kompresi memanaskan tabung penerima: laju diatur agar suhu tak melewati 65°C — terlalu serakah = transfer dihentikan paksa oleh proteksi termal. 300 kg butuh kesabaran; hidrogen tak pernah menghargai ketergesaan.',
+    fx(){mtt.fill=true;beep(200,.6,'sine',.07);
+      toast('⛽ Transfer berjalan — perhatikan suhu ikut menanjak.','ok',2800);}},
+   {type:'act',aid:'DOKUMEN',done:false,targets:()=>[mtt.dok],
+    check:()=>mtt.kg>=300,
+    checkFail:'Transfer belum penuh! Tunggu 300 kg tercapai sebelum menutup dokumen.',
+    desc:'300 kg penuh: lepas selang (purging), lengkapi DOKUMEN angkut (klik dokumen).',
+    why:'Selang di-purge N₂ sebelum dilepas, valve trailer terkunci & tersegel. Dokumen B3: manifes, placard "Gas Mudah Terbakar", rute yang menghindari terowongan, sertifikat sopir, nomor darurat. Truk ini legal sampai ke gerbang pelanggan — administrasi adalah APD-nya perjalanan.',
+    fx(){mtt.fill=false;
+      toast('📋 300 kg tersegel · dokumen lengkap — trailer BERANGKAT!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Pengiriman perdana berangkat!</b> Bonding dulu, leak test sebelum aliran, suhu dijaga, dokumen menutup ritual. Hidrogenmu kini menempuh jalan raya — dengan semua hukum acaranya terpenuhi.');
+    setTimeout(()=>showWin('trailer'),2200);});
+  say('VOLTA di sini 🚛 Kontrak 300 kg/minggu — dan jalurnya darat: <b>tube trailer</b>. Logistik H₂ punya hukum acara: grounding sebelum selang, leak test sebelum aliran, dokumen sebelum roda. Trailer sudah parkir. Mulai!');
+  $('#modTitle').textContent='J14·M5 — Loading Tube Trailer';
+  $('#taskHead').textContent='BOND · TEST · TRANSFER · DOKUMEN';}
+MISSIONS.trailer.build=buildTrailer;
+Object.assign(REAL,{
+ trailer:[
+  'Bay loading dirancang dgn zona ATEX, ESD & deteksi api H₂ (UV/IR) — bukan halaman parkir biasa',
+  'Periksa sertifikasi tabung trailer (uji periodik) sebelum tiap pengisian — tanggal di pelat itu hukum',
+  'Driver wajib pelatihan B3 + APD & detector pribadi; rute disurvei (hindari terowongan & padat)',
+  'Prosedur darurat perjalanan disepakati dengan pelanggan: nomor kontak, titik aman, skenario bocor'],
+});

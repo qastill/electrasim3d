@@ -435,3 +435,112 @@ Object.assign(REAL,{
   'Clearing time dihitung dari panjang belt ÷ kecepatan + margin — bukan angka tebakan',
   'Alarm penumpukan dicatat di sistem: transfer yang sering tersumbat = masalah desain, bukan operator'],
 });
+
+/* =====================================================================
+   MISI 5 — PREDICTIVE MAINTENANCE: ANALISIS VIBRASI
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ vibra:{lvl:'JALUR 02 · INDUSTRI & MANUFAKTUR · MISI 5',icon:'📳',title:'Predictive Maintenance: Analisis Vibrasi',strict:false,
+  loc:'📍 Pabrik tekstil · Rute pengukuran bulanan',
+  story:'Pabrik ini dulu menganut dua mazhab: perbaiki saat rusak (mahal & mendadak) atau ganti terjadwal (membuang komponen sehat). Kamu membawa mazhab ketiga: DENGARKAN mesinnya. Bearing yang mulai rusak bernyanyi berminggu-minggu sebelum mati — dalam bahasa getaran yang hanya dipahami spektrum. Hari ini rute vibrasi bulanan menemukan sesuatu di pompa P-203.',
+  goal:'Kerusakan bearing terdeteksi dini dari spektrum vibrasi, sisa umur diestimasi dari tren, dan penggantian terjadwal TANPA produksi berhenti mendadak.',
+  obj:['Ukur vibrasi sesuai rute & titik standar','Baca spektrum: kenali tanda tangan kerusakan bearing','Tren-kan data, putuskan jadwal, eksekusi tanpa kejutan'],
+  learn:['Overall vibration (mm/s RMS) adalah termometer; SPEKTRUM adalah diagnosisnya — frekuensi mana yang bergetar menunjuk komponen mana yang sakit','Tiap cacat bearing punya frekuensi khasnya (BPFO/BPFI dari geometri bearing) — puncak di frekuensi itu = vonis yang spesifik','Kerusakan bearing menempuh tahapan berminggu-minggu: ultrasonik → spektrum → terdengar → panas → gagal. Makin dini tertangkap, makin murah','Predictive menang dua arah: tak ada breakdown mendadak, tak ada penggantian komponen yang masih sehat'],
+  next:['Pelajari analisis envelope/demodulasi untuk bearing tahap dini','Dalami balancing & alignment — dua akar getaran terbesar','Eksplorasi sensor vibrasi online + IoT untuk aset kritis']},
+});
+let mvb={};
+function buildVibra(){
+  freshScene(0xb0bfcc,0x131c26);
+  cam={theta:-.1,phi:1.18,r:8,target:new THREE.Vector3(0,1.4,-.8)};
+  const Z=room(0x55606a,0xb9bfc6,16,11);
+  /* deretan pompa */
+  mvb.pumps=[];
+  [[-4.5,'P-201'],[-1.5,'P-202'],[1.5,'P-203'],[4.5,'P-204']].forEach((o,i)=>{
+    const mtr=cyl(.3,.3,.8,0x3a6ea8);mtr.rotation.z=Math.PI/2;mtr.position.set(o[0]-.5,.6,-1.6);scene.add(mtr);
+    const pmp=cyl(.34,.34,.5,0x6a8aa8);pmp.rotation.z=Math.PI/2;pmp.position.set(o[0]+.45,.6,-1.6);scene.add(pmp);
+    const base=boxT(1.8,.18,.8,TEX.concrete());base.position.set(o[0],.1,-1.6);scene.add(base);
+    actMesh(pmp,'P'+i);mvb.pumps.push(pmp);
+    scene.add(label(o[1],.6).translateX(o[0]).translateY(1.25).translateZ(-1.6));});
+  /* vibration analyzer */
+  const tbl=boxT(1.0,.07,.6,TEX.wood());tbl.position.set(-3.0,.95,1.2);scene.add(tbl);
+  const tleg=boxT(.08,.95,.08,TEX.wood());tleg.position.set(-3.0,.47,1.2);scene.add(tleg);
+  mvb.ana=box(.3,.22,.2,0xd8b020);mvb.ana.position.set(-3.0,1.1,1.2);scene.add(mvb.ana);
+  scene.add(label('VIBRATION ANALYZER',.55,'#5fd4ff').translateX(-3.0).translateY(1.45).translateZ(1.2));
+  /* layar spektrum */
+  const frame=boxT(3.4,2.0,.16,TEX.metal(),{metalness:.4});frame.position.set(1.4,2.5,Z+.05);scene.add(frame);
+  frame.add(label('SPEKTRUM & TREN',.8).translateY(1.25));
+  mvb.D=makeDisplay(3.1,1.7,520,300);
+  mvb.D.mesh.position.set(1.4,2.5,Z+.15);scene.add(mvb.D.mesh);
+  actMesh(mvb.D.mesh,'SPEK');
+  function layar(mode){
+    const g=mvb.D.g,W=520,H=300;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.strokeStyle='#2a3a4c';g.lineWidth=2;
+    g.beginPath();g.moveTo(36,16);g.lineTo(36,H-36);g.lineTo(W-12,H-36);g.stroke();
+    g.font='600 14px Consolas';g.textAlign='left';
+    if(mode<=1){ /* spektrum */
+      const peaks=[[60,.25,'1x'],[120,.12,'2x'],[236,mode===1?.7:.1,'BPFO!'],[472,mode===1?.35:.05,'2xBPFO']];
+      peaks.forEach(p=>{
+        const x=36+p[0]*.9,h=p[1]*(H-70);
+        g.strokeStyle=p[2].includes('BPFO')&&mode===1?'#ff5a5a':'#5fd4ff';g.lineWidth=5;
+        g.beginPath();g.moveTo(x,H-36);g.lineTo(x,H-36-h);g.stroke();
+        g.fillStyle=g.strokeStyle;g.fillText(p[2],x-12,H-42-h);});
+      g.fillStyle='#8aa3bd';g.fillText('frekuensi (Hz) →',W-150,H-14);
+      g.fillStyle=mode===1?'#ff5a5a':'#46ff8e';g.font='700 16px Consolas';
+      g.fillText(mode===1?'P-203: puncak di BPFO 236 Hz — cacat lintasan luar!':'spektrum normal',40,30);}
+    else{ /* tren */
+      g.strokeStyle='#ffd23f';g.lineWidth=3;g.beginPath();
+      [[0,1.1],[1,1.2],[2,1.3],[3,1.8],[4,2.9],[5,4.6]].forEach((p,i)=>{
+        const x=36+p[0]*80,y=H-36-p[1]*42;
+        i===0?g.moveTo(x,y):g.lineTo(x,y);g.fillStyle='#ffd23f';g.fillRect(x-3,y-3,6,6);});
+      g.stroke();
+      g.strokeStyle='#7a2a2a';g.setLineDash([6,5]);
+      g.beginPath();g.moveTo(36,H-36-7.1*42+42);g.lineTo(W-12,H-36-7.1*42+42);g.stroke();g.setLineDash([]);
+      g.fillStyle='#ff8d8d';g.fillText('batas 7,1 mm/s',40,H-36-7.1*42+36);
+      g.fillStyle='#ffd23f';g.font='700 16px Consolas';
+      g.fillText('tren 6 bln: proyeksi sentuh batas ±3 minggu',40,28);}
+    mvb.D.tex.needsUpdate=true;}
+  layar(0);
+  /* papan jadwal & bearing baru */
+  mvb.jadwal=box(.6,.7,.05,0xe8e4d8);mvb.jadwal.position.set(4.6,2.3,Z+.06);scene.add(mvb.jadwal);
+  actMesh(mvb.jadwal,'JADWAL');
+  scene.add(label('JADWAL HAR',.55,'#5fd4ff').translateX(4.6).translateY(2.9).translateZ(Z+.1));
+  mvb.brg=new THREE.Mesh(new THREE.TorusGeometry(.18,.06,12,24),
+    new THREE.MeshStandardMaterial({color:0xd8dee4,metalness:.7,roughness:.3}));
+  mvb.brg.position.set(5.4,1.1,.8);scene.add(mvb.brg);
+  actMesh(mvb.brg,'GANTI');
+  scene.add(label('BEARING BARU 6309',.55,'#5fd4ff').translateX(5.4).translateY(1.5).translateZ(.8));
+  startSeq([
+   {type:'act',aid:'P2',done:false,targets:()=>[mvb.pumps[2]],
+    desc:'Jalankan rute: ukur vibrasi tiap pompa — P-203 terasa beda (klik P-203).',
+    why:'Titik ukur selalu sama (bearing housing, arah H-V-A) agar bulan demi bulan bisa dibandingkan. P-201, 202, 204: 1,1–1,4 mm/s, tenang. P-203: 4,6 mm/s — naik dari 2,9 bulan lalu. Termometer sudah bicara; saatnya diagnosis.',
+    fx(){toast('📳 P-203: 4,6 mm/s (bulan lalu 2,9) — perlu spektrum!','bad',2800);}},
+   {type:'act',aid:'SPEK',done:false,targets:()=>[mvb.D.mesh],
+    desc:'Baca SPEKTRUM P-203: frekuensi mana yang berteriak? (klik layar)',
+    why:'Puncak menjulang di 236 Hz — bukan 1x putaran (ketidakseimbangan), bukan 2x (misalignment). 236 Hz = persis BPFO bearing 6309 pada 2.950 rpm: cacat di LINTASAN LUAR bearing. Spektrum tak hanya bilang "sakit" — ia menyebut nama penyakitnya.',
+    fx(){layar(1);toast('🔍 Puncak BPFO 236 Hz — cacat outer race bearing!','bad',3000);}},
+   {type:'act',aid:'TREN',done:false,targets:()=>[mvb.D.mesh],
+    desc:'Buka TREN 6 bulan: berapa sisa umurnya?',
+    why:'Kurva menanjak makin curam — pola klasik kerusakan bearing tahap 3. Proyeksi menyentuh batas 7,1 mm/s dalam ±3 minggu. Artinya: BUKAN darurat malam ini, tapi tak boleh menunggu overhaul tahunan. Jendela emasnya: shutdown mingguan terdekat.',
+    fx(){layar(2);toast('📈 Proyeksi: 3 minggu menuju batas — jadwalkan, jangan panik.','ok',3000);}},
+   {type:'act',aid:'JADWAL',done:false,targets:()=>[mvb.jadwal],
+    desc:'Putuskan: masukkan penggantian ke JADWAL shutdown mingguan.',
+    why:'Inilah buah predictive: penggantian dijadwalkan Sabtu (line memang berhenti), bearing dipesan hari ini, kru disiapkan — produksi TIDAK kehilangan satu menit pun di luar rencana. Bandingkan dengan versi takdir: pecah Rabu jam 2 pagi.',
+    fx(){toast('🗓️ Sabtu 09:00 · bearing dipesan · kru siap — tanpa drama.','ok',2800);}},
+   {type:'act',aid:'GANTI',done:false,targets:()=>[mvb.brg],
+    desc:'Sabtu tiba: GANTI bearing & verifikasi (klik bearing baru).',
+    why:'Bearing lama dibuka: lintasan luar benar-benar terkelupas (spalling) — persis kata spektrum. Yang baru dipasang dengan pemanas induksi (bukan dipukul!), lalu diukur ulang: 1,2 mm/s, halus. Mesin kembali bernyanyi nada sehat — dan kamu yang mengajarinya.',
+    fx(){toast('🔧 Spalling terkonfirmasi · baru terpasang · 1,2 mm/s ✓','ok',3200);sfx.big();}},
+  ],()=>{say('🎉 <b>Kerusakan tertangkap 3 minggu sebelum pecah!</b> Spektrum menyebut nama penyakitnya, tren memberi tanggalnya, jadwal mengeksekusi tanpa kejutan. Itulah predictive maintenance: mendengar sebelum menjerit.');
+    setTimeout(()=>showWin('vibra'),2200);});
+  say('VOLTA di sini 📳 Mesin yang akan rusak selalu <b>bernyanyi lebih dulu</b> — dalam bahasa getaran. Hari ini rute bulanan menemukan nada sumbang di P-203. Ambil analyzer, kita dengarkan bersama.');
+  $('#modTitle').textContent='J02·M5 — Analisis Vibrasi';
+  $('#taskHead').textContent='DENGAR · DIAGNOSA · JADWALKAN';}
+MISSIONS.vibra.build=buildVibra;
+Object.assign(REAL,{
+ vibra:[
+  'Titik & arah pengukuran distandarkan dan ditandai di mesin — konsistensi adalah nyawa trending',
+  'Hitung frekuensi cacat (BPFO/BPFI/BSF/FTF) dari geometri bearing & rpm aktual, simpan di database aset',
+  'Bearing dipasang dengan pemanas induksi/penekan sleeve — palu adalah pembuat cacat baru',
+  'Simpan bearing bekas yang rusak untuk analisis akar (pelumasan? beban? arus bearing dari VFD?)'],
+});

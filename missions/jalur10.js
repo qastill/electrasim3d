@@ -400,3 +400,90 @@ Object.assign(REAL,{
   'Stok suku cadang kritis di lokasi (fuse, MC4, satu MPPT cadangan) — logistik pulau tak kenal darurat',
   'Manajemen beban komunal disepakati desa (jam beban besar bergiliran) — sosial menentukan teknis'],
 });
+
+/* =====================================================================
+   MISI 5 — PLTS TERAPUNG (FLOATING SOLAR)
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ apung:{lvl:'JALUR 10 · PV & SOLAR · MISI 5',icon:'🌊',title:'PLTS Terapung (Floating Solar)',strict:false,
+  loc:'📍 Waduk irigasi Cipancuh · Pilot 1 MWp terapung',
+  story:'Lahan makin mahal, tapi waduk irigasi itu luas dan menganggur di permukaannya. Proyek barumu: PLTS TERAPUNG 1 MWp — panel di atas ponton HDPE, angkur ke dasar waduk, kabel menyelam ke darat. Air memberi bonus pendinginan alami (+5-10% produksi), tapi menagih harga: semuanya bergerak, mengapung, dan menuntut hormat pada korosi.',
+  goal:'Array terapung beroperasi: ponton terangkur benar mengikuti pasang-surut, wiring tahan gerak & air, dan produksi perdana dengan bonus pendinginan terverifikasi.',
+  obj:['Rakit & posisikan ponton apung','Pasang angkur dengan kelonggaran pasang-surut','Wiring tahan gerak + ikuti uji & energize'],
+  learn:['Air mendinginkan panel alami: suhu sel turun belasan derajat = produksi naik 5-10% dibanding darat — bonus yang menutup biaya ponton','Angkur harus mengizinkan GERAK: level waduk naik-turun meteran — angkur kaku akan menenggelamkan ponton atau putus saat surut','Kabel di sistem terapung hidup dengan gerakan: jalur diberi service loop, jenis kabel tahan tekuk & air (bukan kabel darat biasa)','Korosi & biofouling adalah penyewa tetap: material marine-grade & jadwal inspeksi ponton adalah bagian desain, bukan tambahan'],
+  next:['Pelajari studi evaporasi: PLTS terapung juga menghemat air waduk','Dalami desain angkur untuk variasi level ekstrem (waduk PLTA)','Eksplorasi hibrida: floating PV + PLTA existing berbagi interkoneksi']},
+});
+let mfl={};
+function buildApung(){
+  freshScene(0xa8d0e0,0x10242e);
+  cam={theta:.1,phi:1.1,r:10,target:new THREE.Vector3(0,1,-1)};
+  /* air waduk */
+  const air=box(26,.06,16,0x1d5a7a,{roughness:.15,metalness:.4});air.position.y=0;scene.add(air);
+  const darat=boxT(6,.5,16,TEX.gravel());darat.position.set(-10,.2,0);scene.add(darat);
+  scene.add(label('WADUK CIPANCUH',.9).translateY(3.4).translateZ(-4));
+  /* ponton + panel */
+  mfl.ponton=new THREE.Group();
+  for(let r=0;r<2;r++)for(let c=0;c<3;c++){
+    const p=box(1.5,.18,1.1,0xe8edf2,{roughness:.6});
+    p.position.set(c*1.6-1.6,.12,r*1.2-.6);mfl.ponton.add(p);
+    const pv=box(1.4,.05,1.0,0x16263e,{roughness:.25,metalness:.5});
+    pv.position.set(c*1.6-1.6,.28,r*1.2-.6);pv.rotation.x=-.1;mfl.ponton.add(pv);}
+  mfl.ponton.position.set(8,2,-1);scene.add(mfl.ponton); /* mulai "di darat/crane" */
+  actMesh(mfl.ponton.children[1],'PONTON');
+  scene.add(label('MODUL PONTON (siap luncur)',.7,'#ffd23f').translateX(8).translateY(3.2).translateZ(-1));
+  /* angkur */
+  mfl.angkur=box(.4,.3,.3,0x556570);mfl.angkur.position.set(4.4,.3,1.6);scene.add(mfl.angkur);
+  actMesh(mfl.angkur,'ANGKUR');
+  scene.add(label('ANGKUR + RANTAI',.6,'#5fd4ff').translateX(4.4).translateY(.85).translateZ(1.6));
+  /* kabel laut */
+  mfl.kabel=cyl(.05,.05,3.2,0x18242f);mfl.kabel.rotation.z=1.25;
+  mfl.kabel.position.set(-3.8,.3,-1);mfl.kabel.visible=false;scene.add(mfl.kabel);
+  mfl.kabelBtn=box(.4,.3,.3,0x18242f);mfl.kabelBtn.position.set(-6.8,.7,1.4);scene.add(mfl.kabelBtn);
+  actMesh(mfl.kabelBtn,'KABEL');
+  scene.add(label('ROL KABEL MARINE',.6,'#5fd4ff').translateX(-6.8).translateY(1.2).translateZ(1.4));
+  /* inverter darat + display */
+  mfl.inv=boxT(1.0,1.3,.6,TEX.metal(),{metalness:.35});mfl.inv.position.set(-9.4,1.1,-1);scene.add(mfl.inv);
+  mfl.inv.add(label('INVERTER DARAT 1 MW',.6).translateY(.95));
+  mfl.D=makeDisplay(.85,.5,260,150);
+  mfl.D.mesh.position.set(-9.4,1.3,-.68);scene.add(mfl.D.mesh);
+  dispText(mfl.D,['STANDBY','—'],['#7d8f84','#7d8f84']);
+  actMesh(mfl.D.mesh,'ON');
+  mfl.t=0;mfl.on=false;
+  moduleTick=(dt,T)=>{
+    if(mfl.launched){mfl.ponton.position.y=.0+Math.sin(T*.8)*.05;
+      mfl.ponton.rotation.z=Math.sin(T*.6)*.012;}
+    if(mfl.on)dispText(mfl.D,[(0.92+Math.sin(T*.7)*.05).toFixed(2)+' MW','+8% vs darat ✓'],
+      ['#46ff8e','#46ff8e']);};
+  startSeq([
+   {type:'act',aid:'PONTON',done:false,targets:()=>[mfl.ponton.children[1]],
+    desc:'Luncurkan & rakit modul PONTON di air (klik ponton).',
+    why:'HDPE marine-grade dirakit di tepi lalu ditarik perahu ke posisi — pin penghubung memberi sendi antar ponton agar array bisa BERGELOMBANG bersama air, bukan melawannya. Struktur kaku di air adalah struktur yang patah.',
+    fx(){mfl.launched=true;mfl.ponton.position.set(1.5,0,-1);
+      toast('🌊 Array mengapung di posisi — bergoyang sehat bersama riak.','ok',2800);}},
+   {type:'act',aid:'ANGKUR',done:false,targets:()=>[mfl.angkur],
+    desc:'Pasang ANGKUR dengan kelonggaran pasang-surut (klik angkur).',
+    why:'Blok beton ke dasar + rantai dengan scope cukup: level waduk irigasi ini berayun 2,5 m antar musim. Angkur terlalu kencang = ponton tertarik tenggelam saat air naik; terlalu kendor = array berkelana menabrak tepi. Empat titik silang menjaga orientasi.',
+    fx(){toast('⚓ 4 angkur terpasang — siap surut 2,5 m & angin musiman.','ok',2800);}},
+   {type:'act',aid:'KABEL',done:false,targets:()=>[mfl.kabelBtn],
+    desc:'Tarik KABEL MARINE dari array ke darat (klik rol kabel).',
+    why:'Kabel tahan air & tekuk dinamis, diberi pelampung kecil + service loop di sambungan ponton-darat: tiap goyangan array diserap lengkungan, bukan tarikan. Kabel darat biasa di sini umurnya hitungan bulan — laut kecil pun tetap laut.',
+    fx(){mfl.kabel.visible=true;mfl.kabelBtn.visible=false;
+      toast('🔌 Kabel marine tertarik — service loop di tiap transisi.','ok',2800);}},
+   {type:'act',aid:'ON',done:false,targets:()=>[mfl.D.mesh],
+    desc:'Uji isolasi (basah!) lalu ENERGIZE (klik display).',
+    why:'Riso diuji justru saat lembap — kondisi terjujur sistem terapung: 1,1 MΩ ✓. Inverter sinkron... 0,94 MW pada irradiance yang sama dengan referensi darat 0,87 MW: bonus pendinginan air +8% TERBUKTI. Panel ternyata suka berenang.',
+    fx(){mfl.on=true;
+      toast('☀️ 0,94 MW — +8% berkat pendinginan air. TERAPUNG & PRODUKTIF!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>PLTS terapung beroperasi!</b> Mengapung tapi terangkur, bergoyang tapi tersambung, basah tapi terisolasi — dan lebih produktif 8% dari saudaranya di darat. Permukaan waduk yang dulu menganggur kini bekerja.');
+    setTimeout(()=>showWin('apung'),2200);});
+  say('VOLTA di sini 🌊 Proyek paling segar: <b>PLTS di atas air</b>. Air memberi bonus pendinginan — tapi menagih hormat: semua bergerak, semua lembap. Tiga kunci: ponton bersendi, angkur longgar terukur, kabel marine. Luncurkan!');
+  $('#modTitle').textContent='J10·M5 — PLTS Terapung';
+  $('#taskHead').textContent='MENGAPUNG · TERANGKUR · PRODUKTIF';}
+MISSIONS.apung.build=buildApung;
+Object.assign(REAL,{
+ apung:[
+  'Studi bathymetri & variasi level waduk multi-tahun SEBELUM desain angkur — data, bukan perkiraan',
+  'Koordinasi izin dengan pengelola waduk: fungsi irigasi/PLTA tetap prioritas pertama',
+  'Jadwalkan inspeksi ponton & sambungan berkala (biofouling, UV, fatigue pin penghubung)',
+  'Perhatikan keselamatan kerja di atas air: pelampung wajib, perahu standby, tak bekerja sendirian'],
+});

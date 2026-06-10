@@ -409,3 +409,93 @@ Object.assign(REAL,{
   'Label hasil lapangan dikembalikan ke model (terbukti/false) — tanpa umpan balik, model membusuk',
   'Jaga privasi data interval pelanggan: akses berjenjang & audit log siapa membuka data siapa'],
 });
+
+/* =====================================================================
+   MISI 5 — ENERGY BALANCE: MEMBEDAH SUSUT PENYULANG
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ losses:{lvl:'JALUR 05 · ENERGY ANALYST · MISI 5',icon:'🧮',title:'Energy Balance: Membedah Susut Penyulang',strict:false,
+  loc:'📍 Kantor UP3 · Rapat target susut triwulan',
+  story:'Angka merah di rapor triwulan: susut penyulang Karang 11,2% — jauh di atas target 7%. Manajer bertanya pertanyaan yang menentukan anggaran: "Berapa yang TEKNIS dan berapa yang NON-TEKNIS?" Salah membedah = salah obat: susut teknis diobati dengan tembaga (rugi jaringan), non-teknis dengan penertiban. Energy balance adalah pisau bedahnya.',
+  goal:'Susut 11,2% terurai menjadi komponen teknis & non-teknis dengan perhitungan yang bisa dipertanggungjawabkan, dan dua program perbaikan tepat sasaran terbit.',
+  obj:['Susun neraca energi: masuk vs terjual','Hitung susut teknis dari data jaringan','Selisihnya = non-teknis: validasi & program aksi'],
+  learn:['Energy balance: kWh masuk penyulang − kWh terjual = susut total; tugas analis memilahnya menjadi teknis vs non-teknis','Susut teknis dihitung (bukan ditebak): I²R jaringan dari profil beban + rugi inti trafo — fisika yang bisa disimulasikan','Non-teknis = susut total − teknis: pencurian, meter rusak, baca meter salah — tiap penyebab punya obat berbeda','Susut teknis tinggi diobati tembaga & tata jaringan (perbesar penampang, pecah beban, geser trafo ke pusat beban); non-teknis diobati penertiban & meter'],
+  next:['Pelajari simulasi aliran daya untuk susut teknis presisi','Gabungkan dengan peta NTL (misi M1) untuk target operasi','Susun kurva biaya-manfaat program penurunan susut']},
+});
+let mls={};
+function buildLosses(){
+  freshScene(0x9fb8d0,0x121e2c);
+  cam={theta:0,phi:1.18,r:7.5,target:new THREE.Vector3(0,1.9,-1)};
+  const floor=boxT(16,.1,10,TEX.concrete());floor.position.y=-.05;scene.add(floor);
+  const wall=boxT(14,4.4,.2,TEX.plaster());wall.position.set(0,2.2,-3.2);scene.add(wall);
+  /* papan neraca besar */
+  const frame=boxT(5.2,2.8,.16,TEX.metal(),{metalness:.4});frame.position.set(-1.4,2.4,-3.1);scene.add(frame);
+  frame.add(label('NERACA ENERGI PENYULANG KARANG',.85).translateY(1.7));
+  mls.D=makeDisplay(4.8,2.4,640,330);
+  mls.D.mesh.position.set(-1.4,2.4,-3.0);scene.add(mls.D.mesh);
+  actMesh(mls.D.mesh,'NERACA');
+  function papan(mode){
+    const g=mls.D.g,W=640,H=330;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.font='700 18px Consolas';g.textAlign='left';
+    g.fillStyle='#5fd4ff';g.fillText('MASUK (kWh meter gardu induk): 2.420.000',20,40);
+    g.fillStyle='#eaf2fb';g.fillText('TERJUAL (total rekening plgn) : 2.148.000',20,74);
+    g.fillStyle='#ff5a5a';g.fillText('SUSUT TOTAL: 272.000 kWh = 11,2%',20,112);
+    if(mode>=1){
+      g.fillStyle='#ffd23f';g.fillText('TEKNIS (hitung): I²R jaringan 128.000',20,160);
+      g.fillText('               + rugi inti trafo 34.000',20,190);
+      g.fillText('               = 162.000 kWh (6,7%)',20,220);}
+    if(mode>=2){
+      g.fillStyle='#ff8d8d';g.font='700 20px Consolas';
+      g.fillText('NON-TEKNIS = 110.000 kWh (4,5%) ⚠',20,266);
+      g.font='600 15px Consolas';g.fillStyle='#8aa3bd';
+      g.fillText('≈ Rp 159 juta / triwulan menguap',20,296);}
+    mls.D.tex.needsUpdate=true;}
+  papan(0);
+  /* kartu data jaringan */
+  mls.jar=box(.9,.6,.07,0x2a5a8a);mls.jar.position.set(2.6,3.0,-3.05);scene.add(mls.jar);
+  actMesh(mls.jar,'TEKNIS');
+  scene.add(label('DATA JARINGAN',.55,'#9cc4ff').translateX(2.6).translateY(3.5).translateZ(-3.0));
+  /* kartu validasi */
+  mls.val=box(.9,.6,.07,0x8a5a2a);mls.val.position.set(2.6,2.0,-3.05);scene.add(mls.val);
+  actMesh(mls.val,'VALID');
+  scene.add(label('VALIDASI LAPANGAN',.55,'#e8c890').translateX(2.6).translateY(2.5).translateZ(-3.0));
+  /* papan program */
+  mls.prog=box(.6,.7,.05,0xe8e4d8);mls.prog.position.set(4.4,2.4,-3.08);scene.add(mls.prog);
+  actMesh(mls.prog,'PROGRAM');
+  scene.add(label('PROGRAM AKSI',.55,'#5fd4ff').translateX(4.4).translateY(2.95).translateZ(-3.0));
+  startSeq([
+   {type:'act',aid:'NERACA',done:false,targets:()=>[mls.D.mesh],
+    desc:'Susun NERACA: energi masuk vs terjual (klik papan).',
+    why:'Meter gardu induk berkata 2,42 GWh masuk; jumlah seluruh rekening pelanggan: 2,148 GWh. Selisih 272 MWh (11,2%) — itu susut TOTAL, sebuah angka gabungan yang belum boleh disimpulkan apa-apa. Periode meter harus sama persis: neraca beda tanggal = neraca bohong.',
+    fx(){papan(0);toast('🧮 Susut total 11,2% — sekarang kita bedah komponennya.','info',2800);}},
+   {type:'act',aid:'TEKNIS',done:false,targets:()=>[mls.jar],
+    desc:'Hitung SUSUT TEKNIS dari data jaringan (klik kartu data).',
+    why:'Fisika dipanggil: panjang & penampang tiap segmen, profil arus per jam → I²R = 128 MWh; rugi inti 14 trafo (tetap, 24 jam) = 34 MWh. Total teknis 6,7% — masuk akal untuk penyulang panjang berbeban berat di ujung. Teknis BUKAN angka karet: ia hasil hitungan yang bisa diaudit.',
+    fx(){papan(1);toast('⚡ Teknis terhitung: 6,7% (I²R + inti trafo).','ok',3000);}},
+   {type:'act',aid:'SISA',done:false,targets:()=>[mls.D.mesh],
+    desc:'Kurangi: berapa NON-TEKNIS-nya? (klik papan lagi)',
+    why:'11,2% − 6,7% = 4,5% non-teknis ≈ 110 MWh ≈ Rp 159 juta per triwulan. Inilah angka yang membuat rapat terdiam: bukan kabel yang panas, tapi energi yang tak tercatat — pencurian, meter tua melambat, atau pembacaan yang keliru.',
+    fx(){papan(2);toast('🚨 Non-teknis 4,5% = Rp 159 jt/triwulan — target operasi!','bad',3000);}},
+   {type:'act',aid:'VALID',done:false,targets:()=>[mls.val],
+    desc:'VALIDASI sebelum menuduh: cek kualitas data dulu (klik kartu).',
+    why:'Analis yang baik menguji angkanya sendiri: meter GI terkalibrasi ✓, tak ada pelanggan besar yang rekeningnya telat catat ✓, periode sinkron ✓. Sampling 30 meter tua: 6 melambat >3%. Sebagian "non-teknis" ternyata meter renta — bukan semua pencurian. Presisi sebelum penertiban.',
+    fx(){toast('🔍 Valid: data sehat · 20% dari NT diduga meter tua.','ok',3000);}},
+   {type:'act',aid:'PROGRAM',done:false,targets:()=>[mls.prog],
+    desc:'Terbitkan dua PROGRAM tepat sasaran (klik papan program).',
+    why:'Obat sesuai penyakit: (1) TEKNIS — perbesar penampang 2 segmen terberat + pecah beban ke T3: proyeksi 6,7→5,1%; (2) NON-TEKNIS — ganti 600 meter tua + operasi P2TL berbasis peta NTL: target 4,5→2%. Total proyeksi: 11,2% → 7,1%. Rapor merah punya jalan pulang.',
+    fx(){toast('📋 2 program terbit — proyeksi susut 11,2% → 7,1%!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Susut terbedah tuntas!</b> Teknis dihitung fisika, non-teknis tersisa dari neraca, dan dua obat diresepkan untuk dua penyakit berbeda. Analis tidak menebak — ia menimbang.');
+    setTimeout(()=>showWin('losses'),2200);});
+  const s0=seq.steps[0],of0=s0.fx;s0.fx=()=>{of0();mls.D.mesh.userData.aid='SISA';};
+  say('VOLTA di sini 🧮 Rapor merah: susut 11,2%. Pertanyaan sejutanya: <b>berapa teknis, berapa non-teknis?</b> Salah bedah = salah obat = anggaran terbuang. Pisau bedahnya bernama energy balance. Mulai!');
+  $('#modTitle').textContent='J05·M5 — Energy Balance Susut';
+  $('#taskHead').textContent='BEDAH DULU, OBATI KEMUDIAN';}
+MISSIONS.losses.build=buildLosses;
+Object.assign(REAL,{
+ losses:[
+  'Sinkronkan periode baca meter GI & pelanggan — beda beberapa hari merusak seluruh neraca',
+  'Susut teknis dihitung dengan simulasi aliran daya bila datanya ada; rumus pendekatan diberi rentang',
+  'Audit sampling meter tua per kelompok umur sebelum menuduh pencurian massal',
+  'Pantau susut BULANAN per penyulang sebagai KPI — triwulan terlalu lambat untuk koreksi'],
+});

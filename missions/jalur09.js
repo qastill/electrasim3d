@@ -331,3 +331,85 @@ Object.assign(REAL,{
   'Diskon (bila terpaksa) selalu ditukar konsesi: volume, termin lebih cepat, atau referensi — tidak pernah gratis',
   'Tulis semua kesepakatan verbal ke dalam kontrak hari itu juga — ingatan meeting memudar, dokumen tidak'],
 });
+
+/* =====================================================================
+   MISI 5 — SITE ACCEPTANCE TEST & SERAH TERIMA
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ sat:{lvl:'JALUR 09 · SALES & TECHNICAL MARKETING · MISI 5',icon:'✅',title:'Site Acceptance Test & Serah Terima',strict:false,
+  loc:'📍 PT Sinar Logam · Kapasitor bank terpasang, hari SAT',
+  story:'Kontrak yang kamu menangkan lewat negosiasi alot kini terpasang di panel pelanggan — tapi penjualan belum selesai sampai pelanggan MENANDATANGANI bahwa semuanya bekerja. Hari ini SAT: site acceptance test, disaksikan direktur yang dulu hampir memilih kompetitor. Sales engineer sejati tahu: serah terima yang rapi adalah proposal untuk proyek berikutnya.',
+  goal:'SAT lulus disaksikan pelanggan: cosφ terbukti naik sesuai garansi kontrak, punch list dituntaskan, BAST ditandatangani — dan pintu proyek berikutnya terbuka.',
+  obj:['Jalankan uji kinerja sesuai protokol SAT','Selesaikan punch list temuan kecil','Serah terima: dokumen, training, BAST'],
+  learn:['SAT menguji di kondisi NYATA pelanggan (beban asli, jam asli) — FAT di pabrik vendor belum membuktikan apa-apa di lapangan','Protokol uji disepakati SEBELUM hari-H: parameter, alat ukur, kriteria lulus — SAT tanpa kriteria tertulis berakhir debat','Punch list bukan aib: temuan kecil yang dicatat & dituntaskan justru membangun percaya — yang merusak adalah temuan yang disembunyikan','BAST memindahkan kepemilikan & memulai garansi: tanggalnya menentukan hak dua pihak — dokumen kecil berdampak hukum besar'],
+  next:['Susun template protokol SAT untuk tiap lini produk','Pelajari masa garansi & SLA respon gangguan sebagai nilai jual','Bangun program QBR (quarterly business review) pasca-serah terima']},
+});
+let mss={};
+function buildSAT(){
+  freshScene(0xc6d2dc,0x18222c);
+  cam={theta:.05,phi:1.18,r:7,target:new THREE.Vector3(0,1.6,-.8)};
+  const Z=room(0x6b5a45,0xd8d2c4);
+  /* kapasitor bank terpasang */
+  const bank=boxT(1.6,2.0,.8,TEX.metal(),{metalness:.35});bank.position.set(-3.6,1.1,-1.8);scene.add(bank);
+  bank.add(label('KAPASITOR BANK 200 kVAr',.65).translateY(1.25));
+  const steps=[];for(let i=0;i<3;i++){const s=box(.35,.5,.2,0x8a96a2);
+    s.position.set(-4.0+i*.4,1.0,-1.36);scene.add(s);}
+  /* panel meter cosφ */
+  mss.D=makeDisplay(1.6,1.0,360,220);
+  mss.D.mesh.position.set(-1.2,2.2,Z+.08);scene.add(mss.D.mesh);
+  dispText(mss.D,['cosφ 0,78','bank OFF — baseline'],['#ff5a5a','#8aa3bd']);
+  actMesh(mss.D.mesh,'UJI');
+  scene.add(label('METER — DISAKSIKAN DIREKTUR',.7,'#5fd4ff').translateX(-1.2).translateY(2.95).translateZ(Z+.1));
+  /* protokol di meja */
+  const desk=boxT(2.6,.08,1.2,TEX.wood());desk.position.set(1.6,1.0,-.4);scene.add(desk);
+  [[-1.1,-.9],[1.1,-.9],[-1.1,.1],[1.1,.1]].forEach(p=>{
+    const l=boxT(.08,1,.08,TEX.wood());l.position.set(1.6+p[0],.5,p[1]-.4+.45);scene.add(l);});
+  mss.prot=box(.5,.02,.7,0xf0ead8);mss.prot.position.set(1.0,1.06,-.4);scene.add(mss.prot);
+  actMesh(mss.prot,'PROTOKOL');
+  scene.add(label('PROTOKOL SAT',.55,'#5fd4ff').translateX(1.0).translateY(1.4).translateZ(-.4));
+  /* punch list */
+  mss.punch=box(.5,.66,.04,0xffe8c0);mss.punch.position.set(2.4,2.2,Z+.06);scene.add(mss.punch);
+  actMesh(mss.punch,'PUNCH');
+  scene.add(label('PUNCH LIST',.55,'#ffd23f').translateX(2.4).translateY(2.75).translateZ(Z+.1));
+  /* map dokumen + BAST */
+  mss.map=box(.6,.1,.8,0x2a5a8a);mss.map.position.set(2.2,1.1,-.4);scene.add(mss.map);
+  actMesh(mss.map,'DOKUMEN');
+  scene.add(label('PAKET DOKUMEN',.55,'#9cc4ff').translateX(2.3).translateY(1.45).translateZ(-.4));
+  mss.bast=box(.5,.66,.04,0xe8d8a0);mss.bast.position.set(4.4,2.2,Z+.06);scene.add(mss.bast);
+  actMesh(mss.bast,'BAST');
+  scene.add(label('BAST',.6,'#ffd23f').translateX(4.4).translateY(2.7).translateZ(Z+.1));
+  startSeq([
+   {type:'act',aid:'PROTOKOL',done:false,targets:()=>[mss.prot],
+    desc:'Buka PROTOKOL SAT yang disepakati: apa kriteria lulusnya? (klik dokumen)',
+    why:'Hitam di atas putih sejak kontrak: cosφ rata-rata ≥ 0,95 pada beban produksi normal, diukur power analyzer terkalibrasi milik netral, durasi 2 jam. Tanpa kriteria tertulis, SAT berubah jadi debat selera — dengan kriteria, ia hanya soal angka.',
+    fx(){toast('📋 Kriteria jelas: cosφ ≥ 0,95 · 2 jam · alat terkalibrasi.','ok',2800);}},
+   {type:'act',aid:'UJI',done:false,targets:()=>[mss.D.mesh],
+    desc:'Jalankan UJI: bank ON, beban produksi nyata, direktur menonton (klik meter).',
+    why:'Baseline 0,78 tercatat... bank ON: step kontaktor masuk satu per satu mengikuti beban — cosφ merangkak 0,86... 0,93... 0,96 ✓. Dua jam di beban asli pabrik: rata-rata 0,958. Angka yang dulu kamu janjikan di ruang meeting kini menyala di depan mata orang yang membayarnya.',
+    fx(){dispText(mss.D,['cosφ 0,96 ✓','rata2 2 jam: 0,958'],['#46ff8e','#46ff8e']);
+      toast('📈 0,78 → 0,958 — MELAMPAUI garansi kontrak!','ok',3200);}},
+   {type:'act',aid:'PUNCH',done:false,targets:()=>[mss.punch],
+    desc:'Catat & tuntaskan PUNCH LIST temuan kecil (klik daftar).',
+    why:'Tiga temuan kecil dicatat TERBUKA: label step 3 belum terpasang, satu baut pintu panel longgar, manual book belum diserahkan. Dituntaskan hari itu juga di depan pelanggan. Vendor yang mencatat kekurangannya sendiri lebih dipercaya daripada yang mengaku sempurna.',
+    fx(){toast('🔧 3 item punch list — tuntas hari ini juga ✓','ok',2800);}},
+   {type:'act',aid:'DOKUMEN',done:false,targets:()=>[mss.map],
+    desc:'Serahkan PAKET DOKUMEN + training singkat operator (klik map).',
+    why:'As-built drawing, manual, sertifikat komponen, hasil uji, kartu garansi 3 tahun, jadwal pemeliharaan — plus 30 menit melatih dua operator pelanggan membaca panel & merespons alarm. Sistem yang diserahkan tanpa ilmu pengoperasiannya adalah bom waktu komplain.',
+    fx(){toast('📚 Dokumen lengkap + 2 operator terlatih.','ok',2800);}},
+   {type:'act',aid:'BAST',done:false,targets:()=>[mss.bast],
+    desc:'Puncaknya: tanda tangan BAST (klik dokumen kuning).',
+    why:'Direktur menandatangani: kepemilikan berpindah, garansi resmi berjalan. Lalu kalimat yang ditunggu setiap sales engineer: "Pabrik kami yang di Cirebon... bisa disurvei bulan depan?" SAT yang rapi memang bukan akhir penjualan — ia pembuka penjualan berikutnya.',
+    fx(){toast('🤝 BAST DITANDATANGANI + undangan survei pabrik ke-2!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Serah terima sempurna — dan proyek baru menghampiri sendiri!</b> Kriteria jelas, bukti di depan mata, kekurangan diakui & dituntaskan, ilmu ikut diserahkan. Begitulah penjualan kedua dimenangkan: di hari serah terima penjualan pertama.');
+    setTimeout(()=>showWin('sat'),2200);});
+  say('VOLTA di sini ✅ Kontrak yang kamu menangkan kini harus DIBUKTIKAN: hari SAT, disaksikan direktur. Ingat: penjualan belum selesai sampai BAST ditandatangani — dan serah terima terbaik adalah proposal diam-diam untuk proyek berikutnya.');
+  $('#modTitle').textContent='J09·M5 — SAT & Serah Terima';
+  $('#taskHead').textContent='BUKTIKAN · TUNTASKAN · SERAHKAN';}
+MISSIONS.sat.build=buildSAT;
+Object.assign(REAL,{
+ sat:[
+  'Protokol SAT & kriteria lulus dilampirkan di kontrak — bukan disusun mendadak di lokasi',
+  'Alat ukur SAT disepakati & sertifikat kalibrasinya ditunjukkan sebelum uji dimulai',
+  'Punch list diberi tenggat & penanggung jawab tertulis; BAST bisa bersyarat bila ada item tersisa',
+  'Arsipkan seluruh paket SAT — sengketa garansi dimenangkan oleh dokumentasi, bukan ingatan'],
+});

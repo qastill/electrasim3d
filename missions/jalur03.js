@@ -425,3 +425,87 @@ Object.assign(REAL,{
   'Cek kemampuan penyulang tetangga (beban & setting proteksi) SEBELUM backfeed — jangan menulari',
   'Regu lapangan tetap dikirim ke seksi terisolasi — SCADA melokalisir, manusia memperbaiki'],
 });
+
+/* =====================================================================
+   MISI 5 — PEMASANGAN TRAFO DISTRIBUSI BARU
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ trafo:{lvl:'JALUR 03 · DISTRIBUSI · MISI 5',icon:'🔩',title:'Pemasangan Trafo Distribusi Baru',strict:true,
+  loc:'📍 Perumahan baru Griya Asri · Gardu portal 160 kVA',
+  story:'Perumahan baru 240 unit siap huni — dan rekomendasi analisis beban (ingat misi J05?) akhirnya cair jadi anggaran: gardu portal baru 160 kVA. Hari ini kamu pengawas pemasangannya: dari trafo digantung crane sampai energize perdana. Trafo distribusi adalah jantung lingkungan — dipasang benar ia diam 30 tahun; dipasang salah, ia berita di grup WhatsApp warga.',
+  goal:'Gardu portal beroperasi: trafo terpasang dengan proteksi lengkap (arester, FCO), pembumian terukur, uji lolos, dan energize perdana mulus.',
+  obj:['Posisikan trafo & pasang proteksi sisi 20 kV','Kerjakan pembumian: arester, bodi, netral','Uji isolasi & ratio, lalu energize bertahap'],
+  learn:['Urutan proteksi dari jaringan: arester (petir) → FCO (hubung singkat) → trafo: dua pengawal sebelum jantung','Tiga pembumian berbeda tugas: arester (buang surja), bodi (arus bocor), netral sekunder (referensi sistem & PE pelanggan)','Sebelum energize selalu: megger HV-LV-bodi, cek ratio & vektor grup — trafo baru pun bisa salah dari pabrik','Energize bertahap: FCO masuk satu-satu, dengar dengungan, ukur tegangan sekunder TANPA beban dulu, baru sambung jurusan'],
+  next:['Pelajari penyetelan tap changer sesuai tegangan ujung','Dalami pemilihan rating FCO & koordinasi dengan proteksi penyulang','Hitung pembebanan & umur trafo dari profil beban perumahan']},
+});
+let mtb={};
+function buildTrafo(){
+  freshScene(0x9fc0dc,0x12202e);
+  cam={theta:.2,phi:1.1,r:10,target:new THREE.Vector3(0,3,-1)};
+  const ground=boxT(22,.1,14,TEX.gravel());ground.position.y=-.05;scene.add(ground);
+  /* dua tiang portal */
+  [-1.2,1.2].forEach(x=>{
+    const p=cyl(.11,.14,7.5,0x8a939e);p.position.set(x,3.75,-2);scene.add(p);});
+  const palang1=boxT(3.2,.15,.15,TEX.metal(),{metalness:.5});palang1.position.set(0,4.6,-2);scene.add(palang1);
+  const palang2=palang1.clone();palang2.position.y=5.2;scene.add(palang2);
+  /* SUTM di atas */
+  const kawat=cyl(.018,.018,18,0x3c4754);kawat.rotation.z=Math.PI/2;kawat.position.set(0,7.2,-2);scene.add(kawat);
+  scene.add(label('SUTM 20 kV',.7).translateY(7.7).translateZ(-2));
+  /* trafo menggantung di crane (awal) */
+  mtb.trafo=boxT(1.6,1.6,1.1,TEX.metal(),{metalness:.3});mtb.trafo.position.set(3.2,2.2,-2);scene.add(mtb.trafo);
+  [-.5,0,.5].forEach(dx=>{const fin=box(.06,1.4,1.0,0x5a6a7a);fin.position.set(3.2+dx,2.2,-2);scene.add(fin);});
+  actMesh(mtb.trafo,'PASANG');
+  scene.add(label('TRAFO 160 kVA (di crane)',.7,'#ffd23f').translateX(3.2).translateY(3.4).translateZ(-2));
+  /* arester & FCO slot */
+  mtb.arr=cyl(.07,.09,.7,0x8a6a4a);mtb.arr.position.set(-.7,5.9,-2);mtb.arr.visible=false;scene.add(mtb.arr);
+  mtb.fco=box(.12,.55,.12,0xc9b08a);mtb.fco.position.set(.7,5.9,-2);mtb.fco.rotation.z=.15;mtb.fco.visible=false;scene.add(mtb.fco);
+  mtb.protBtn=box(.5,.35,.2,0x2a5a8a);mtb.protBtn.position.set(-3.4,1.2,-.6);scene.add(mtb.protBtn);
+  actMesh(mtb.protBtn,'PROT');
+  scene.add(label('KOTAK ARESTER + FCO',.55,'#5fd4ff').translateX(-3.4).translateY(1.7).translateZ(-.6));
+  /* pembumian */
+  mtb.gnd=boxT(.45,.28,.45,TEX.concrete());mtb.gnd.position.set(1.8,.14,-.6);scene.add(mtb.gnd);
+  actMesh(mtb.gnd,'GND');
+  scene.add(label('PEMBUMIAN 3 SISTEM',.55,'#8df0b8').translateX(2.1).translateY(.65).translateZ(-.3));
+  /* megger */
+  const tbl=boxT(.9,.07,.6,TEX.wood());tbl.position.set(4.8,.95,.8);scene.add(tbl);
+  const tleg=boxT(.08,.95,.08,TEX.wood());tleg.position.set(4.8,.47,.8);scene.add(tleg);
+  mtb.meg=box(.32,.2,.24,0xcc8830);mtb.meg.position.set(4.8,1.08,.8);scene.add(mtb.meg);
+  actMesh(mtb.meg,'UJI');
+  scene.add(label('MEGGER + RATIO TESTER',.55,'#5fd4ff').translateX(4.8).translateY(1.4).translateZ(.8));
+  startSeq([
+   {type:'act',aid:'PASANG',done:false,targets:()=>[mtb.trafo],
+    desc:'Pandu crane: dudukkan TRAFO di dudukan portal (klik trafo).',
+    why:'1,1 ton menggantung — area steril, tagline dipegang dua orang, dan tak seorang pun berdiri di bawah beban. Trafo duduk di dudukan, baut dikencang silang. Bushing 20 kV menghadap atas: jalur kabel dari FCO sudah terbayang rapi.',
+    fx(){mtb.trafo.position.set(0,3.6,-2);
+      toast('🏗️ Trafo terpasang di portal — baut silang, posisi presisi.','ok',2800);}},
+   {type:'act',aid:'PROT',done:false,targets:()=>[mtb.protBtn],
+    desc:'Pasang pengawal sisi 20 kV: ARESTER lalu FCO (klik kotak).',
+    why:'Urutan dari jaringan: arester paling hulu (menyambut surja petir sebelum apa pun), FCO setelahnya (memutus saat hubung singkat — fuse link 6,3 A sesuai tabel 160 kVA). Dua pengawal dengan musuh berbeda, berdiri di gerbang yang benar.',
+    fx(){mtb.arr.visible=true;mtb.fco.visible=true;mtb.protBtn.visible=false;
+      toast('🛡️ Arester + FCO 6,3A terpasang — gerbang dijaga.','ok',2800);}},
+   {type:'act',aid:'GND',done:false,targets:()=>[mtb.gnd],
+    desc:'Kerjakan PEMBUMIAN tiga sistem & ukur (klik bak).',
+    why:'Tiga kawat turun beda tugas: arester (jalur surja — selurus mungkin!), bodi trafo (arus bocor), netral sekunder (referensi 4 kawat ke pelanggan). Terukur: 1,8 Ω gabungan — surja petir nanti punya jalan pulang yang lapang.',
+    fx(){toast('⏚ 3 pembumian tuntas — terukur 1,8 Ω ✓','ok',2800);}},
+   {type:'act',aid:'UJI',done:false,targets:()=>[mtb.meg],
+    desc:'UJI sebelum bertegangan: megger & ratio test (klik alat).',
+    why:'Megger HV-LV 2.500 MΩ, HV-bodi 1.800 MΩ — isolasi perawan. Ratio test: 20.000/400 V sesuai pelat, vektor Dyn5 benar. Lima belas menit pengujian ini adalah bedanya "kami yakin" dengan "kami sudah buktikan".',
+    fx(){toast('🔍 Megger ✓ ratio ✓ vektor Dyn5 ✓ — siap energize.','ok',2800);}},
+   {type:'act',aid:'ON',done:false,targets:()=>[mtb.fco],
+    desc:'ENERGIZE perdana: masukkan FCO dengan stik (klik FCO).',
+    why:'Izin dispatcher masuk, area bersih, FCO ditutup satu-satu dengan gerakan mantap... dengungan halus 50 Hz — suara trafo sehat. Sekunder terukur 231/400 V tanpa beban ✓. Besok 240 keluarga pindahan; mereka tak akan pernah tahu kerja malam ini — dan justru itulah suksesnya.',
+    fx(){mtb.fco.rotation.z=0;spark(new THREE.Vector3(.7,5.9,-2),0x9fd8ff);
+      toast('⚡ ENERGIZED — 231/400 V, dengungan sehat. Gardu LAHIR!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Gardu portal beroperasi!</b> Diangkat dengan hormat, dikawal arester & FCO, dibumikan tiga jalur, diuji sebelum dipercaya. Tiga puluh tahun ke depan ia akan diam — karena malam ini kamu tidak diam-diam saja.');
+    setTimeout(()=>showWin('trafo'),2200);});
+  say('VOLTA di sini 🔩 Rekomendasi analismu jadi nyata: <b>gardu baru untuk 240 keluarga</b>. Trafo masih menggantung di crane — pandu ia duduk, kawal dengan proteksi, bumikan, uji, baru beri tegangan. Urutan adalah segalanya.');
+  $('#modTitle').textContent='J03·M5 — Pemasangan Trafo Distribusi';
+  $('#taskHead').textContent='PASANG · KAWAL · BUMIKAN · UJI';}
+MISSIONS.trafo.build=buildTrafo;
+Object.assign(REAL,{
+ trafo:[
+  'Cek fisik trafo saat terima: level & kebocoran minyak, silica gel, segel — klaim sebelum dipasang',
+  'Torsi baut bushing & terminal sesuai spesifikasi; sambungan kendor di 20 kV = titik panas fatal',
+  'Setel tap changer berdasarkan tegangan ujung jaringan terukur, bukan posisi default pabrik',
+  'Dokumentasikan: nomor seri, hasil uji, setting — kartu gardu adalah riwayat hidup aset 30 tahun'],
+});

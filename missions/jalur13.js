@@ -371,3 +371,88 @@ Object.assign(REAL,{
   'Debu line RDF mudah terbakar: housekeeping ketat + deteksi panas di shredder & dryer',
   'Jaga konsistensi pasokan: tanur semen benci kejutan kualitas — blending umpan adalah kuncinya'],
 });
+
+/* =====================================================================
+   MISI 5 — LANDFILL GAS: MENAMBANG METANA TPA
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ biogas:{lvl:'JALUR 13 · WASTE TO ENERGY · MISI 5',icon:'🫧',title:'Landfill Gas: Menambang Metana TPA',strict:true,
+  loc:'📍 TPA lama Pecuk · Proyek landfill gas 1 MW',
+  story:'TPA lama itu sudah ditutup bertahun-tahun — tapi di perutnya, sampah organik terus mencerna diri menjadi METANA: gas rumah kaca 28 kali lebih ganas dari CO₂, yang selama ini bocor cuma-cuma ke langit. Proyekmu menambangnya: sumur gas, jaringan pipa vakum, lalu genset gas 1 MW. Satu proyek, dua kemenangan: listrik mengalir, metana berhenti lolos.',
+  goal:'Sistem landfill gas beroperasi: sumur tertanam, kualitas gas terverifikasi aman, genset menyala — dan flare siaga membakar kelebihan gas.',
+  obj:['Tanam sumur vertikal & jaringan pengumpul','Uji kualitas gas: CH₄, O₂, H₂S','Operasikan blower-genset & flare cadangan'],
+  learn:['Sampah organik terdekomposisi anaerob → biogas TPA: ±50% metana — energi yang membocorkan dirinya sendiri bila tak ditangkap','O₂ dalam gas TPA adalah alarm ganda: kebocoran sistem & risiko campuran mudah meledak DI DALAM pipa — vakum berlebihan menyedot udara masuk','H₂S harus dipantau: korosif bagi mesin genset & mematikan bagi manusia di konsentrasi rendah','Flare bukan hiasan: saat genset berhenti, metana tetap diproduksi perut TPA — dibakar di flare (jadi CO₂, 28x lebih ringan dampaknya) jauh lebih baik daripada lolos'],
+  next:['Pelajari estimasi produksi gas TPA (model first-order decay)','Dalami gas treatment: dehumidifier & penyaring H₂S/siloksan','Eksplorasi kredit karbon dari pembakaran metana — pendapatan ketiga']},
+});
+let mbg={};
+function buildBiogas(){
+  freshScene(0x9ab088,0x121a10);
+  cam={theta:.15,phi:1.12,r:11,target:new THREE.Vector3(0,1.5,-1)};
+  const ground=boxT(26,.1,15,TEX.gravel());ground.position.y=-.05;scene.add(ground);
+  /* gundukan TPA tertutup */
+  const bukit=new THREE.Mesh(new THREE.SphereGeometry(6,24,16,0,Math.PI*2,0,Math.PI/2),
+    new THREE.MeshStandardMaterial({color:0x5a7a4a,roughness:.95}));
+  bukit.scale.set(1,.28,.8);bukit.position.set(-3,0,-2);scene.add(bukit);
+  scene.add(label('TPA LAMA (ditutup) — pabrik metana alami',.8).translateX(-3).translateY(2.6).translateZ(-2));
+  /* sumur gas */
+  mbg.sumur=[];
+  [[-5.5,-2.5],[-3,-1],[-1,-3]].forEach((o,i)=>{
+    const s=cyl(.09,.09,1.4,0x8a96a2);s.position.set(o[0],1.1,o[1]);s.visible=false;scene.add(s);
+    mbg.sumur.push(s);});
+  mbg.rig=box(.5,.9,.5,0xcc8830);mbg.rig.position.set(-5.5,.6,-2.5);scene.add(mbg.rig);
+  actMesh(mbg.rig,'SUMUR');
+  scene.add(label('RIG BOR SUMUR GAS',.6,'#5fd4ff').translateX(-5.5).translateY(1.55).translateZ(-2.5));
+  /* stasiun blower + analyzer */
+  mbg.blow=boxT(1.2,.9,.8,TEX.metal(),{metalness:.35});mbg.blow.position.set(1.8,.5,-1.6);scene.add(mbg.blow);
+  scene.add(label('BLOWER STATION',.65).translateX(1.8).translateY(1.25).translateZ(-1.6));
+  mbg.ana=box(.3,.4,.2,0xd8b020);mbg.ana.position.set(1.8,1.3,-1.0);scene.add(mbg.ana);
+  actMesh(mbg.ana,'GASLAB');
+  scene.add(label('GAS ANALYZER',.55,'#5fd4ff').translateX(1.8).translateY(1.8).translateZ(-1.0));
+  /* genset gas + display */
+  mbg.gen=boxT(2.0,1.3,1.0,TEX.metal(),{metalness:.3});mbg.gen.position.set(4.8,.7,-1.8);scene.add(mbg.gen);
+  actMesh(mbg.gen,'GENSET');
+  scene.add(label('GENSET GAS 1 MW',.7).translateX(4.8).translateY(1.65).translateZ(-1.8));
+  mbg.D=makeDisplay(1.3,.7,300,170);
+  mbg.D.mesh.position.set(4.8,2.3,-1.8);scene.add(mbg.D.mesh);
+  dispText(mbg.D,['OFFLINE','—'],['#7d8f84','#7d8f84']);
+  /* flare */
+  mbg.flare=cyl(.14,.18,2.8,0x8a8a8a);mbg.flare.position.set(7.6,1.4,-2.6);scene.add(mbg.flare);
+  actMesh(mbg.flare,'FLARE');
+  mbg.api=new THREE.Mesh(new THREE.ConeGeometry(.2,.6,10),
+    new THREE.MeshStandardMaterial({color:0xff8030,emissive:0x000000,transparent:true,opacity:.85}));
+  mbg.api.position.set(7.6,3.1,-2.6);scene.add(mbg.api);
+  scene.add(label('FLARE',.6,'#5fd4ff').translateX(7.6).translateY(3.7).translateZ(-2.6));
+  startSeq([
+   {type:'act',aid:'SUMUR',done:false,targets:()=>[mbg.rig],
+    desc:'Bor & tanam SUMUR GAS vertikal + jaringan pengumpul (klik rig).',
+    why:'Pipa HDPE berlubang turun ke perut sampah, dikelilingi gravel, dengan kepala sumur ber-valve untuk menyetel hisapan tiap titik. Tiga sumur menjangkau zona gas terkaya — TPA tua ini diperkirakan masih bernafas metana 15 tahun lagi.',
+    fx(){mbg.sumur.forEach(s=>s.visible=true);
+      toast('🕳️ 3 sumur tertanam + manifold pengumpul tersambung.','ok',2800);}},
+   {type:'act',aid:'GASLAB',done:false,targets:()=>[mbg.ana],
+    desc:'UJI kualitas gas sebelum apa pun menyala (klik analyzer).',
+    why:'CH₄ 52% (bagus, genset mau), O₂ 0,8% (aman — di atas 3% artinya kebocoran menyedot udara & risiko campuran meledak DALAM pipa), H₂S 180 ppm (perlu filter, terpasang). Vakum disetel justru KONSERVATIF: serakah menyedot = mengundang oksigen.',
+    fx(){toast('🧪 CH₄ 52% · O₂ 0,8% · H₂S terfilter — gas LAYAK.','ok',3000);}},
+   {type:'act',aid:'GENSET',done:false,targets:()=>[mbg.gen],
+    desc:'Start BLOWER lalu GENSET GAS — listrik dari perut TPA (klik genset).',
+    why:'Blower menarik gas lembut dari manifold, dehumidifier menyaring embun, genset menyalak hidup... 0,9 MW mengalir ke jaringan. Bahan bakarnya: sampah yang dibuang kota ini sepuluh tahun lalu. Masa lalu yang membayar listrik masa kini.',
+    fx(){beep(80,1.0,'sawtooth',.08);
+      dispText(mbg.D,['0,9 MW','CH₄ 52% · stabil'],['#46ff8e','#46ff8e']);
+      toast('⚡ Genset ONLINE 0,9 MW — TPA resmi jadi pembangkit!','ok',3000);}},
+   {type:'act',aid:'FLARE',done:false,targets:()=>[mbg.flare],
+    desc:'Uji FLARE siaga: simulasi genset berhenti (klik flare).',
+    why:'Genset disimulasikan trip — perut TPA tak ikut berhenti memproduksi. Dalam 30 detik flare menyala otomatis: metana terbakar jadi CO₂, dampak iklimnya terpangkas 28 kali. Membakar percuma terdengar sayang — melepas mentah jauh lebih mahal bagi planet.',
+    fx(){mbg.api.material.emissive.setHex(0xff8030);mbg.api.material.emissiveIntensity=1;
+      toast('🔥 Flare auto-start 28 dtk ✓ — metana tak pernah lolos mentah.','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Tambang metana beroperasi!</b> Gas yang dulu meracuni langit kini menyalakan kota — dan saat genset istirahat, flare berjaga. Satu TPA tua, dua kemenangan iklim, tiga sumber pendapatan. Sampah memang tak pernah benar-benar selesai bercerita.');
+    setTimeout(()=>showWin('biogas'),2200);});
+  say('VOLTA di sini 🫧 TPA tua itu bukan gunung diam — ia <b>pabrik metana</b> yang bocor ke langit bertahun-tahun. Hari ini kita tambang: sumur, pipa, genset. Dan ingat: O₂ dalam pipa gas adalah alarm paling serius. Mulai mengebor!');
+  $('#modTitle').textContent='J13·M5 — Landfill Gas TPA';
+  $('#taskHead').textContent='TAMBANG GAS, SELAMATKAN IKLIM';}
+MISSIONS.biogas.build=buildBiogas;
+Object.assign(REAL,{
+ biogas:[
+  'Pengeboran di TPA pakai prosedur khusus: gas pocket & amblesan — rig & kru berpengalaman landfill',
+  'Pantau O₂ kontinu dengan trip otomatis blower — campuran metana-udara dalam pipa adalah bom',
+  'H₂S & siloksan merusak genset: program treatment & analisis oli mesin lebih ketat dari genset biasa',
+  'Manfaatkan skema kredit karbon destruksi metana — sering lebih bernilai dari listriknya sendiri'],
+});
