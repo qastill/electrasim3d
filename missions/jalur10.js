@@ -210,3 +210,103 @@ Object.assign(REAL,{
   'Hitung Voc desain pada suhu terdingin lokasi: Voc_stc × (1 + |koef| × ΔT)',
   'Dokumentasi hasil uji menjadi lampiran wajib pengajuan meter exim & SLO PLTS'],
 });
+
+/* =====================================================================
+   MISI 3 — O&M PLTS: PRODUKSI TURUN
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ om:{lvl:'JALUR 10 · PV & SOLAR · MISI 3',icon:'🧰',title:'O&M PLTS: Diagnosa Produksi Turun',strict:false,
+  loc:'📍 Atap gudang CV Berkah · 6 bulan setelah komisioning',
+  story:'Telepon dari CV Berkah: "Tagihan naik lagi — PLTS-nya rusak ya?" Dashboard monitoring menunjukkan produksi turun 18% dibanding bulan-bulan awal. PLTS tidak punya bagian bergerak, tapi ia punya musuh yang sabar: debu, kotoran burung, sel yang retak diam-diam. Saatnya O&M bicara.',
+  goal:'Penyebab penurunan ditemukan lewat data & inspeksi (bukan tebakan), diperbaiki, dan produksi kembali normal.',
+  obj:['Analisis data monitoring per string','Inspeksi termal & visual di atap','Bersihkan, ganti modul rusak, verifikasi pemulihan'],
+  learn:['Monitoring per string menunjuk arah: string yang tertinggal dari saudaranya = ada masalah lokal','Thermal camera melihat yang mata lewatkan: hotspot = sel retak/bypass diode bekerja/kotoran membandel','Soiling (debu+kotoran burung) mencuri 5-15% produksi secara diam — pembersihan terjadwal itu investasi, bukan biaya','Satu modul retak menyeret satu string: sel-sel seri mengikuti arus TERLEMAH'],
+  next:['Pelajari analisis PR (performance ratio) bulanan sebagai KPI PLTS','Dalami kurva I-V lapangan untuk diagnosa presisi','Susun kontrak O&M: preventive, corrective, & jaminan availability']},
+});
+let mom={};
+function buildOM(){
+  freshScene(0xcfe2f0,0x16242f);
+  cam={theta:-.15,phi:1.1,r:8,target:new THREE.Vector3(0,2.4,-1)};
+  const ground=boxT(16,.1,12,TEX.concrete());ground.position.y=-.05;scene.add(ground);
+  const roof=boxT(9,.15,5.5,TEX.wood());roof.position.set(-1,3.2,-2.5);roof.rotation.x=-.28;scene.add(roof);
+  /* 3 string panel */
+  mom.panels=[];
+  [-3.6,-1.6,.4].forEach((x,i)=>{
+    const p=box(1.7,.06,2.3,0x16263e,{roughness:.25,metalness:.5});
+    p.position.set(x,3.45,-2.5);p.rotation.x=-.28;scene.add(p);mom.panels.push(p);
+    scene.add(label('STRING '+(i+1),.55).translateX(x).translateY(4.35).translateZ(-2.5));});
+  /* kotoran burung & retakan di string 3 */
+  mom.kotor=new THREE.Mesh(new THREE.SphereGeometry(.16,10,8),
+    new THREE.MeshStandardMaterial({color:0xd8d8cc,roughness:.95}));
+  mom.kotor.scale.set(1,.25,1);mom.kotor.position.set(.2,3.62,-2.1);scene.add(mom.kotor);
+  actMesh(mom.kotor,'VISUAL');
+  /* monitoring kiosk */
+  mom.D=makeDisplay(1.9,1.2,400,260);
+  mom.D.mesh.position.set(3.4,2.0,-2.8);scene.add(mom.D.mesh);
+  actMesh(mom.D.mesh,'MON');
+  const pole=cyl(.05,.05,1.4,0x666666);pole.position.set(3.4,.7,-2.8);scene.add(pole);
+  scene.add(label('MONITORING',.65,'#5fd4ff').translateX(3.4).translateY(2.75).translateZ(-2.8));
+  function mon(fix){
+    const g=mom.D.g,W=400,H=260;
+    g.fillStyle='#0c141d';g.fillRect(0,0,W,H);
+    g.font='700 19px Consolas';g.textAlign='left';
+    g.fillStyle='#5fd4ff';g.fillText('PRODUKSI PER STRING',16,30);
+    const v=fix?[1.62,1.60,1.58]:[1.62,1.60,1.07];
+    v.forEach((kw,i)=>{
+      g.fillStyle='#8aa3bd';g.font='600 17px Consolas';
+      g.fillText('STR'+(i+1),16,72+i*56);
+      g.fillStyle=kw<1.4?'#ff5a5a':'#46ff8e';
+      g.fillRect(80,56+i*56,kw*150,24);
+      g.fillText(kw.toFixed(2)+' kW',80+kw*150+10,74+i*56);});
+    g.fillStyle=fix?'#46ff8e':'#ffd23f';g.font='700 16px Consolas';
+    g.fillText(fix?'TOTAL 4,80 kW — PULIH ✓':'TOTAL 4,29 kW (-18%)',16,H-18);
+    mom.D.tex.needsUpdate=true;}
+  mon(false);
+  /* thermal camera & alat */
+  const tbl=boxT(1.4,.07,.7,TEX.wood());tbl.position.set(4.2,.95,.6);scene.add(tbl);
+  const tleg=boxT(.08,.95,.08,TEX.wood());tleg.position.set(4.2,.47,.6);scene.add(tleg);
+  mom.cam=box(.26,.2,.16,0x18242f);mom.cam.position.set(3.8,1.1,.6);scene.add(mom.cam);
+  actMesh(mom.cam,'THERMAL');
+  scene.add(label('THERMAL CAMERA',.55,'#5fd4ff').translateX(3.8).translateY(1.4).translateZ(.6));
+  mom.sikat=cyl(.04,.04,1.2,0x2a72c8);mom.sikat.rotation.z=.6;mom.sikat.position.set(4.7,1.15,.6);scene.add(mom.sikat);
+  actMesh(mom.sikat,'BERSIH');
+  scene.add(label('SIKAT + AIR DEMIN',.55,'#5fd4ff').translateX(4.9).translateY(1.5).translateZ(.6));
+  mom.modul=box(1.0,.05,1.4,0x1a2c46,{roughness:.25});mom.modul.position.set(6.0,.6,-.8);scene.add(mom.modul);
+  actMesh(mom.modul,'GANTI');
+  scene.add(label('MODUL CADANGAN',.55,'#5fd4ff').translateX(6.0).translateY(.95).translateZ(-.8));
+  startSeq([
+   {type:'act',aid:'MON',done:false,targets:()=>[mom.D.mesh],
+    desc:'Buka MONITORING: bandingkan produksi per string (klik layar).',
+    why:'String 1 & 2 kompak di 1,6 kW — string 3 terseok di 1,07 kW (-34%). Penurunan total 18% ternyata bukan merata: ia berasal dari SATU string sakit. Data sudah menunjuk arah; tinggal naik ke atap.',
+    fx(){toast('📉 String 3 anomali: 1,07 kW vs 1,6 kW saudaranya.','bad',2800);}},
+   {type:'act',aid:'THERMAL',done:false,targets:()=>[mom.cam],
+    desc:'Scan string 3 dengan THERMAL CAMERA (klik kamera).',
+    why:'Layar termal bercerita: satu area panas 78°C di modul tepi (sel retak — bypass diode bekerja keras) + pola hangat tak rata di modul tengah (kotoran tebal). Dua tersangka, satu kamera.',
+    fx(){toast('🌡️ Hotspot 78°C modul tepi + pola soiling modul tengah.','bad',2800);}},
+   {type:'act',aid:'VISUAL',done:false,targets:()=>[mom.kotor],
+    desc:'Inspeksi VISUAL dari dekat: konfirmasi temuan (klik area kotor).',
+    why:'Benar: kotoran burung mengeras menutup 3 sel (burung suka tepi atap yang hangat), dan modul tepi menunjukkan retak halus dari mikro-crack yang berkembang. Termal menuduh, mata mengonfirmasi.',
+    fx(){toast('🔍 Terkonfirmasi: kotoran keras + retak halus modul tepi.','info',2600);}},
+   {type:'act',aid:'BERSIH',done:false,targets:()=>[mom.sikat],
+    desc:'BERSIHKAN array: sikat lembut + air demin (klik sikat).',
+    why:'Pagi hari saat kaca dingin — air dingin di kaca panas bisa meretakkan. Sikat lembut & air tanpa mineral: bekas sabun justru jadi perekat debu berikutnya. Produksi string 3 langsung merangkak naik.',
+    fx(){mom.kotor.visible=false;
+      toast('🧽 Array bersih — string 3 naik ke 1,38 kW. Tinggal si retak.','ok',2800);}},
+   {type:'act',aid:'GANTI',done:false,targets:()=>[mom.modul],
+    desc:'GANTI modul retak dengan cadangan & verifikasi (klik modul).',
+    why:'Modul retak diganti spesifikasi setara (arus seri mengikuti yang terlemah!). Sarung tangan, konektor MC4 klik sempurna, lalu cek monitoring: string 3 kembali 1,58 kW — keluarga tiga string rukun kembali.',
+    fx(){mon(true);
+      toast('🔧 Modul baru terpasang — produksi PULIH 4,80 kW ✓','ok',3000);sfx.big();}},
+  ],()=>{say('🎉 <b>Produksi pulih!</b> Data menunjuk string, termal menunjuk modul, mata mengonfirmasi, tangan memperbaiki. PLTS itu rajin — asal pemiliknya rajin merawat.');
+    setTimeout(()=>showWin('om'),2200);});
+  say('VOLTA di sini 🧰 PLTS-mu enam bulan kemudian: <b>produksi turun 18%</b> dan pelanggan mulai curiga. Jangan menebak — biarkan data per string, kamera termal, dan mata yang memutuskan. Mulai dari monitoring.');
+  $('#modTitle').textContent='J10·M3 — O&M PLTS';
+  $('#taskHead').textContent='DATA → TERMAL → VISUAL → AKSI';}
+MISSIONS.om.build=buildOM;
+Object.assign(REAL,{
+ om:[
+  'Bekerja di atap = bahaya ganda: DC hidup + ketinggian. Gunakan prosedur keduanya sekaligus',
+  'Jadwalkan pembersihan dari data soiling loss lokasi (musim kemarau vs hujan), bukan kalender buta',
+  'Modul pengganti harus kompatibel arus/tegangan dengan string existing — beda generasi = mismatch',
+  'Catat semua temuan & penggantian di logbook O&M — klaim garansi modul butuh riwayat'],
+});

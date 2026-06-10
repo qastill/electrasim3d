@@ -219,3 +219,95 @@ Object.assign(REAL,{
   'Koordinasi rating: MCB utama > jumlah pertimbangan grup, dengan kurva selektif',
   'Label setiap grup di pintu panel — penyelamat waktu saat gangguan tengah malam'],
 });
+
+/* =====================================================================
+   MISI 3 — INSTALASI 3 FASA & KESEIMBANGAN BEBAN
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ tiga:{lvl:'JALUR 01 · INSTALASI BANGUNAN · MISI 3',icon:'⚖️',title:'Instalasi 3 Fasa & Keseimbangan Beban',strict:false,
+  loc:'📍 Rumah 2 lantai daya 11.000 VA · Indramayu',
+  story:'Rumah besar Pak Haji baru naik daya ke 11.000 VA tiga fasa — tapi listriknya aneh: lampu meredup tiap AC menyala, dan MCB fasa R sering trip padahal dua fasa lain nyaris menganggur. Instalatir sebelumnya menumpuk hampir semua beban di satu fasa. Tugasmu menyeimbangkannya.',
+  goal:'Beban terbagi rata ke fasa R, S, T — selisih arus antar fasa di bawah 10% dan tidak ada lagi MCB yang trip.',
+  obj:['Ukur arus ketiga fasa & buktikan ketimpangan','Pelajari denah beban lalu pindahkan grup ke fasa yang tepat','Ukur ulang & verifikasi keseimbangan'],
+  learn:['Beban timpang membuat satu fasa kelebihan (trip, drop tegangan) sementara fasa lain menganggur','Arus netral pada sistem 3 fasa seimbang mendekati NOL — ketimpangan membuat netral bekerja keras','Drop tegangan di fasa yang berat = lampu redup, peralatan elektronik cepat rusak','Pembagian grup 3 fasa direncanakan dari daftar beban, bukan asal sambung'],
+  next:['Pelajari perhitungan arus netral dari ketiga fasa (vektor)','Dalami beban 3 fasa sejati (motor) vs beban 1 fasa terdistribusi','Rancang panel 3 fasa gedung dengan diagram satu garis']},
+});
+let mtg={};
+function buildTiga(){
+  freshScene(0xa8c0d4,0x141e2a);
+  cam={theta:0,phi:1.18,r:6.5,target:new THREE.Vector3(0,2,-1)};
+  const floor=boxT(12,.1,9,TEX.concrete());floor.position.y=-.05;scene.add(floor);
+  const wall=boxT(11,4.8,.15,TEX.plaster());wall.position.set(0,2.4,-3);scene.add(wall);
+  const Z=-2.86;
+  const enc=boxT(4.2,2.4,.3,TEX.metal(),{metalness:.35});enc.position.set(-.6,2.4,Z-.05);scene.add(enc);
+  enc.add(label('PANEL 3 FASA 11.000 VA',.95).translateY(1.5));
+  /* MCB grup berderet, warna fasa */
+  mtg.grups=[];
+  [['AC LT.1','R',-2.2],['AC LT.2','R',-1.5],['P.AIR','R',-.8],['W.HEATER','R',-.1],['LAMPU','S',.6],['KOTAK KTK','T',1.3]].forEach((o,i)=>{
+    const colr={R:0xd83a3a,S:0xd8b020,T:0x444b55}[o[1]];
+    const m=box(.42,.6,.16,COL.cream);m.position.set(o[2],2.7,Z+.14);scene.add(m);
+    const ind=box(.3,.12,.05,colr);ind.position.set(o[2],3.08,Z+.2);scene.add(ind);
+    actMesh(m,'G'+i);
+    scene.add(label(o[0],.42).translateX(o[2]).translateY(2.32).translateZ(Z+.1));
+    mtg.grups.push({mesh:m,ind:ind,fasa:o[1]});});
+  scene.add(label('merah=R · kuning=S · hitam=T',.6,'#8aa3bd').translateX(-.5).translateY(1.85).translateZ(Z+.1));
+  /* display arus */
+  mtg.D=makeDisplay(1.6,.8,360,190);
+  mtg.D.mesh.position.set(3.0,2.5,Z+.1);scene.add(mtg.D.mesh);
+  actMesh(mtg.D.mesh,'UKUR1');
+  scene.add(label('METER 3 FASA',.6,'#5fd4ff').translateX(3.0).translateY(3.1).translateZ(Z+.1));
+  /* denah di meja */
+  const tbl=boxT(1.2,.07,.8,TEX.wood());tbl.position.set(3.4,.95,.4);scene.add(tbl);
+  const tleg=boxT(.08,.95,.08,TEX.wood());tleg.position.set(3.4,.47,.4);scene.add(tleg);
+  mtg.denah=box(.6,.02,.8,0xf0ead8);mtg.denah.position.set(3.4,1.0,.4);scene.add(mtg.denah);
+  actMesh(mtg.denah,'DENAH');
+  scene.add(label('DENAH BEBAN',.55,'#5fd4ff').translateX(3.4).translateY(1.3).translateZ(.4));
+  function setFasa(i,f){mtg.grups[i].fasa=f;
+    mtg.grups[i].ind.material.color.setHex({R:0xd83a3a,S:0xd8b020,T:0x444b55}[f]);}
+  function arus(){const a={R:0,S:0,T:0};const w=[9,8,5,6,4,5];
+    mtg.grups.forEach((g,i)=>a[g.fasa]+=w[i]);return a;}
+  function tampil(){const a=arus();
+    dispText(mtg.D,['R '+a.R+'A · S '+a.S+'A · T '+a.T+'A',
+      (Math.max(a.R,a.S,a.T)-Math.min(a.R,a.S,a.T))<=3?'SEIMBANG ✓':'TIMPANG ⚠'],
+      [(Math.max(a.R,a.S,a.T)-Math.min(a.R,a.S,a.T))<=3?'#46ff8e':'#ff5a5a','#8aa3bd']);}
+  tampil();
+  startSeq([
+   {type:'act',aid:'UKUR1',done:false,targets:()=>[mtg.D.mesh],
+    desc:'Baca METER 3 fasa: buktikan ketimpangan arus (klik meter).',
+    why:'R = 28 A nyaris penuh, S = 4 A, T = 5 A. Satu fasa memikul rumah, dua fasa menonton. Inilah sumber trip & lampu redup — bukan dayanya kurang, distribusinya yang salah.',
+    fx(){toast('📏 R 28A · S 4A · T 5A — timpang berat!','bad',2800);}},
+   {type:'act',aid:'DENAH',done:false,targets:()=>[mtg.denah],
+    desc:'Pelajari DENAH BEBAN: rencanakan pembagian ulang.',
+    why:'Daftar beban: AC lt.1 (9A), AC lt.2 (8A), pompa (5A), water heater (6A), lampu (4A), kotak kontak (5A). Target tiap fasa ±12 A. Rencana di kertas dulu — memindah MCB tanpa rencana = timpang versi baru.',
+    fx(){toast('📋 Rencana: R=AC1 · S=AC2+lampu · T=pompa+heater+KK… hampir.','info',3200);}},
+   {type:'act',aid:'G1',done:false,targets:()=>[mtg.grups[1].mesh],
+    desc:'Pindahkan AC LT.2 dari fasa R ke fasa S (klik MCB AC LT.2).',
+    why:'AC adalah beban terbesar — keduanya tak boleh sefasa. AC lt.2 (8A) pindah ke S yang nyaris kosong: sekali pindah, ketimpangan terpangkas sepertiga.',
+    fx(){setFasa(1,'S');tampil();toast('🔀 AC LT.2 → fasa S. R turun ke 20A.','ok',2400);}},
+   {type:'act',aid:'G3',done:false,targets:()=>[mtg.grups[3].mesh],
+    desc:'Pindahkan WATER HEATER dari R ke fasa T.',
+    why:'Water heater 6A melengkapi T (pompa sudah akan menyusul). Prinsipnya: beban besar disebar dulu, beban kecil jadi penyeimbang akhir.',
+    fx(){setFasa(3,'T');tampil();toast('🔀 Water heater → fasa T.','ok',2200);}},
+   {type:'act',aid:'G2',done:false,targets:()=>[mtg.grups[2].mesh],
+    desc:'Terakhir: pindahkan POMPA AIR dari R ke fasa T… atau S? Cek meter, lalu putuskan (klik MCB pompa).',
+    why:'R kini 9A (AC1), S 12A (AC2+lampu), T 11A (heater+KK). Pompa 5A paling pas menemani R → 14A? Bukan — R+5=14 vs ideal: justru biarkan hitungan menuntun: R 9+5=14, masih tertimpang tipis tapi terbaik yang ada. Keseimbangan sempurna jarang — yang wajib: selisih < 10%.',
+    fx(){setFasa(2,'R');tampil();toast('🔀 Pompa → tetap di R: 14/12/11 A.','ok',2600);}},
+   {type:'act',aid:'UKUR2',done:false,targets:()=>[mtg.D.mesh],
+    desc:'Verifikasi akhir: baca meter — ketiga fasa seimbang.',
+    why:'14 / 12 / 11 A — selisih maksimum 3 A (≈9%). Netral kini hampir tak berarus, tegangan rata, MCB tak ada yang menanggung sendirian. Rumah yang sama, instalasi yang jauh lebih sehat.',
+    fx(){toast('✅ R 14A · S 12A · T 11A — SEIMBANG. Trip tinggal kenangan.','ok',3000);sfx.big();}},
+  ],()=>{say('🎉 <b>Keseimbangan tercapai!</b> Tidak ada kabel baru, tidak ada daya tambahan — hanya distribusi yang benar. Itulah seni instalasi 3 fasa.');
+    setTimeout(()=>showWin('tiga'),2200);});
+  /* meter dipakai 2x */
+  const s0=seq.steps[0],of0=s0.fx;s0.fx=()=>{of0();mtg.D.mesh.userData.aid='UKUR2';};
+  say('VOLTA di sini ⚖️ Rumah 11.000 VA tapi lampu redup tiap AC hidup? Klasik: <b>beban menumpuk di satu fasa</b>. Hari ini kita jadi penyeimbang. Mulai dari meter — biarkan angka yang bercerita.');
+  $('#modTitle').textContent='J01·M3 — Instalasi 3 Fasa & Balancing';
+  $('#taskHead').textContent='UKUR · RENCANA · SEBAR · BUKTIKAN';}
+MISSIONS.tiga.build=buildTiga;
+Object.assign(REAL,{
+ tiga:[
+  'Pengukuran keseimbangan dilakukan pada jam beban puncak aktual, bukan siang hari kosong',
+  'Setelah pemindahan grup: perbarui label panel & diagram satu garis — dokumen harus mengikuti kenyataan',
+  'Ukur juga arus NETRAL sebelum-sesudah: penurunan drastis adalah bukti keberhasilan balancing',
+  'Beban 1 fasa besar (AC, heater) dicatat dayanya saat perencanaan — balancing dimulai dari desain'],
+});

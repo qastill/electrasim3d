@@ -216,3 +216,103 @@ Object.assign(REAL,{
   'Pahami mode kontrol unit: droop, isochronous, atau AGC remote dari pusat pengatur',
   'Latih skenario gangguan frekuensi di simulator unit sebelum menghadapi yang sungguhan'],
 });
+
+/* =====================================================================
+   MISI 3 — SHUTDOWN TERENCANA & TURNING GEAR
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ shutdown:{lvl:'JALUR 07 · PEMBANGKITAN · MISI 3',icon:'🌙',title:'Shutdown Terencana & Turning Gear',strict:true,
+  loc:'📍 PLTU unit 2 · Jadwal inspeksi tahunan, 22:00',
+  story:'Setelah setahun beroperasi, unit 2 dijadwalkan inspeksi tahunan. Menghidupkan unit kamu sudah bisa — kini seni yang sebaliknya: MEMATIKANNYA dengan benar. Turbin ratusan ton yang panas tidak boleh sekadar dimatikan: poros yang berhenti dalam keadaan panas akan melengkung oleh beratnya sendiri.',
+  goal:'Unit berhenti dengan selamat: beban diturunkan bertahap, breaker dibuka tanpa beban, uap ditutup, dan turning gear menjaga poros tetap lurus.',
+  obj:['Izin dispatcher & turunkan beban bertahap ke nol','Buka breaker generator hanya saat beban mendekati nol','Tutup uap & aktifkan turning gear untuk pendinginan'],
+  learn:['Urutan shutdown = kebalikan start-up: beban dulu turun, breaker kemudian, uap terakhir','Membuka breaker saat masih berbeban = unit tiba-tiba kehilangan lawan → overspeed berbahaya','Poros panas yang diam melengkung oleh beratnya sendiri (shaft bow) — turning gear memutarnya pelan berjam-jam','Pendinginan turbin diatur gradien suhunya: logam tebal yang didinginkan terburu-buru akan retak'],
+  next:['Pelajari jenis shutdown: normal, forced, emergency trip — dan bedanya','Dalami prosedur cooldown boiler & perawatan saat unit standby','Eksplorasi start-up panas vs dingin (hot/warm/cold start)']},
+});
+let msd={};
+function buildShutdown(){
+  freshScene(0x1d2a3a,0x0a121c); /* malam */
+  cam={theta:-.1,phi:1.18,r:9,target:new THREE.Vector3(0,1.8,-.8)};
+  const floor=boxT(20,.1,12,TEX.concrete());floor.position.y=-.05;scene.add(floor);
+  const wall=boxT(18,4.6,.2,TEX.metal(),{metalness:.25});wall.position.set(0,2.3,-3.6);scene.add(wall);
+  /* turbin-generator */
+  msd.turb=cyl(.7,.9,2.6,0x9aa7b4);msd.turb.rotation.z=Math.PI/2;
+  msd.turb.position.set(-3.2,1.2,-1.6);scene.add(msd.turb);
+  scene.add(label('TURBIN UAP',.8).translateX(-3.2).translateY(2.4).translateZ(-1.6));
+  const gen=cyl(.8,.8,1.8,0x5a7a9a);gen.rotation.z=Math.PI/2;gen.position.set(-.2,1.2,-1.6);scene.add(gen);
+  scene.add(label('GENERATOR',.75).translateX(-.2).translateY(2.4).translateZ(-1.6));
+  msd.shaft=cyl(.12,.12,.7,0xd8e0e8,12,{metalness:.7});
+  msd.shaft.rotation.z=Math.PI/2;msd.shaft.position.set(-1.65,1.2,-1.6);scene.add(msd.shaft);
+  /* turning gear motor kecil */
+  msd.tg=box(.5,.4,.4,0xcc8830);msd.tg.position.set(-1.65,.4,-1.0);scene.add(msd.tg);
+  actMesh(msd.tg,'TG');
+  scene.add(label('TURNING GEAR',.6,'#5fd4ff').translateX(-1.65).translateY(.1).translateZ(-.8));
+  /* katup uap */
+  msd.valve=cyl(.22,.22,.3,0xd83a3a);msd.valve.position.set(-5.2,2.2,-1.6);scene.add(msd.valve);
+  const pipa=cyl(.18,.18,2.2,0x8a96a2);pipa.rotation.z=.5;pipa.position.set(-5.6,1.4,-1.6);scene.add(pipa);
+  actMesh(msd.valve,'STEAM');
+  scene.add(label('MAIN STEAM VALVE',.6,'#5fd4ff').translateX(-5.2).translateY(2.7).translateZ(-1.6));
+  /* panel kontrol */
+  const panel=boxT(2.6,2.2,.3,TEX.metal(),{metalness:.4});panel.position.set(4.2,1.6,-2.8);scene.add(panel);
+  panel.add(label('PANEL KONTROL UNIT',.8).translateY(1.4));
+  msd.D=makeDisplay(1.7,.8,380,180);
+  msd.D.mesh.position.set(3.7,2.0,-2.63);scene.add(msd.D.mesh);
+  actMesh(msd.D.mesh,'IZIN');
+  msd.gov=box(.34,.2,.16,0xcc8830);msd.gov.position.set(5.1,2.2,-2.62);scene.add(msd.gov);
+  actMesh(msd.gov,'GOV');
+  scene.add(label('GOVERNOR ▼',.5,'#5fd4ff').translateX(5.1).translateY(2.5).translateZ(-2.6));
+  msd.brk=box(.34,.5,.16,0x18242f);msd.brk.position.set(5.1,1.4,-2.62);scene.add(msd.brk);
+  actMesh(msd.brk,'BRK');
+  scene.add(label('BREAKER GEN',.5,'#5fd4ff').translateX(5.1).translateY(1.05).translateZ(-2.6));
+  msd.mw=62;msd.rpm=3000;msd.unload=false;msd.open=false;msd.steamOff=false;msd.tgOn=false;
+  function tampil(){dispText(msd.D,[msd.mw.toFixed(1)+' MW · '+Math.round(msd.rpm)+' RPM',
+    msd.tgOn?'TURNING GEAR · 3 RPM':(msd.open?'BREAKER TERBUKA':'ONLINE')],
+    [msd.mw>1?'#ffd23f':'#46ff8e',msd.tgOn?'#46ff8e':'#8aa3bd']);}
+  tampil();
+  moduleTick=(dt)=>{
+    if(msd.unload&&msd.mw>0){msd.mw=Math.max(0,msd.mw-dt*4.5);tampil();}
+    if(msd.steamOff&&msd.rpm>3&&!msd.tgOn){msd.rpm=Math.max(3,msd.rpm-dt*420);tampil();}
+    if(msd.rpm>5)msd.shaft.rotation.x+=dt*msd.rpm*.004;
+    else if(msd.tgOn)msd.shaft.rotation.x+=dt*.35;};
+  startSeq([
+   {type:'act',aid:'IZIN',done:false,targets:()=>[msd.D.mesh],
+    desc:'Lapor dispatcher: izin melepas unit dari sistem (klik layar).',
+    why:'62 MW yang akan hilang harus digantikan unit lain — dispatcher mengatur penggantinya dulu. Unit yang pamit tanpa izin membuat frekuensi sistem terjun: dosa besar dunia pembangkitan.',
+    fx(){toast('📻 "Unit 2 izin shutdown terjadwal — beban pengganti SIAP."','ok',2800);}},
+   {type:'act',aid:'GOV',done:false,targets:()=>[msd.gov],
+    desc:'Turunkan beban BERTAHAP via governor (klik governor).',
+    why:'Dari 62 MW merosot landai sesuai ramp rate — logam turbin melepas panas secara merata. Beban diturunkan, tapi putaran tetap 3000 RPM: generator masih menggenggam jaringan.',
+    fx(){msd.unload=true;
+      toast('📉 Unloading... amati MW merosot perlahan ke nol.','ok',2600);}},
+   {type:'act',aid:'BRK',done:false,targets:()=>[msd.brk],
+    check:()=>msd.mw<=1.5,
+    checkFail:'Masih berbeban! Membuka breaker sekarang = unit kehilangan lawan mendadak → overspeed. Tunggu MW mendekati nol.',
+    desc:'Saat MW ≈ 0: buka BREAKER generator (klik breaker).',
+    why:'Tanpa beban, membuka breaker hanyalah perpisahan damai: generator lepas dari jaringan tanpa hentakan. Synchroscope yang dulu menyatukan, malam ini diam menyaksikan perpisahan.',
+    fx(){msd.open=true;tampil();
+      toast('🔌 Breaker TERBUKA — unit resmi berpisah dari sistem.','ok',2600);}},
+   {type:'act',aid:'STEAM',done:false,targets:()=>[msd.valve],
+    desc:'Tutup MAIN STEAM VALVE — biarkan turbin coast down.',
+    why:'Uap berhenti mendorong; turbin melambat oleh gesekannya sendiri dari 3000 RPM menuju nol — proses berjam-jam yang tidak boleh dipercepat. Dengarkan: dengung yang memudar itu suara logam beristirahat.',
+    fx(){msd.steamOff=true;beep(220,1.2,'sine',.06);
+      toast('🌫️ Uap tertutup — coast down dimulai, RPM merosot.','ok',2600);}},
+   {type:'act',aid:'TG',done:false,targets:()=>[msd.tg],
+    check:()=>msd.rpm<=10,
+    checkFail:'Putaran masih tinggi! Turning gear hanya boleh masuk saat poros hampir berhenti (lihat RPM).',
+    desc:'Saat putaran hampir nol: aktifkan TURNING GEAR (klik motor oranye).',
+    why:'Inilah penjaga malam: motor kecil memutar poros ratusan ton dengan 3 RPM selama berjam-jam, agar logam panas mendingin MERATA. Tanpanya, poros melengkung oleh beratnya sendiri — dan start berikutnya berakhir dengan getaran maut.',
+    fx(){msd.tgOn=true;msd.rpm=3;tampil();
+      toast('🌙 Turning gear AKTIF — poros berputar 3 RPM hingga dingin.','ok',3000);sfx.big();}},
+  ],()=>{say('🎉 <b>Unit tertidur dengan benar!</b> Beban turun landai, breaker terbuka tanpa beban, dan turning gear berjaga semalaman. Inspeksi tahunan menanti — dan poros yang lurus sempurna.');
+    setTimeout(()=>showWin('shutdown'),2200);});
+  say('VOLTA di sini 🌙 Kamu sudah bisa membangunkan unit — kini belajar <b>menidurkannya</b>. Urutannya kebalikan start-up, dan ada penjaga terakhir bernama turning gear. Satu pantangan: <b>breaker tak pernah dibuka saat berbeban</b>.');
+  $('#modTitle').textContent='J07·M3 — Shutdown & Turning Gear';
+  $('#taskHead').textContent='UNLOAD → BREAKER → UAP → TG';}
+MISSIONS.shutdown.build=buildShutdown;
+Object.assign(REAL,{
+ shutdown:[
+  'Ikuti kurva cooldown pabrikan: gradien suhu logam dipantau, bukan dikira-kira',
+  'Turning gear berjalan berjam-jam (bahkan lebih dari sehari) — jangan dihentikan sebelum suhu logam aman',
+  'Eccentricity & getaran poros dipantau saat coast down — anomali dicatat untuk inspeksi',
+  'Sistem pelumas TETAP beroperasi selama turning gear — bearing tanpa oli rusak walau 3 RPM'],
+});

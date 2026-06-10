@@ -225,3 +225,99 @@ Object.assign(REAL,{
   'Sebelum menutup PMT penghantar antar-GI: pastikan kondisi sinkron atau sirkit mati di sisi lawan (synchro-check)',
   'Catat waktu setiap langkah di log switching — jejak audit operasi GI'],
 });
+
+/* =====================================================================
+   MISI 3 — TRANSFER BUS TANPA PADAM
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ busbar:{lvl:'JALUR 04 · TRANSMISI · MISI 3',icon:'🔀',title:'Transfer Bus Tanpa Padam (Double Busbar)',strict:true,
+  loc:'📍 GI 150 kV Kosambi · Pemeliharaan Bus A terjadwal',
+  story:'Bus A akan dipelihara minggu depan — semua bay yang menggantung di Bus A harus pindah ke Bus B HARI INI, tanpa satu pelanggan pun berkedip. Inilah manuver paling elegan di GI: transfer bus. Rahasianya satu prinsip yang terdengar terbalik: sambungkan dulu, baru lepaskan (make before break).',
+  goal:'Bay penghantar Sukamandi berpindah dari Bus A ke Bus B tanpa pemadaman: kopel menjembatani, PMS berpindah tanpa memutus arus.',
+  obj:['Izin manuver & tutup bus coupler (paralel Bus A-B)','Tutup PMS Bus B DULU, baru buka PMS Bus A (make before break)','Buka kembali kopel & laporkan transfer selesai'],
+  learn:['Make before break: jalur baru disambung dulu, jalur lama dilepas kemudian — beban tak pernah kehilangan pijakan','Bus coupler menyamakan tegangan & sudut kedua bus; selama kopel tertutup, PMS boleh pindah karena tak memutus arus (arus lewat kopel)','Membuka PMS Bus A saat kopel TERBUKA = memutus arus beban dengan pisau tanpa peredam — busur api fatal','Interlock elektrik mencegah urutan salah, tapi operator tetap wajib paham LOGIKAnya — interlock bisa rusak'],
+  next:['Pelajari konfigurasi busbar: single, double, satu-setengah breaker','Dalami proteksi busbar (busbar differential) & zona-nya','Simulasikan transfer seluruh bay (4 bay berurutan) untuk pemeliharaan total'],},
+});
+let mbb={};
+function buildBusbar(){
+  freshScene(0x7f9cc0,0x0d1726);
+  cam={theta:.1,phi:1.12,r:12,target:new THREE.Vector3(0,3,-1)};
+  const ground=boxT(26,.1,18,TEX.gravel());ground.position.y=-.05;scene.add(ground);
+  const pad=boxT(14,.06,9,TEX.concrete());pad.position.set(0,.03,-1);scene.add(pad);
+  /* dua busbar sejajar */
+  const busA=cyl(.05,.05,18,0xd8c8a8,18,{metalness:.6,roughness:.3});
+  busA.rotation.z=Math.PI/2;busA.position.set(0,6.2,-4);scene.add(busA);
+  scene.add(label('BUS A (akan dipelihara)',.8,'#ffd23f').translateY(6.7).translateZ(-4));
+  const busB=cyl(.05,.05,18,0xb9d8c8,18,{metalness:.6,roughness:.3});
+  busB.rotation.z=Math.PI/2;busB.position.set(0,5.0,-2.2);scene.add(busB);
+  scene.add(label('BUS B',.8,'#8df0b8').translateY(5.5).translateZ(-2.2));
+  /* panel kontrol */
+  const ctrl=boxT(.9,1.5,.5,TEX.metal(),{metalness:.4});ctrl.position.set(-6.2,.75,2.0);scene.add(ctrl);
+  ctrl.add(label('PANEL KONTROL',.7,'#5fd4ff').translateY(1.05));
+  actMesh(ctrl,'IZIN');
+  /* bus coupler di tengah */
+  mbb.kopel=cyl(.35,.4,1.4,0x9aa7b4,20,{metalness:.3});mbb.kopel.position.set(-4,1.5,-3.1);scene.add(mbb.kopel);
+  actMesh(mbb.kopel,'KOPEL');
+  mbb.kInd=new THREE.Mesh(new THREE.SphereGeometry(.07,12,10),
+    new THREE.MeshStandardMaterial({color:0x36e07a,emissive:0x36e07a,emissiveIntensity:1}));
+  mbb.kInd.position.set(-4,.9,-2.7);scene.add(mbb.kInd);
+  scene.add(label('BUS COUPLER (PMT)',.65,'#5fd4ff').translateX(-4).translateY(2.6).translateZ(-3.1));
+  /* bay Sukamandi: PMS A & PMS B */
+  function pms3(x,z,name,key,closed){
+    const base=boxT(.8,.16,.45,TEX.metal(),{metalness:.4});base.position.set(x,2.0,z);scene.add(base);
+    const p1=cyl(.05,.07,1.9,0xc9b08a);p1.position.set(x-.25,1.05,z);scene.add(p1);
+    const p2=p1.clone();p2.position.x=x+.25;scene.add(p2);
+    const arm=box(.6,.07,.07,0xd8e0e8,{metalness:.6});arm.position.set(x,2.1,z);
+    if(!closed)arm.rotation.y=.9;scene.add(arm);
+    actMesh(arm,key);actMesh(base,key);
+    scene.add(label(name,.55,'#5fd4ff').translateX(x).translateY(2.5).translateZ(z));
+    return arm;}
+  mbb.pmsA=pms3(2.5,-4,'PMS BUS A (MASUK)','PMSA',true);
+  mbb.pmsB=pms3(2.5,-2.2,'PMS BUS B','PMSB',false);
+  /* PMT bay + penghantar */
+  const pmt=cyl(.35,.4,1.5,0x9aa7b4,20,{metalness:.3});pmt.position.set(4.5,1.55,-3.1);scene.add(pmt);
+  scene.add(label('PMT BAY (TETAP TUTUP)',.6).translateX(4.5).translateY(2.7).translateZ(-3.1));
+  const span=cyl(.025,.025,6,0x3c4754);span.rotation.z=Math.PI/2;span.position.set(8,5.4,-3.1);scene.add(span);
+  scene.add(label('→ SUKAMANDI · 86 MW MENGALIR',.7).translateX(7.5).translateY(6.0).translateZ(-3.1));
+  startSeq([
+   {type:'act',aid:'IZIN',done:false,targets:()=>[ctrl],
+    desc:'Minta IZIN transfer bus ke dispatcher (klik panel kontrol).',
+    why:'Transfer bus mengubah topologi GI — proteksi busbar perlu tahu konfigurasi barunya. Dispatcher juga memastikan tak ada manuver lain yang sedang berjalan di GI lawan.',
+    fx(){toast('📻 "Izin transfer bay Sukamandi A→B — DISETUJUI, proteksi disiagakan."','ok',2800);}},
+   {type:'act',aid:'KOPEL',done:false,targets:()=>[mbb.kopel],
+    desc:'Tutup BUS COUPLER — paralelkan Bus A & Bus B.',
+    why:'Kopel adalah jembatan: begitu tertutup, kedua bus menjadi SATU titik listrik dengan tegangan & sudut identik. Di atas jembatan inilah beban akan menyeberang tanpa terjun.',
+    fx(){toast('🌉 Kopel TERTUTUP — Bus A & B paralel, jembatan siap.','ok',2600);}},
+   {type:'act',aid:'PMSB',done:false,targets:()=>[mbb.pmsB],
+    desc:'MAKE dulu: tutup PMS BUS B bay Sukamandi.',
+    why:'Inilah jiwa make-before-break: jalur baru disambung SAAT jalur lama masih ada. Aman bagi PMS karena kedua bus setegangan via kopel — kontak bertemu tanpa beda potensial, tanpa busur.',
+    fx(){mbb.pmsB.rotation.y=0;
+      toast('🔗 PMS Bus B MASUK — bay kini berpegangan dua tangan.','ok',2600);}},
+   {type:'act',aid:'PMSA',done:false,targets:()=>[mbb.pmsA],
+    desc:'BREAK kemudian: buka PMS BUS A.',
+    why:'Arus tidak terputus — ia berpindah lewat kopel ke Bus B persis saat kontak PMS A merenggang. Pisau membuka tanpa memutus apa pun: 86 MW mengalir terus, pelanggan tak merasakan apa-apa.',
+    fx(){mbb.pmsA.rotation.y=.9;
+      toast('✂️ PMS Bus A LEPAS — beban mulus sepenuhnya di Bus B.','ok',2600);}},
+   {type:'act',aid:'KOPEL2',done:false,targets:()=>[mbb.kopel],
+    desc:'Tugas jembatan selesai: buka kembali BUS COUPLER.',
+    why:'Bay sudah utuh di Bus B; kopel dibuka agar Bus A benar-benar terpisah & siap dibebaskan untuk pemeliharaan. PMT kopel mampu memutus arus penyeimbang — itulah kenapa kopel memakai PMT, bukan PMS.',
+    fx(){mbb.kInd.material.color.setHex(0xff3b3b);mbb.kInd.material.emissive.setHex(0xff3b3b);
+      toast('🌉 Kopel DIBUKA — Bus A kini sendirian, siap dipelihara.','ok',2600);}},
+   {type:'act',aid:'IZIN2',done:false,targets:()=>[ctrl],
+    desc:'Lapor TRANSFER SELESAI ke dispatcher.',
+    why:'"Bay Sukamandi di Bus B, beban 86 MW normal, Bus A bebas beban." Log switching mencatat manuver tanpa padam — KPI keandalan (SAIDI) hari ini tak bertambah sedetik pun.',
+    fx(){toast('📻 Transfer TUNTAS — nol detik padam, dispatcher mencatat.','ok',3000);sfx.big();}},
+  ],()=>{say('🎉 <b>Manuver paling elegan di GI — sempurna!</b> 86 MW pindah rumah tanpa berkedip. Make before break: tiga kata yang membedakan operator dari pemain tebak-tebakan.');
+    setTimeout(()=>showWin('busbar'),2200);});
+  const s0=seq.steps[0],of0=s0.fx;s0.fx=()=>{of0();ctrl.userData.aid='IZIN2';};
+  say('VOLTA di sini 🔀 Hari ini kita melakukan sulap kelas GI: <b>memindah beban hidup antar busbar tanpa padam</b>. Mantranya: make before break — sambung dulu, lepas kemudian. Mulai dari izin dispatcher.');
+  $('#modTitle').textContent='J04·M3 — Transfer Bus Tanpa Padam';
+  $('#taskHead').textContent='MAKE BEFORE BREAK';}
+MISSIONS.busbar.build=buildBusbar;
+Object.assign(REAL,{
+ busbar:[
+  'Sebelum transfer: pastikan setting proteksi busbar mengikuti perubahan topologi (zona A/B)',
+  'Verifikasi posisi setiap PMS secara VISUAL di lapangan, jangan hanya percaya indikasi remote',
+  'Transfer banyak bay dilakukan satu per satu dengan log per langkah — tidak pernah borongan',
+  'Pahami batas arus kopel: total beban yang dipindah tak boleh melampaui rating bus coupler'],
+});

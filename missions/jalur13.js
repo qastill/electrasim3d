@@ -183,3 +183,101 @@ Object.assign(REAL,{
   'Pekerja penanganan abu wajib APD pernapasan (respirator) — partikel halus adalah bahayanya',
   'Rekonsiliasi neraca massa bulanan dengan log timbangan & faktur pengangkutan B3'],
 });
+
+/* =====================================================================
+   MISI 3 — GANGGUAN OPERASI: SUHU DROP & EMISI NAIK
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ cems:{lvl:'JALUR 13 · WASTE TO ENERGY · MISI 3',icon:'📟',title:'Gangguan Operasi: Suhu Drop, Emisi Naik',strict:true,
+  loc:'📍 PLTSa · Musim hujan, shift siang 13:15',
+  story:'Musim hujan mengirim musuh lama PLTSa: sampah basah kuyup. Suhu ruang bakar merosot ke 790°C, CEMS mulai berkedip — CO naik, tanda pembakaran tak sempurna. Di bawah 850°C, dioksin tidak terurai. Kamu punya beberapa menit untuk mengembalikan angka keramat itu, atau unit harus diturunkan bebannya.',
+  goal:'Suhu kembali di atas 850°C dan CEMS normal — lewat burner bantu, pengaturan udara, dan pengadukan sampah yang benar.',
+  obj:['Baca alarm CEMS & diagnosa penyebab','Nyalakan burner bantu & atur udara pembakaran','Aduk umpan basah-kering & verifikasi pemulihan'],
+  learn:['Sampah basah menyerap panas untuk menguapkan airnya dulu — nilai kalor anjlok, suhu ikut anjlok','CO tinggi = pembakaran tak sempurna; ia muncul SEBELUM dioksin lolos — alarm dini yang harus dihormati','Burner bantu (solar/gas) adalah jaring pengaman suhu: biaya bahan bakar < denda emisi + reputasi','Pencampuran umpan basah:kering di bunker adalah resep koki insinerasi — crane operator menentukan'],
+  next:['Pelajari pengeringan sampah: bunker management & waste drying','Dalami parameter CEMS lain: SO2, NOx, HCl, partikulat, dioksin sampling','Eksplorasi kontrol otomatis suhu (burner & udara) berbasis PID']},
+});
+let mcm={};
+function buildCEMS(){
+  freshScene(0x5a6a78,0x0d141a); /* mendung gelap */
+  cam={theta:.15,phi:1.2,r:10,target:new THREE.Vector3(0,2,-1)};
+  const ground=boxT(24,.1,14,TEX.concrete());ground.position.y=-.05;scene.add(ground);
+  /* bunker + crane */
+  const bunker=boxT(2.6,1.8,2.2,TEX.metal(),{metalness:.25});bunker.position.set(-6.0,.9,-1.6);scene.add(bunker);
+  const basah=box(1.1,.5,1.8,0x4a4438);basah.position.set(-6.5,1.5,-1.6);scene.add(basah);
+  const kering=box(1.1,.5,1.8,0x7a6a4a);kering.position.set(-5.4,1.5,-1.6);scene.add(kering);
+  scene.add(label('BUNKER: BASAH | KERING',.65).translateX(-6.0).translateY(2.3).translateZ(-1.6));
+  const ctow=box(.2,3.2,.2,0x8a8a8a);ctow.position.set(-4.2,1.6,-1.6);scene.add(ctow);
+  mcm.crane=box(1.8,.15,.15,0xcc8830);mcm.crane.position.set(-5.0,3.1,-1.6);scene.add(mcm.crane);
+  actMesh(mcm.crane,'ADUK');
+  scene.add(label('CRANE',.6,'#5fd4ff').translateX(-5.0).translateY(3.5).translateZ(-1.6));
+  /* insinerator + burner */
+  mcm.furn=boxT(2.6,2.6,2.2,TEX.metal(),{metalness:.2});mcm.furn.position.set(-.8,1.3,-1.8);scene.add(mcm.furn);
+  mcm.furn.material.emissive=new THREE.Color(0x331100);mcm.furn.material.emissiveIntensity=.4;
+  scene.add(label('INSINERATOR',.8).translateX(-.8).translateY(2.95).translateZ(-1.8));
+  mcm.burner=cyl(.16,.2,.7,0xd83a3a);mcm.burner.rotation.z=Math.PI/2;
+  mcm.burner.position.set(-2.3,1.0,-1.0);scene.add(mcm.burner);
+  actMesh(mcm.burner,'BURNER');
+  scene.add(label('BURNER BANTU',.6,'#5fd4ff').translateX(-2.5).translateY(.65).translateZ(-.8));
+  /* damper udara */
+  mcm.damper=box(.5,.4,.16,0x8a96a2);mcm.damper.position.set(.8,1.9,-.66);scene.add(mcm.damper);
+  actMesh(mcm.damper,'UDARA');
+  scene.add(label('DAMPER UDARA SEKUNDER',.55,'#5fd4ff').translateX(.8).translateY(2.4).translateZ(-.6));
+  /* layar CEMS */
+  const frame=boxT(2.4,1.7,.16,TEX.metal(),{metalness:.4});frame.position.set(4.0,2.1,-2.9);scene.add(frame);
+  frame.add(label('CEMS — EMISI REAL-TIME',.75).translateY(1.1));
+  mcm.D=makeDisplay(2.1,1.4,420,280);
+  mcm.D.mesh.position.set(4.0,2.1,-2.8);scene.add(mcm.D.mesh);
+  actMesh(mcm.D.mesh,'CEK');
+  mcm.t=790;mcm.co=210;mcm.burnerOn=false;mcm.airOk=false;mcm.mixed=false;
+  function layar(){
+    dispText(mcm.D,[Math.round(mcm.t)+'°C · CO '+Math.round(mcm.co),
+      mcm.t>=850&&mcm.co<100?'BAKU MUTU ✓':'⚠ DI BAWAH STANDAR'],
+      [mcm.t>=850?'#46ff8e':'#ff5a5a',mcm.t>=850&&mcm.co<100?'#46ff8e':'#ffd23f']);}
+  layar();
+  moduleTick=(dt)=>{
+    let target=790;
+    if(mcm.burnerOn)target+=35;if(mcm.airOk)target+=15;if(mcm.mixed)target+=25;
+    mcm.t+=(target-mcm.t)*dt*.25;
+    const coT=mcm.t>=850?(mcm.airOk?45:90):210;
+    mcm.co+=(coT-mcm.co)*dt*.25;layar();};
+  startSeq([
+   {type:'act',aid:'CEK',done:false,targets:()=>[mcm.D.mesh],
+    desc:'Baca ALARM CEMS: pahami apa yang terjadi (klik layar).',
+    why:'790°C dan CO 210 mg/Nm3 — dua angka yang bercerita satu hal: api kekurangan tenaga karena umpan basah kuyup. CO adalah kenari di tambang: ia berteriak sebelum dioksin lolos.',
+    fx(){toast('📟 790°C · CO 210 — pembakaran tak sempurna, bergerak!','bad',2800);}},
+   {type:'act',aid:'BURNER',done:false,targets:()=>[mcm.burner],
+    desc:'Nyalakan BURNER BANTU — dorong suhu naik (klik burner).',
+    why:'Inilah fungsi burner bantu dilahirkan: menyuntik panas saat sampah tak sanggup. Biaya solarnya terasa? Bandingkan dengan dioksin lolos ke kota — burner adalah opsi termurah di ruangan ini.',
+    fx(){mcm.burnerOn=true;mcm.furn.material.emissiveIntensity=.8;
+      beep(90,.8,'sawtooth',.07);
+      toast('🔥 Burner bantu MENYALA — suhu mulai merangkak.','ok',2600);}},
+   {type:'act',aid:'UDARA',done:false,targets:()=>[mcm.damper],
+    desc:'Atur DAMPER udara sekunder (klik damper).',
+    why:'CO tinggi = ada bahan bakar yang tak bertemu oksigen. Udara sekunder menambah turbulensi di atas api — campuran lebih rata, CO terbakar tuntas. Tapi jangan kebablasan: udara berlebih justru mendinginkan ruang bakar.',
+    fx(){mcm.airOk=true;
+      toast('💨 Udara sekunder +15% — turbulensi naik, CO mulai turun.','ok',2600);}},
+   {type:'act',aid:'ADUK',done:false,targets:()=>[mcm.crane],
+    desc:'Perintahkan CRANE: aduk umpan basah dengan stok kering (klik crane).',
+    why:'Solusi akar masalah: sampah basah dicampur stok kering tandon kemarau dengan rasio 1:1. Burner mengobati gejala; pencampuran mengobati penyebab. Bunker management adalah dapur PLTSa.',
+    fx(){mcm.mixed=true;
+      toast('🏗️ Umpan campur 1:1 basah-kering mengalir ke hopper.','ok',2600);}},
+   {type:'act',aid:'VERIF',done:false,targets:()=>[mcm.D.mesh],
+    check:()=>mcm.t>=850&&mcm.co<100,
+    checkFail:'Belum pulih! Tunggu suhu menembus 850°C dan CO turun di bawah 100 (lihat layar CEMS).',
+    desc:'Saat layar hijau: VERIFIKASI pemulihan di CEMS.',
+    why:'862°C · CO 48 — baku mutu kembali dipeluk. Catat kronologi di log: jam alarm, tindakan, waktu pulih. Regulator membaca CEMS-mu online; log inilah ceritamu versi resmi.',
+    fx(){toast('✅ 862°C · CO 48 — BAKU MUTU PULIH. Log tercatat.','ok',3000);sfx.big();}},
+  ],()=>{say('🎉 <b>Krisis musim hujan terkendali!</b> Burner menambal, udara menyempurnakan, pengadukan menyembuhkan. Operator PLTSa sejati menjaga 850°C seperti menjaga nama baik kotanya.');
+    setTimeout(()=>showWin('cems'),2200);});
+  const s0=seq.steps[0],of0=s0.fx;s0.fx=()=>{of0();mcm.D.mesh.userData.aid='VERIF';};
+  say('VOLTA di sini 📟 Musim hujan menguji PLTSa: <b>sampah basah, suhu 790°C, CO meninggi</b>. Kamu tahu angka keramatnya — 850. Tiga senjata menunggu: burner, udara, dan crane. Mulai dari layar CEMS.');
+  $('#modTitle').textContent='J13·M3 — Gangguan Suhu & Emisi';
+  $('#taskHead').textContent='KEMBALIKAN 850°C';}
+MISSIONS.cems.build=buildCEMS;
+Object.assign(REAL,{
+ cems:[
+  'Di bawah suhu minimum berkepanjangan: SOP umumnya menghentikan umpan sampah, bukan memaksakan',
+  'Data CEMS terekam & terkirim online ke regulator — jangan pernah ada pikiran mengakali sensor',
+  'Stok sampah kering/RDF disiapkan sebelum musim hujan — mitigasi dimulai dari perencanaan bunker',
+  'Kalibrasi berkala CEMS oleh pihak terakreditasi; sensor melenceng = keputusan operasi melenceng'],
+});

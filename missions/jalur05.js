@@ -209,3 +209,107 @@ Object.assign(REAL,{
   'Pecah beban perlu studi aliran daya jaringan, bukan sekadar pindah jurusan',
   'Dokumentasikan tren pertumbuhan beban per gardu sebagai dasar perencanaan investasi'],
 });
+
+/* =====================================================================
+   MISI 3 — FORECASTING BEBAN DENGAN REGRESI
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ forecast:{lvl:'JALUR 05 · ENERGY ANALYST · MISI 3',icon:'🔮',title:'Forecasting Beban dengan Regresi',strict:false,
+  loc:'📍 Kantor UP3 · Proyek peramalan beban gardu',
+  story:'Manajer perencanaan datang membawa pertanyaan klasik: "Gardu mana yang akan overload TAHUN DEPAN?" Menunggu trafo menjerit seperti misi lalu itu reaktif. Hari ini kamu membangun model peramalan: dari data historis dua tahun, fitur yang tepat, sampai prediksi yang bisa dipertanggungjawabkan.',
+  goal:'Model regresi terlatih dengan MAPE di bawah 5%, dan daftar gardu berisiko overload tahun depan tersusun berbasis prediksi.',
+  obj:['Muat & bersihkan data historis 24 bulan','Pilih fitur yang relevan & latih model','Evaluasi akurasi lalu terjemahkan menjadi rekomendasi'],
+  learn:['Model hanya sebaik datanya: missing value & outlier dibersihkan SEBELUM melatih apa pun','Fitur beban klasik: suhu (AC!), hari kerja vs libur, jam, tren pertumbuhan pelanggan','MAPE (mean absolute percentage error) <5% = layak untuk perencanaan; selalu bandingkan dengan baseline naive','Prediksi tanpa rekomendasi = angka mati; analis menerjemahkan ke daftar aksi: uprating, pecah beban, sisip gardu'],
+  next:['Naik level: time series modern (SARIMA, Prophet, gradient boosting)','Pelajari backtesting: uji model di data yang belum pernah ia lihat','Gabungkan forecast dengan data cuaca BMKG via API']},
+});
+let mfo={};
+function buildForecast(){
+  freshScene(0x9fb8d0,0x121e2c);
+  cam={theta:0,phi:1.18,r:7.5,target:new THREE.Vector3(0,1.9,-1)};
+  const floor=boxT(16,.1,10,TEX.concrete());floor.position.y=-.05;scene.add(floor);
+  const wall=boxT(14,4.4,.2,TEX.plaster());wall.position.set(0,2.2,-3.2);scene.add(wall);
+  /* layar utama: kurva data */
+  const frame=boxT(4.2,2.4,.16,TEX.metal(),{metalness:.4});frame.position.set(-2.6,2.4,-3.1);scene.add(frame);
+  frame.add(label('WORKSTATION ANALIS',.9).translateY(1.5));
+  mfo.D=makeDisplay(3.9,2.1,620,330);
+  mfo.D.mesh.position.set(-2.6,2.4,-3.0);scene.add(mfo.D.mesh);
+  actMesh(mfo.D.mesh,'DATA');
+  function draw(mode){
+    const g=mfo.D.g,W=620,H=330;
+    g.fillStyle='#0c141d';g.fillRect(0,0,W,H);
+    g.strokeStyle='#2a3a4c';g.lineWidth=2;
+    g.beginPath();g.moveTo(46,18);g.lineTo(46,H-36);g.lineTo(W-16,H-36);g.stroke();
+    g.font='600 15px Consolas';g.textAlign='left';
+    function seri(col,off,noise,dash){
+      g.strokeStyle=col;g.lineWidth=3;if(dash)g.setLineDash([7,5]);
+      g.beginPath();
+      for(let m=0;m<=24;m++){
+        const tren=.35+m*.009, musim=.1*Math.sin(m/12*Math.PI*2);
+        let v=tren+musim+off+(noise?Math.sin(m*7.3)*noise:0);
+        const x=46+m/24*(W-78), y=H-36-v*(H-90);
+        m===0?g.moveTo(x,y):g.lineTo(x,y);}
+      g.stroke();g.setLineDash([]);}
+    if(mode>=0){seri('#5fd4ff',0,.06);g.fillStyle='#5fd4ff';g.fillText('DATA AKTUAL 24 BLN',54,34);}
+    if(mode>=1){g.fillStyle='#ffd23f';g.fillText('+ outlier dibersihkan · fitur: suhu, hari, tren',54,56);}
+    if(mode>=2){seri('#46ff8e',.012,0,true);g.fillStyle='#46ff8e';g.fillText('MODEL (prediksi)',54,78);}
+    if(mode>=3){g.fillStyle='#ff5a5a';g.font='700 17px Consolas';
+      g.fillText('FORECAST 12 BLN → GD-CENDANA 104% (Jun)',54,H-12);}
+    mfo.D.tex.needsUpdate=true;}
+  draw(-1);
+  /* kartu fitur */
+  mfo.cards=[];
+  [['SUHU','F1',1.4],['HARI KERJA','F2',2.5],['WARNA CAT GARDU','F3',3.6]].forEach(o=>{
+    const c=box(.95,.6,.07,0x2b3a4a);c.position.set(o[2],2.9,-3.05);scene.add(c);
+    actMesh(c,o[1]);mfo.cards.push(c);
+    scene.add(label(o[0],.5,'#5fd4ff').translateX(o[2]).translateY(3.4).translateZ(-3.0));});
+  scene.add(label('PILIH FITUR YANG MASUK AKAL',.65,'#ffd23f').translateX(2.5).translateY(3.85).translateZ(-3.0));
+  /* tombol train & papan rekomendasi */
+  mfo.train=box(.5,.3,.12,0xcc8830);mfo.train.position.set(1.6,1.9,-3.05);scene.add(mfo.train);
+  actMesh(mfo.train,'TRAIN');
+  scene.add(label('TRAIN',.5).translateX(1.6).translateY(1.65).translateZ(-3.0));
+  mfo.evalb=box(.5,.3,.12,0x2a5a8a);mfo.evalb.position.set(2.5,1.9,-3.05);scene.add(mfo.evalb);
+  actMesh(mfo.evalb,'EVAL');
+  scene.add(label('EVALUASI',.5).translateX(2.5).translateY(1.65).translateZ(-3.0));
+  mfo.rek=box(.85,.6,.05,0xe8e4d8);mfo.rek.position.set(4.6,1.6,-3.08);scene.add(mfo.rek);
+  actMesh(mfo.rek,'REKOM');
+  scene.add(label('REKOMENDASI',.55,'#5fd4ff').translateX(4.6).translateY(2.1).translateZ(-3.0));
+  startSeq([
+   {type:'act',aid:'DATA',done:false,targets:()=>[mfo.D.mesh],
+    desc:'Muat & BERSIHKAN data beban 24 bulan (klik layar).',
+    why:'Ditemukan 3 bulan dengan meter rusak (nilai nol) dan 1 lonjakan ganjil saat kalibrasi. Dibuang atau diimputasi — model yang menelan sampah akan meramal sampah. 80% pekerjaan data science memang di sini.',
+    fx(){draw(0);toast('🧹 24 bln dimuat · 4 anomali data dibersihkan.','ok',2800);}},
+   {type:'act',aid:'F1',done:false,targets:()=>[mfo.cards[0]],
+    desc:'Pilih fitur #1 yang paling berpengaruh: klik kartu yang tepat.',
+    why:'SUHU adalah raja fitur beban di iklim tropis: tiap derajat lebih panas, ribuan AC bekerja lebih keras. Korelasinya dengan beban malam mencapai 0,8 — wajib masuk model. (Warna cat gardu? Tentu bukan.)',
+    fx(){mfo.cards[0].material.color.setHex(0x2e6a4a);
+      toast('🌡️ Fitur SUHU masuk — korelasi 0,8 dengan beban.','ok',2400);}},
+   {type:'act',aid:'F2',done:false,targets:()=>[mfo.cards[1]],
+    desc:'Tambahkan fitur #2: klik kartu berikutnya yang relevan.',
+    why:'HARI KERJA vs akhir pekan membelah profil menjadi dua dunia: industri libur, rumah tangga naik. Plus tren waktu untuk pertumbuhan pelanggan. Tiga fitur sederhana yang menjelaskan — bukan seratus fitur yang membingungkan.',
+    fx(){mfo.cards[1].material.color.setHex(0x2e6a4a);draw(1);
+      toast('📅 Fitur HARI KERJA + tren masuk. Dataset siap.','ok',2400);}},
+   {type:'act',aid:'TRAIN',done:false,targets:()=>[mfo.train],
+    desc:'LATIH model regresi (klik TRAIN).',
+    why:'Data dibelah: 20 bulan untuk belajar, 4 bulan terakhir DISEMBUNYIKAN untuk ujian. Model yang dinilai di data yang pernah ia lihat = murid yang menilai ujiannya sendiri.',
+    fx(){draw(2);toast('🧠 Model terlatih — kurva hijau menempel data. Saatnya ujian.','ok',2600);}},
+   {type:'act',aid:'EVAL',done:false,targets:()=>[mfo.evalb],
+    desc:'EVALUASI di data uji: layakkah dipakai? (klik EVALUASI)',
+    why:'MAPE 4,1% vs baseline naive 11,3% — model mengalahkan tebakan sederhana hampir 3x. Di bawah 5% artinya layak untuk perencanaan investasi. Angka inilah yang membuat manajer percaya.',
+    fx(){toast('📐 MAPE 4,1% (naive: 11,3%) — LAYAK untuk perencanaan ✓','ok',2800);}},
+   {type:'act',aid:'REKOM',done:false,targets:()=>[mfo.rek],
+    desc:'Terjemahkan ke REKOMENDASI: gardu mana, kapan, tindakan apa.',
+    why:'Forecast 12 bulan: GD-Cendana menembus 104% pada Juni (musim panas + tren perumahan baru). Rekomendasi: uprating masuk anggaran SEKARANG — pengadaan trafo butuh 5 bulan. Itulah bedanya prediksi dan firasat.',
+    fx(){draw(3);toast('📋 GD-Cendana → uprating sebelum Mei. Anggaran diajukan!','ok',3200);sfx.big();}},
+  ],()=>{say('🎉 <b>Dari reaktif menjadi prediktif!</b> Data bersih → fitur masuk akal → ujian jujur → rekomendasi beranggaran. Tahun depan tak ada trafo yang menjerit — karena kamu sudah mendengarnya hari ini.');
+    setTimeout(()=>showWin('forecast'),2200);});
+  say('VOLTA di sini 🔮 Misi analis level berikutnya: <b>meramal beban tahun depan</b>. Ingat mantranya: data bersih dulu, fitur yang masuk akal, dan model selalu diuji di data yang belum pernah ia lihat. Mulai dari layar.');
+  $('#modTitle').textContent='J05·M3 — Forecasting Beban';
+  $('#taskHead').textContent='BERSIH · FITUR · LATIH · UJI';}
+MISSIONS.forecast.build=buildForecast;
+Object.assign(REAL,{
+ forecast:[
+  'Simpan pipeline pembersihan data sebagai kode (bukan edit manual Excel) agar bisa diaudit & diulang',
+  'Dokumentasikan asumsi model: periode data, fitur, perlakuan outlier — penerus harus bisa mereproduksi',
+  'Re-train berkala: pola beban berubah (EV, PLTS atap, pelanggan baru) dan model membusuk diam-diam',
+  'Sajikan interval keyakinan, bukan angka tunggal — keputusan investasi butuh skenario, bukan kepastian palsu'],
+});
