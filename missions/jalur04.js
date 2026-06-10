@@ -310,6 +310,7 @@ function buildBusbar(){
   ],()=>{say('🎉 <b>Manuver paling elegan di GI — sempurna!</b> 86 MW pindah rumah tanpa berkedip. Make before break: tiga kata yang membedakan operator dari pemain tebak-tebakan.');
     setTimeout(()=>showWin('busbar'),2200);});
   const s0=seq.steps[0],of0=s0.fx;s0.fx=()=>{of0();ctrl.userData.aid='IZIN2';};
+  const s1b=seq.steps[1],of1b=s1b.fx;s1b.fx=()=>{of1b();mbb.kopel.userData.aid='KOPEL2';};
   say('VOLTA di sini 🔀 Hari ini kita melakukan sulap kelas GI: <b>memindah beban hidup antar busbar tanpa padam</b>. Mantranya: make before break — sambung dulu, lepas kemudian. Mulai dari izin dispatcher.');
   $('#modTitle').textContent='J04·M3 — Transfer Bus Tanpa Padam';
   $('#taskHead').textContent='MAKE BEFORE BREAK';}
@@ -514,4 +515,97 @@ Object.assign(REAL,{
   'Catat emisivitas & jarak ukur di tiap foto IR; angka tanpa parameter = angka yang bisa dibantah',
   'Temuan SEGERA dieksekusi dengan PDKB (pekerjaan dalam keadaan bertegangan) bila padam tak memungkinkan',
   'Bangun database temuan per tower — pola berulang menunjuk masalah desain, bukan kebetulan'],
+});
+
+/* =====================================================================
+   MISI 6 — DGA: MEMBACA DARAH TRAFO IBT
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ dga:{lvl:'JALUR 04 · TRANSMISI · MISI 6',icon:'🩸',title:'DGA: Membaca Darah Trafo IBT',strict:false,
+  loc:'📍 GI 150 kV Kosambi · Trafo IBT 60 MVA, uji tahunan',
+  story:'Aset termahal di GI ini bukan PMT atau busbar — melainkan IBT 60 MVA seharga puluhan miliar yang merendam rahasianya dalam puluhan ribu liter minyak. Dan minyak itu seperti darah: setiap gangguan kecil di dalam belitan meninggalkan jejak gas terlarut. Hari ini pengambilan sampel tahunan — dan hasil lab kali ini meminta perhatian lebih.',
+  goal:'Sampel minyak terambil benar, hasil DGA terinterpretasi dengan metode standar, dan keputusan operasi yang tepat diambil — tanpa panik, tanpa abai.',
+  obj:['Ambil sampel minyak sesuai prosedur','Interpretasi gas terlarut: rasio & tren','Putuskan tindak lanjut operasi yang proporsional'],
+  learn:['DGA (dissolved gas analysis) = tes darah trafo: tiap jenis gangguan menghasilkan gas khas — H₂ (partial discharge), C₂H₂ (arcing!), C₂H₄ (panas tinggi), CO/CO₂ (kertas isolasi)','Sampel salah ambil = diagnosis salah: botol gelap kedap udara, dibilas minyak yang sama, tanpa gelembung — udara luar mencemari cerita','TREN mengalahkan angka tunggal: kenaikan 30% dalam 6 bulan lebih berarti daripada nilai absolut yang stabil bertahun-tahun','C₂H₂ (asetilen) adalah garis merah: ia hanya lahir dari busur listrik — kehadirannya walau ppm kecil mengubah jadwal santai jadi rencana serius'],
+  next:['Pelajari segitiga Duval untuk klasifikasi gangguan visual','Dalami online DGA monitor untuk trafo kritis','Eksplorasi uji furan: menilai sisa umur kertas isolasi']},
+});
+let mdg={};
+function buildDGA(){
+  freshScene(0x7f9cc0,0x0d1726);
+  cam={theta:.1,phi:1.16,r:9,target:new THREE.Vector3(0,1.8,-.8)};
+  const ground=boxT(20,.1,12,TEX.gravel());ground.position.y=-.05;scene.add(ground);
+  /* trafo IBT besar */
+  const ibt=boxT(3.6,2.6,2.2,TEX.metal(),{metalness:.3});ibt.position.set(-2.6,1.35,-2);scene.add(ibt);
+  [-1.2,0,1.2].forEach(dx=>{const fin=box(.07,2.2,2.1,0x5a6a7a);fin.position.set(-2.6+dx,1.3,-2);scene.add(fin);});
+  [-.8,.2].forEach(dx=>{const bush=cyl(.12,.18,1.2,0xc9b08a);bush.position.set(-2.6+dx,3.2,-2);scene.add(bush);});
+  scene.add(label('IBT 150/20 kV · 60 MVA',.9).translateX(-2.6).translateY(4.2).translateZ(-2));
+  /* valve sampling */
+  mdg.valve=cyl(.07,.07,.25,0xd83a3a);mdg.valve.rotation.z=Math.PI/2;
+  mdg.valve.position.set(-.7,.6,-1.2);scene.add(mdg.valve);
+  actMesh(mdg.valve,'SAMPEL');
+  scene.add(label('VALVE SAMPLING BAWAH',.55,'#5fd4ff').translateX(-.4).translateY(.3).translateZ(-.9));
+  /* botol sampel + kotak lab */
+  mdg.botol=cyl(.08,.08,.22,0x3a2a1a,12,{transparent:true,opacity:.85});
+  mdg.botol.position.set(1.2,.95,.6);scene.add(mdg.botol);
+  const tbl=boxT(1.0,.07,.6,TEX.wood());tbl.position.set(1.2,.82,.6);scene.add(tbl);
+  const tleg=boxT(.08,.82,.08,TEX.wood());tleg.position.set(1.2,.41,.6);scene.add(tleg);
+  scene.add(label('BOTOL SAMPEL GELAP',.55,'#5fd4ff').translateX(1.2).translateY(1.35).translateZ(.6));
+  /* layar hasil lab */
+  const frame=boxT(3.6,2.2,.16,TEX.metal(),{metalness:.4});frame.position.set(4.2,2.3,-2.6);scene.add(frame);
+  frame.add(label('HASIL LAB DGA',.8).translateY(1.35));
+  mdg.D=makeDisplay(3.3,1.9,520,310);
+  mdg.D.mesh.position.set(4.2,2.3,-2.5);scene.add(mdg.D.mesh);
+  actMesh(mdg.D.mesh,'LAB');
+  function lab(mode){
+    const g=mdg.D.g,W=520,H=310;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.font='600 16px Consolas';g.textAlign='left';
+    g.fillStyle='#5fd4ff';g.font='700 18px Consolas';
+    g.fillText('GAS TERLARUT (ppm) — vs tahun lalu',16,32);
+    const rows=[['H2','38','61','+61%','#ffd23f'],['CH4','22','41','+86%','#ffd23f'],
+      ['C2H4','18','52','+189%','#ff5a5a'],['C2H6','14','28','+100%','#ffd23f'],
+      ['C2H2','0','0','tetap 0','#46ff8e'],['CO','310','335','+8%','#46ff8e']];
+    g.font='600 15px Consolas';
+    rows.forEach((r,i)=>{const y=70+i*34;
+      g.fillStyle='#8aa3bd';g.fillText(r[0],16,y);g.fillText(r[1],110,y);
+      g.fillStyle=r[4];g.fillText(r[2],190,y);g.fillText(r[3],270,y);});
+    if(mode>=1){g.fillStyle='#ffd23f';g.font='700 16px Consolas';
+      g.fillText('POLA: panas 300-700°C (C2H4 naik, TANPA C2H2)',16,H-44);
+      g.fillText('dugaan: kontak tap changer / sambungan memanas',16,H-18);}
+    mdg.D.tex.needsUpdate=true;}
+  lab(0);
+  /* papan keputusan */
+  mdg.kep=box(.6,.7,.05,0xe8e4d8);mdg.kep.position.set(7.0,1.6,-2.55);scene.add(mdg.kep);
+  actMesh(mdg.kep,'PUTUSKAN');
+  scene.add(label('LEMBAR KEPUTUSAN',.55,'#5fd4ff').translateX(7.0).translateY(2.15).translateZ(-2.5));
+  startSeq([
+   {type:'act',aid:'SAMPEL',done:false,targets:()=>[mdg.valve],
+    desc:'Ambil SAMPEL minyak dari valve bawah dengan benar (klik valve).',
+    why:'Ritualnya menentukan validitas: buang minyak mati di pipa valve dulu, bilas botol dengan minyak yang sama tiga kali, isi dari dasar tanpa gelembung, tutup kedap, lindungi dari cahaya. Sampel yang tercemar udara akan berbohong di lab — dan kebohongan trafo 60 MVA itu mahal.',
+    fx(){toast('🧴 Sampel bersih terambil — tanpa gelembung, terlindung cahaya.','ok',2800);}},
+   {type:'act',aid:'LAB',done:false,targets:()=>[mdg.D.mesh],
+    desc:'Hasil lab tiba: baca kadar gas vs TAHUN LALU (klik layar).',
+    why:'Etilen (C₂H₄) melonjak +189%, metana & hidrogen ikut naik — tapi perhatikan baris kelima: asetilen TETAP NOL. Tren-lah yang bercerita: ada yang MEMANAS di dalam sana, ratusan derajat... tapi belum ada busur api. Garis merah belum terlintasi.',
+    fx(){toast('🩸 C2H4 +189% · C2H2 = 0 — panas ya, busur belum.','bad',3000);}},
+   {type:'act',aid:'POLA',done:false,targets:()=>[mdg.D.mesh],
+    desc:'Interpretasi POLA: gangguan jenis apa ini?',
+    why:'Rasio gas mengarah ke gangguan termal 300–700°C — pola khas kontak yang memburuk: tersangka utama kontak tap changer atau sambungan internal yang resistansinya naik. CO hanya naik 8%: kertas isolasi belum ikut terbakar — pasiennya demam, organ vitalnya masih utuh.',
+    fx(){lab(1);toast('🔍 Diagnosa: hot spot 300-700°C, kertas belum terlibat.','ok',3000);}},
+   {type:'act',aid:'PUTUSKAN',done:false,targets:()=>[mdg.kep],
+    desc:'Ambil KEPUTUSAN proporsional (klik lembar keputusan).',
+    why:'Bukan panik (C₂H₂ nol, trafo boleh tetap beroperasi), bukan abai (tren +189% itu nyata). Keputusan kelas engineer: resample dipercepat ke 3 bulan, online DGA monitor dipasang, thermovision bushing & tap changer bulanan, dan inspeksi tap changer masuk agenda pemeliharaan terdekat. Aset miliaran dijaga oleh keputusan yang setimbang.',
+    fx(){toast('📋 Operasi lanjut + monitor ketat + inspeksi terjadwal — proporsional.','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Darah trafo terbaca tuntas!</b> Sampel jujur, tren ditimbang, pola dikenali, dan keputusan tak panik tak abai. IBT 60 MVA itu kini dijaga bukan oleh harapan — tapi oleh data yang diambil ulang tiap tiga bulan.');
+    setTimeout(()=>showWin('dga'),2200);});
+  const s1=seq.steps[1],of1=s1.fx;s1.fx=()=>{of1();mdg.D.mesh.userData.aid='POLA';};
+  say('VOLTA di sini 🩸 Aset puluhan miliar itu menyimpan rahasianya di <b>minyak</b> — dan minyak adalah darah yang bisa dites. Hari ini DGA tahunan: ambil sampelnya dengan hormat, baca gasnya dengan tenang. C₂H₂ adalah kata kuncinya.');
+  $('#modTitle').textContent='J04·M6 — DGA Trafo IBT';
+  $('#taskHead').textContent='TREN BICARA, ASETILEN MEMVONIS';}
+MISSIONS.dga.build=buildDGA;
+Object.assign(REAL,{
+ dga:[
+  'Gunakan lab terakreditasi & metode konsisten — beda lab beda kalibrasi, tren jadi kacau',
+  'Interpretasi dengan beberapa metode sekaligus (rasio Rogers, Duval, IEEE C57.104) — satu metode bisa ambigu',
+  'Catat suhu, beban & kejadian saat sampling — gas dipengaruhi kondisi operasi',
+  'C2H2 terdeteksi berapa pun = eskalasi serius: konsultasi spesialis & rencana uji lanjutan segera'],
 });

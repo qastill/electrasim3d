@@ -346,6 +346,7 @@ function buildHybrid(){
   /* inverter hybrid + display */
   mhy.inv=boxT(1.0,1.3,.5,TEX.metal(),{metalness:.35});mhy.inv.position.set(1.8,.7,-2.2);scene.add(mhy.inv);
   mhy.inv.add(label('HYBRID INVERTER 30 kW',.6).translateY(.95));
+  actMesh(mhy.inv,'NYALA');
   mhy.D=makeDisplay(.85,.55,260,160);
   mhy.D.mesh.position.set(1.8,.85,-1.93);scene.add(mhy.D.mesh);
   dispText(mhy.D,['OFFLINE','—'],['#7d8f84','#7d8f84']);
@@ -486,4 +487,100 @@ Object.assign(REAL,{
   'Koordinasi izin dengan pengelola waduk: fungsi irigasi/PLTA tetap prioritas pertama',
   'Jadwalkan inspeksi ponton & sambungan berkala (biofouling, UV, fatigue pin penghubung)',
   'Perhatikan keselamatan kerja di atas air: pelampung wajib, perahu standby, tak bekerja sendirian'],
+});
+
+/* =====================================================================
+   MISI 6 — PLTS UTILITY-SCALE & POWER PLANT CONTROLLER
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ utility:{lvl:'JALUR 10 · PV & SOLAR · MISI 6',icon:'🏜️',title:'PLTS Utility-Scale & Power Plant Controller',strict:true,
+  loc:'📍 PLTS 50 MWp · Ruang kontrol, hari interkoneksi',
+  story:'Dari atap 5 kWp ke ladang 50 MWp: hamparan panel sejauh mata memandang, 12 inverter sentral, dan satu otak bernama PPC — power plant controller. Di skala ini PLTS bukan lagi "pemasang panel": ia PEMBANGKIT yang tunduk pada grid code, menerima perintah dispatcher, dan harus bisa menahan diri. Hari ini: uji interkoneksi disaksikan pengelola jaringan.',
+  goal:'PLTS 50 MWp lulus uji interkoneksi: PPC mengendalikan seluruh inverter sebagai satu pembangkit, merespons setpoint daya & tegangan, dan lolos uji curtailment.',
+  obj:['Verifikasi komunikasi PPC ke 12 inverter','Uji respons setpoint daya aktif (curtailment)','Uji kontrol reaktif & laporkan kelulusan'],
+  learn:['PPC membuat 12 inverter tampil sebagai SATU pembangkit di titik interkoneksi — dispatcher bicara pada satu pintu, bukan dua belas','Curtailment adalah syarat naik kelas: pembangkit besar harus mau DIKURANGI outputnya saat sistem meminta — matahari gratis bukan alasan membangkang','PLTS modern menyumbang tegangan: inverter menyuntik/menyerap daya reaktif sesuai setpoint — ladang panel merangkap kapasitor raksasa','Grid code menguji semua itu sebelum COD: respons setpoint, ramp rate, ride-through — kelulusannya adalah akta lahir pembangkit'],
+  next:['Pelajari grid code interkoneksi pembangkit EBT skala besar','Dalami forecasting produksi harian untuk dispatcher (day-ahead)','Eksplorasi PLTS + BESS utility: dispatchable solar plant']},
+});
+let muy={};
+function buildUtility(){
+  freshScene(0xe8d8b0,0x1a1812);
+  cam={theta:.1,phi:1.1,r:12,target:new THREE.Vector3(0,1.5,-1)};
+  const ground=boxT(30,.1,16,TEX.gravel());ground.position.y=-.05;scene.add(ground);
+  /* ladang panel */
+  for(let r=0;r<3;r++)for(let c=0;c<6;c++){
+    const p=box(2.2,.05,1.0,0x16263e,{roughness:.25,metalness:.5});
+    p.position.set(-9+c*2.6,.8,-5+r*1.6);p.rotation.x=-.3;scene.add(p);}
+  scene.add(label('50 MWp — 110.000 PANEL',1.0).translateX(-2.5).translateY(2.6).translateZ(-4));
+  /* inverter station */
+  muy.inv=boxT(2.0,1.4,1.2,TEX.metal(),{metalness:.35});muy.inv.position.set(4.6,.75,-3.5);scene.add(muy.inv);
+  scene.add(label('INVERTER STATION (1 dari 12)',.65).translateX(4.6).translateY(1.7).translateZ(-3.5));
+  /* ruang kontrol + layar PPC */
+  const frame=boxT(4.6,2.6,.16,TEX.metal(),{metalness:.4});frame.position.set(0,2.6,2.4);frame.rotation.y=Math.PI;scene.add(frame);
+  muy.D=makeDisplay(4.3,2.3,580,330);
+  muy.D.mesh.position.set(0,2.6,2.3);muy.D.mesh.rotation.y=Math.PI;scene.add(muy.D.mesh);
+  actMesh(muy.D.mesh,'KOMUNIKASI');
+  scene.add(label('POWER PLANT CONTROLLER',.85,'#5fd4ff').translateY(4.1).translateZ(2.3));
+  muy.p=42.6;muy.set=50;muy.q=0;muy.curtail=false;
+  function ppc(){
+    const g=muy.D.g,W=580,H=330;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.font='700 19px Consolas';g.textAlign='left';
+    g.fillStyle='#5fd4ff';g.fillText('PPC — 12/12 INVERTER ONLINE',16,34);
+    g.fillStyle='#46ff8e';g.font='800 44px Consolas';
+    g.fillText(muy.p.toFixed(1)+' MW',16,96);
+    g.font='600 16px Consolas';g.fillStyle='#8aa3bd';
+    g.fillText('setpoint: '+muy.set+' MW · Q: '+muy.q.toFixed(1)+' MVAr',16,128);
+    g.fillText('irradiance 880 W/m² · ramp <10%/mnt',16,156);
+    if(muy.curtail){g.fillStyle='#ffd23f';g.font='700 17px Consolas';
+      g.fillText('CURTAILMENT AKTIF: dispatcher minta 30 MW',16,200);
+      g.fillText('PPC membagi rata ke 12 inverter…',16,228);}
+    msgBar(g,W,H);
+    function msgBar(g,W,H){g.fillStyle='#13202f';g.fillRect(0,H-44,W,44);
+      g.fillStyle='#8aa3bd';g.font='600 14px Consolas';
+      g.fillText('uji disaksikan pengelola jaringan — log terekam',16,H-16);}
+    muy.D.tex.needsUpdate=true;}
+  ppc();
+  moduleTick=(dt)=>{
+    const target=muy.curtail?30:Math.min(muy.set,42.6);
+    muy.p+=(target-muy.p)*dt*.5;
+    if(Math.abs(muy.p-target)>.05)ppc();};
+  /* panel uji dispatcher */
+  muy.tes1=box(.6,.34,.14,0x8a5a2a);muy.tes1.position.set(-3.2,1.5,2.35);muy.tes1.rotation.y=Math.PI;scene.add(muy.tes1);
+  actMesh(muy.tes1,'CURTAIL');
+  scene.add(label('UJI CURTAILMENT',.55,'#e8c890').translateX(-3.2).translateY(1.95).translateZ(2.3));
+  muy.tes2=box(.6,.34,.14,0x2a5a8a);muy.tes2.position.set(3.2,1.5,2.35);muy.tes2.rotation.y=Math.PI;scene.add(muy.tes2);
+  actMesh(muy.tes2,'REAKTIF');
+  scene.add(label('UJI DAYA REAKTIF',.55,'#9cc4ff').translateX(3.2).translateY(1.95).translateZ(2.3));
+  startSeq([
+   {type:'act',aid:'KOMUNIKASI',done:false,targets:()=>[muy.D.mesh],
+    desc:'Verifikasi PPC ↔ 12 inverter: satu otak, dua belas otot (klik layar).',
+    why:'Heartbeat tiap inverter hijau, latensi komunikasi <100 ms, failover diuji (satu link diputus — cadangan mengambil alih). PPC kini benar-benar memegang kendali: perintah satu titik, eksekusi serempak dua belas stasiun di ladang seluas 60 lapangan bola.',
+    fx(){toast('📡 12/12 online · latensi 40ms · failover lolos.','ok',2800);}},
+   {type:'act',aid:'CURTAIL',done:false,targets:()=>[muy.tes1],
+    desc:'Dispatcher menguji: "turunkan ke 30 MW" — eksekusi CURTAILMENT.',
+    why:'Matahari sedang murah hati (42,6 MW tersedia) tapi sistem sedang surplus — dispatcher meminta 30. PPC membagi pengurangan rata ke 12 inverter, output meluncur turun sesuai ramp rate... 30,0 MW, presisi. Membuang energi gratis terasa aneh? Itulah harga menjadi pembangkit dewasa.',
+    fx(){muy.curtail=true;ppc();
+      toast('📉 42,6 → 30,0 MW dalam ramp terkendali — dispatcher puas.','ok',3200);}},
+   {type:'act',aid:'REAKTIF',done:false,targets:()=>[muy.tes2],
+    desc:'Uji kedua: setpoint DAYA REAKTIF +8 MVAr untuk dukung tegangan.',
+    why:'Tegangan titik interkoneksi sedikit rendah — pengelola meminta dukungan: inverter menggeser sudut arusnya, ladang panel menyuntik 8 MVAr seperti kapasitor bank raksasa. Tegangan terangkat 0,4 kV. PLTS modern menjual dua barang: energi DAN kualitas tegangan.',
+    fx(){muy.q=8;ppc();
+      toast('⚡ +8 MVAr tersuntik — tegangan interkoneksi terangkat ✓','ok',3000);}},
+   {type:'act',aid:'LULUS',done:false,targets:()=>[muy.D.mesh],
+    desc:'Semua uji hijau: tanda tangani BERITA ACARA kelulusan (klik layar).',
+    why:'Respons setpoint ✓ ramp rate ✓ reaktif ✓ ride-through (diuji simulator) ✓ — pengelola jaringan menandatangani: PLTS 50 MWp resmi LULUS uji interkoneksi, COD pekan depan. Dari atap CV Berkah sampai ladang 50 MW: jalur surya-mu kini selengkap kurikulumnya.',
+    fx(){toast('🏜️ LULUS GRID CODE — COD pekan depan. Pembangkit resmi lahir!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Pembangkit 50 MWp lulus ujian dewasa!</b> Dua belas inverter satu suara, curtailment dipatuhi, tegangan ikut dijaga. Di skala ini, kerendahan hati pada grid code adalah kekuatan yang sesungguhnya.');
+    setTimeout(()=>showWin('utility'),2200);});
+  const s0u=seq.steps[0],of0u=s0u.fx;s0u.fx=()=>{of0u();muy.D.mesh.userData.aid='LULUS';};
+  say('VOLTA di sini 🏜️ Selamat datang di liga utama: <b>50 MWp, 12 inverter, satu PPC</b>. Hari ini pengelola jaringan datang menguji satu hal: bisakah pembangkit besarmu MENAHAN DIRI saat diminta? Buktikan dari layar PPC.');
+  $('#modTitle').textContent='J10·M6 — PLTS Utility & PPC';
+  $('#taskHead').textContent='SATU OTAK, DUA BELAS OTOT';}
+MISSIONS.utility.build=buildUtility;
+Object.assign(REAL,{
+ utility:[
+  'Pelajari grid code setempat sejak fase desain — retrofit kemampuan kontrol jauh lebih mahal',
+  'Uji interkoneksi disaksikan & ditandatangani pengelola jaringan dengan rekaman data lengkap',
+  'Siapkan forecasting produksi day-ahead untuk dispatcher — kewajiban operasional harian',
+  'SCADA plant & PPC diberi redundansi + UPS: kehilangan kontrol = pembangkit liar di mata sistem'],
 });

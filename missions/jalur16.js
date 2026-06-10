@@ -625,3 +625,107 @@ Object.assign(REAL,{
   'Rasionalisasi alarm berkala: alarm yang selalu aktif & di-acknowledge buta adalah kebisingan berbahaya',
   'Simpan backup project HMI + dokumentasi tag — layar tanpa dokumentasi adalah sandera vendor'],
 });
+
+/* =====================================================================
+   MISI 6 — PID CONTROL: SENI MENJAGA SETPOINT
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ pid:{lvl:'JALUR 16 · KONTROL & OTOMASI · MISI 6',icon:'🎚️',title:'PID Control: Seni Menjaga Setpoint',strict:false,
+  loc:'📍 Gudang distribusi · Tangki air proses + pompa VFD',
+  story:'Logika diskrit (ON/OFF, timer, counter) sudah kamu kuasai — kini dunia KONTINU memanggil: tangki air proses yang levelnya harus tetap 60% walau pemakaian naik-turun semaunya. ON/OFF membuat pompa hidup-mati ratusan kali sehari; jawabannya tiga huruf yang menggerakkan separuh industri dunia: PID. Hari ini kamu menjinakkannya — bukan dengan rumus, tapi dengan rasa.',
+  goal:'Loop PID level tangki tertala: P-I-D dipahami lewat eksperimen langsung, osilasi dijinakkan, dan level bertahan di setpoint walau beban berubah mendadak.',
+  obj:['Rasakan kontrol P murni & kelemahannya','Tambah I untuk menghapus offset, jinakkan osilasi','Uji gangguan beban & validasi respons'],
+  learn:['P (proportional) bereaksi sebesar error: cepat tapi selalu menyisakan offset — ia butuh error untuk bekerja, maka error tak pernah benar-benar nol','I (integral) menjumlah error sepanjang waktu: offset terhapus... tapi I yang serakah membuat sistem berayun (overshoot-osilasi)','D (derivative) membaca laju perubahan: rem peredam yang menenangkan ayunan — di proses ber-noise, D dipakai hemat atau tidak sama sekali','Menala PID = kompromi: cepat tapi tenang — naikkan P sampai hampir berosilasi, beri I secukupnya menghapus offset, D seperlunya meredam'],
+  next:['Pelajari metode tuning formal: Ziegler-Nichols & lambda tuning','Dalami cascade control: dua PID bertingkat untuk proses lambat','Eksplorasi feedforward: melawan gangguan sebelum terasa']},
+});
+let mpd={};
+function buildPID(){
+  freshScene(0xb0bfcc,0x131c26);
+  cam={theta:.05,phi:1.16,r:7.5,target:new THREE.Vector3(0,1.8,-.8)};
+  const floor=boxT(14,.1,9,TEX.concrete());floor.position.y=-.05;scene.add(floor);
+  const wall=boxT(13,4.6,.15,TEX.plaster());wall.position.set(0,2.3,-3);scene.add(wall);
+  /* tangki transparan dengan level */
+  const tank=new THREE.Mesh(new THREE.CylinderGeometry(.8,.8,2.4,24,1,true),
+    new THREE.MeshStandardMaterial({color:0x9fc4dc,transparent:true,opacity:.3,side:2}));
+  tank.position.set(-3.6,1.4,-1.4);scene.add(tank);
+  mpd.air=cyl(.76,.76,1.4,0x2a6a9a,24,{transparent:true,opacity:.8});
+  mpd.air.position.set(-3.6,.95,-1.4);scene.add(mpd.air);
+  scene.add(label('TANGKI PROSES — SP 60%',.75).translateX(-3.6).translateY(3.0).translateZ(-1.4));
+  /* pompa VFD */
+  const pompa=cyl(.3,.3,.7,0x3a6ea8);pompa.rotation.z=Math.PI/2;pompa.position.set(-5.6,.4,-1.4);scene.add(pompa);
+  scene.add(label('POMPA + VFD',.6).translateX(-5.6).translateY(.95).translateZ(-1.4));
+  /* layar trend PID */
+  const frame=boxT(4.2,2.4,.16,TEX.metal(),{metalness:.4});frame.position.set(1.6,2.4,-2.9);scene.add(frame);
+  frame.add(label('TREND: LEVEL vs SETPOINT',.85).translateY(1.5));
+  mpd.D=makeDisplay(3.9,2.1,560,330);
+  mpd.D.mesh.position.set(1.6,2.4,-2.79);scene.add(mpd.D.mesh);
+  /* kartu mode */
+  mpd.cards=[];
+  [['P SAJA','PMODE',-1.2],['+ INTEGRAL','IMODE',0],['TALA HALUS','TUNE',1.2],['UJI BEBAN','TEST',2.4]].forEach((o,i)=>{
+    const c=box(1.0,.4,.1,0x2b3a4a);c.position.set(o[2]+1.2,.9,-2.85);scene.add(c);
+    actMesh(c,o[1]);mpd.cards.push(c);
+    scene.add(label(o[0],.48,'#5fd4ff').translateX(o[2]+1.2).translateY(1.25).translateZ(-2.8));});
+  /* simulasi level */
+  mpd.level=40;mpd.sp=60;mpd.mode=0;mpd.hist=[];mpd.t=0;mpd.integ=0;mpd.beban=.30;
+  moduleTick=(dt)=>{
+    mpd.t+=dt;
+    const err=mpd.sp-mpd.level;
+    let out=0;
+    if(mpd.mode===1)out=err*2.2;                       /* P saja */
+    if(mpd.mode===2){mpd.integ+=err*dt*2.4;out=err*2.6+mpd.integ;}  /* PI serakah */
+    if(mpd.mode>=3){mpd.integ+=err*dt*.7;out=err*1.8+mpd.integ;}    /* tertala */
+    out=Math.max(0,Math.min(100,out+30));
+    mpd.level+=(out*.01-mpd.beban)*dt*14;
+    mpd.level=Math.max(0,Math.min(100,mpd.level));
+    mpd.air.scale.y=Math.max(.05,mpd.level/100*1.7);
+    mpd.air.position.y=.25+mpd.level/100*1.7*.7;
+    mpd.hist.push(mpd.level);if(mpd.hist.length>180)mpd.hist.shift();
+    if((mpd.t*8|0)%2===0)trend();};
+  function trend(){
+    const g=mpd.D.g,W=560,H=330;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.strokeStyle='#7a2a2a';g.setLineDash([6,5]);g.lineWidth=2;
+    const ySP=H-30-(mpd.sp/100)*(H-60);
+    g.beginPath();g.moveTo(20,ySP);g.lineTo(W-12,ySP);g.stroke();g.setLineDash([]);
+    g.fillStyle='#ff8d8d';g.font='600 14px Consolas';g.textAlign='left';
+    g.fillText('SP 60%',24,ySP-8);
+    g.strokeStyle='#46ff8e';g.lineWidth=3;g.beginPath();
+    mpd.hist.forEach((v,i)=>{const x=20+i*3,y=H-30-(v/100)*(H-60);
+      i===0?g.moveTo(x,y):g.lineTo(x,y);});
+    g.stroke();
+    g.fillStyle='#8aa3bd';g.font='700 16px Consolas';
+    const lbl=['MANUAL','P SAJA — offset!','P+I — berayun!','TERTALA ✓','UJI BEBAN'][mpd.mode]||'';
+    g.fillText(lbl+' · PV '+mpd.level.toFixed(1)+'%',24,28);
+    mpd.D.tex.needsUpdate=true;}
+  trend();
+  startSeq([
+   {type:'act',aid:'PMODE',done:false,targets:()=>[mpd.cards[0]],
+    desc:'Eksperimen 1: jalankan kontrol P SAJA — amati trendnya (klik kartu).',
+    why:'P bereaksi proporsional: level melesat dari 40% mendekati target... lalu BERHENTI di ±55%, menggantung di bawah setpoint selamanya. Itulah offset bawaan P: ia butuh error agar output-nya cukup melawan beban — maka error tak pernah diizinkan nol. Cepat, tapi tak pernah sampai.',
+    fx(){mpd.mode=1;toast('📈 P murni: cepat naik… mandek di 55% — offset abadi.','info',3000);}},
+   {type:'act',aid:'IMODE',done:false,targets:()=>[mpd.cards[1]],
+    desc:'Eksperimen 2: tambah INTEGRAL (agak serakah) — lihat akibatnya.',
+    why:'I menjumlah error dari waktu ke waktu dan terus mendorong sampai nol — offset musnah! Tapi I yang diset serakah punya kelembaman: ia terus mendorong walau sudah sampai... level MELEWATI setpoint, berbalik, melewati lagi — berayun-ayun seperti bandul. Penyakit ini bernama overshoot-osilasi.',
+    fx(){mpd.mode=2;mpd.integ=0;toast('🌊 Offset hilang… tapi level BERAYUN — integral terlalu galak.','bad',3000);}},
+   {type:'act',aid:'TUNE',done:false,targets:()=>[mpd.cards[2]],
+    desc:'TALA HALUS: turunkan gain, jinakkan integral (klik kartu).',
+    why:'Resep kompromi: P diturunkan sedikit (reaksi tetap sigap tanpa menyentuh ambang osilasi), I dipangkas ke sepertiga (menghapus offset dengan sabar, bukan rakus). Trend menunjukkan hasilnya: naik mantap, satu overshoot mungil yang sopan, lalu MENEMPEL di garis 60%. Itulah suara loop yang sehat — sunyi.',
+    fx(){mpd.mode=3;mpd.integ=0;toast('🎯 Tertala: mantap, overshoot mungil, menempel di SP.','ok',3000);}},
+   {type:'act',aid:'TEST',done:false,targets:()=>[mpd.cards[3]],
+    desc:'Ujian akhir: GANGGUAN BEBAN — pemakaian air melonjak 60% (klik kartu).',
+    why:'Keran proses dibuka lebar mendadak: level terseret turun... P langsung melawan sebesar simpangan, I menambah dorongan yang hilang permanen — dalam setengah menit level merangkak pulang ke 60% dan diam di sana, pada beban yang sama sekali baru. Setpoint dijaga bukan saat dunia tenang — justru saat dunia berubah.',
+    fx(){mpd.mode=4;mpd.beban=.48;setTimeout(()=>{mpd.mode=3;},100);
+      toast('💪 Beban +60% → level pulih & menempel lagi. LOOP LULUS!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>PID dijinakkan dengan rasa, bukan hafalan!</b> P yang cepat tapi mandek, I yang tuntas tapi berayun, dan talanan yang membuat keduanya berdamai. Setengah industri dunia berdiri di atas loop seperti ini — dan kini kamu bisa menalanya.');
+    setTimeout(()=>showWin('pid'),2200);});
+  say('VOLTA di sini 🎚️ Selamat datang di dunia kontinu: tangki yang levelnya harus <b>tetap 60%</b> walau pemakaian semaunya. Tiga huruf legendaris menanti dijinakkan: P, I, D — kita pelajari lewat eksperimen, bukan rumus. Mulai dari P saja!');
+  $('#modTitle').textContent='J16·M6 — PID Control';
+  $('#taskHead').textContent='CEPAT TAPI TENANG';}
+MISSIONS.pid.build=buildPID;
+Object.assign(REAL,{
+ pid:[
+  'Kenali prosesmu dulu (cepat/lambat, ada dead time?) — resep tuning berbeda per karakter proses',
+  'Ubah satu parameter pada satu waktu & beri proses waktu menjawab — tuning terburu menipu',
+  'Catat parameter akhir + alasan di dokumentasi loop — penala berikutnya mewarisi konteks, bukan angka misterius',
+  'Waspadai integral windup saat aktuator jenuh — aktifkan anti-windup di blok PID'],
+});

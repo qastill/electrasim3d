@@ -499,3 +499,110 @@ Object.assign(REAL,{
   'Audit sampling meter tua per kelompok umur sebelum menuduh pencurian massal',
   'Pantau susut BULANAN per penyulang sebagai KPI — triwulan terlalu lambat untuk koreksi'],
 });
+
+/* =====================================================================
+   MISI 6 — DASHBOARD EKSEKUTIF & DATA STORYTELLING
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ dash:{lvl:'JALUR 05 · ENERGY ANALYST · MISI 6',icon:'📋',title:'Dashboard Eksekutif & Data Storytelling',strict:false,
+  loc:'📍 Kantor UP3 · H-3 rapat kinerja General Manager',
+  story:'Semua analisismu — NTL, susut, forecast, AMI — kini diminta naik panggung: GM ingin SATU dashboard untuk rapat bulanan direksi. Draf pertama tim: 40 grafik warna-warni yang membuat pusing. Kebenaran pahit profesi ini: analisis terbaik yang gagal dikomunikasikan = tidak pernah ada. Hari ini kamu belajar bercerita dengan data.',
+  goal:'Dashboard eksekutif yang bercerita: satu pesan utama per layar, metrik yang menggerakkan keputusan, dan presentasi 5 menit yang berakhir dengan persetujuan anggaran.',
+  obj:['Pangkas 40 grafik menjadi yang menggerakkan keputusan','Susun hirarki: KPI → tren → drill-down','Presentasikan sebagai cerita ber-rekomendasi'],
+  learn:['Dashboard eksekutif menjawab 3 pertanyaan dalam 10 detik: bagaimana kondisinya? ke mana arahnya? apa yang harus diputuskan?','Satu layar satu pesan: 40 grafik = 0 pesan — data-ink yang tidak mendukung keputusan adalah dekorasi yang menyamar','Pilih chart sesuai tugasnya: tren = garis, komposisi = batang bertumpuk, JANGAN pie 3D berkilau — kejelasan mengalahkan kemewahan','Storytelling data: konteks (target) → konflik (deviasi) → resolusi (rekomendasi beranggaran) — angka tanpa rekomendasi hanyalah laporan cuaca'],
+  next:['Pelajari prinsip data-ink ratio & decluttering (Tufte, Knaflic)','Bangun dashboard self-service agar manajer mengeksplor sendiri','Latih executive summary satu halaman: ujian sejati seorang analis']},
+});
+let mdh={};
+function buildDash(){
+  freshScene(0x9fb8d0,0x121e2c);
+  cam={theta:0,phi:1.16,r:7.5,target:new THREE.Vector3(0,2,-1)};
+  const floor=boxT(16,.1,10,TEX.concrete());floor.position.y=-.05;scene.add(floor);
+  const wall=boxT(14,4.6,.2,TEX.plaster());wall.position.set(0,2.3,-3.2);scene.add(wall);
+  /* layar dashboard besar */
+  const frame=boxT(5.4,3.0,.16,TEX.metal(),{metalness:.4});frame.position.set(-1.2,2.4,-3.1);scene.add(frame);
+  mdh.D=makeDisplay(5.0,2.6,640,360);
+  mdh.D.mesh.position.set(-1.2,2.4,-3.0);scene.add(mdh.D.mesh);
+  actMesh(mdh.D.mesh,'AUDIT');
+  scene.add(label('DASHBOARD KINERJA UP3',.9).translateX(-1.2).translateY(4.1).translateZ(-3.0));
+  mdh.mode=0;
+  function layar(){
+    const g=mdh.D.g,W=640,H=360;
+    if(mdh.mode===0){ /* draf 40 grafik norak */
+      g.fillStyle='#1a1024';g.fillRect(0,0,W,H);
+      for(let i=0;i<40;i++){
+        const x=(i%8)*80+8,y=Math.floor(i/8)*70+10;
+        g.fillStyle=['#ff5a5a','#ffd23f','#46ff8e','#5fd4ff','#d85ad8'][i%5];
+        if(i%3===0){g.beginPath();g.arc(x+30,y+30,24,0,5);g.fill();}
+        else g.fillRect(x,y+10,60,40);}
+      g.fillStyle='#fff';g.font='700 22px Consolas';g.textAlign='center';
+      g.fillText('DRAF TIM: 40 GRAFIK… pusing?',W/2,H-16);}
+    else{ /* versi bersih */
+      g.fillStyle='#101820';g.fillRect(0,0,W,H);
+      g.textAlign='left';
+      g.fillStyle='#8aa3bd';g.font='600 15px Consolas';g.fillText('SUSUT PENYULANG — JUNI',20,30);
+      g.fillStyle='#46ff8e';g.font='800 52px Consolas';g.fillText('8,4%',20,86);
+      g.fillStyle='#8aa3bd';g.font='600 15px Consolas';g.fillText('target 7% · turun dari 11,2%',20,112);
+      g.strokeStyle='#5fd4ff';g.lineWidth=3;g.beginPath();
+      [[0,11.2],[1,10.6],[2,9.8],[3,9.1],[4,8.4]].forEach((p,i)=>{
+        const x=320+p[0]*70,y=200-(p[1]-7)*22;
+        i===0?g.moveTo(x,y):g.lineTo(x,y);});
+      g.stroke();
+      g.strokeStyle='#7a2a2a';g.setLineDash([6,5]);
+      g.beginPath();g.moveTo(320,200);g.lineTo(W-20,200);g.stroke();g.setLineDash([]);
+      g.fillStyle='#ff8d8d';g.fillText('target 7%',324,194);
+      if(mdh.mode>=2){g.fillStyle='#ffd23f';g.font='700 17px Consolas';
+        g.fillText('REKOMENDASI: lanjutkan ganti meter tua',20,300);
+        g.fillText('(Rp 1,8 M → susut 7% tercapai Okt)',20,328);}}
+    mdh.D.tex.needsUpdate=true;}
+  layar();
+  /* kartu prinsip */
+  mdh.cards=[];
+  [['PANGKAS','CUT',2.6],['HIRARKI','HIR',3.7],['CERITA','STORY',2.6]].forEach((o,i)=>{
+    const y=i<2?2.9:1.8;
+    const c=box(.95,.6,.07,0x2b3a4a);c.position.set(o[2],y,-3.05);scene.add(c);
+    actMesh(c,o[1]);mdh.cards.push(c);
+    scene.add(label(o[0],.5,'#5fd4ff').translateX(o[2]).translateY(y+.45).translateZ(-3.0));});
+  /* GM figur */
+  mdh.gm=new THREE.Group();
+  const badan=cyl(.22,.28,.9,0x444b55);badan.position.y=.72;mdh.gm.add(badan);
+  const kepala=new THREE.Mesh(new THREE.SphereGeometry(.16,14,12),
+    new THREE.MeshStandardMaterial({color:0xd8b090}));kepala.position.y=1.38;mdh.gm.add(kepala);
+  mdh.gm.position.set(4.8,0,-1.2);scene.add(mdh.gm);
+  actMesh(badan,'PITCH');
+  scene.add(label('GENERAL MANAGER',.6).translateX(4.8).translateY(1.9).translateZ(-1.2));
+  startSeq([
+   {type:'act',aid:'AUDIT',done:false,targets:()=>[mdh.D.mesh],
+    desc:'Lihat DRAF tim: 40 grafik — apa yang salah? (klik layar)',
+    why:'Semuanya benar secara data... dan gagal total secara komunikasi: tak ada hirarki, warna berteriak bersamaan, pie 3D di mana-mana. GM punya 5 menit dan satu pertanyaan: "jadi saya harus apa?" — dan layar ini tidak menjawabnya.',
+    fx(){toast('🤯 40 grafik, 0 pesan — GM akan tersesat di detik ke-10.','bad',3000);}},
+   {type:'act',aid:'CUT',done:false,targets:()=>[mdh.cards[0]],
+    desc:'PANGKAS tanpa ampun: sisakan yang menggerakkan keputusan (klik kartu).',
+    why:'Uji tiap grafik dengan satu pertanyaan: "keputusan apa yang berubah karena ini?" Tak ada jawaban = keluar. 40 menjadi 6: susut (KPI utama rapat ini), tren 5 bulan, kontributor per penyulang, progres program, anggaran, risiko. Memangkas itu menyakitkan — membingungkan GM lebih menyakitkan.',
+    fx(){toast('✂️ 40 → 6 grafik — setiap yang tersisa menggerakkan keputusan.','ok',3000);}},
+   {type:'act',aid:'HIR',done:false,targets:()=>[mdh.cards[1]],
+    desc:'Susun HIRARKI: angka besar → tren → drill-down (klik kartu).',
+    why:'Mata eksekutif bergerak: kiri-atas dulu — di sanalah KPI raksasa 8,4% (hijau karena membaik). Tren di kanan menjawab "ke mana arahnya", drill-down tersembunyi untuk yang bertanya. Sepuluh detik, tiga jawaban — sebelum satu kata pun diucapkan.',
+    fx(){mdh.mode=1;layar();
+      toast('🏗️ Hirarki tegak: status → arah → detail (jika diminta).','ok',3000);}},
+   {type:'act',aid:'STORY',done:false,targets:()=>[mdh.cards[2]],
+    desc:'Bungkus jadi CERITA dengan rekomendasi beranggaran (klik kartu).',
+    why:'Konteks: target 7%. Konflik: kita 11,2% tiga bulan lalu. Resolusi: dua program berjalan, susut kini 8,4%, dan dengan Rp 1,8 M lanjutan ganti meter, 7% tercapai Oktober. Bukan laporan cuaca — sebuah cerita yang ujungnya tanda tangan.',
+    fx(){mdh.mode=2;layar();
+      toast('📖 Cerita lengkap: konteks → konflik → rekomendasi Rp 1,8 M.','ok',3000);}},
+   {type:'act',aid:'PITCH',done:false,targets:()=>[mdh.gm.children[0]],
+    desc:'Hari-H: presentasikan 5 menit ke GM (klik GM).',
+    why:'Lima menit, enam grafik, satu cerita. GM bertanya dua kali (drill-down siap!), lalu: "Anggaran ganti meter disetujui. Dashboard ini jadi standar rapat bulanan." Analisis berbulan-bulanmu akhirnya MENJADI keputusan — karena hari ini ia bisa bercerita.',
+    fx(){toast('🎤 DISETUJUI — dashboard jadi standar rapat direksi!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Data yang akhirnya didengar!</b> Dipangkas tanpa ampun, disusun berhirarki, dibungkus cerita beranggaran. Ingat selamanya: analisis hebat yang tak terkomunikasikan = tidak pernah ada.');
+    setTimeout(()=>showWin('dash'),2200);});
+  say('VOLTA di sini 📋 Semua analisismu diminta naik panggung direksi — dan draf tim berisi <b>40 grafik warna-warni</b>. Hari ini ilmu yang jarang diajarkan kampus: bercerita dengan data. Mulai dari menatap drafnya.');
+  $('#modTitle').textContent='J05·M6 — Dashboard & Storytelling';
+  $('#taskHead').textContent='SATU LAYAR, SATU PESAN';}
+MISSIONS.dash.build=buildDash;
+Object.assign(REAL,{
+ dash:[
+  'Wawancarai pemakai dashboard SEBELUM membangun: keputusan apa yang mereka ambil tiap bulan?',
+  'Definisikan kamus metrik (rumus, sumber, periode) — dua angka susut yang beda rumus menghancurkan kepercayaan',
+  'Uji 10 detik ke orang awam: bila pesan utama tak tertangkap, ulangi desainnya',
+  'Otomasikan refresh data — dashboard yang basi sekali saja akan diabaikan selamanya'],
+});

@@ -456,3 +456,87 @@ Object.assign(REAL,{
   'H₂S & siloksan merusak genset: program treatment & analisis oli mesin lebih ketat dari genset biasa',
   'Manfaatkan skema kredit karbon destruksi metana — sering lebih bernilai dari listriknya sendiri'],
 });
+
+/* =====================================================================
+   MISI 6 — ANAEROBIC DIGESTER: BIOGAS TERKENDALI
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ digester:{lvl:'JALUR 13 · WASTE TO ENERGY · MISI 6',icon:'🍲',title:'Anaerobic Digester: Biogas Terkendali',strict:false,
+  loc:'📍 Pasar induk · Digester 20 ton/hari sampah organik',
+  story:'Landfill gas mengajarimu menambang metana liar — kini level berikutnya: MEMBUATNYA dengan sengaja. Sampah organik pasar induk (sayur busuk, sisa buah) masuk reaktor anaerob: tangki raksasa berisi triliunan mikroba yang harus dijaga seperti memelihara makhluk hidup — karena memang begitu adanya. pH-nya, suhunya, jadwal makannya: digester adalah peternakan tak kasat mata.',
+  goal:'Digester beroperasi stabil: umpan tercampur benar, mikroba terjaga (pH & suhu), gangguan asam tertangani, dan biogas menggerakkan genset plus pupuk cair sebagai bonus.',
+  obj:['Siapkan umpan: sortir & rasio campuran','Jaga kondisi mikroba: suhu mesofilik & pH','Tangani gangguan overfeeding & panen ganda'],
+  learn:['Digester = peternakan mikroba: bakteri metanogen bekerja TANPA oksigen, mengubah organik menjadi CH₄ 55-65% — lebih kaya dari landfill gas','Suhu mesofilik 35-38°C dijaga stabil: mikroba benci kejutan — perubahan 2°C lebih berbahaya daripada nilai yang sedikit melenceng','Overfeeding adalah penyakit #1: terlalu banyak umpan → asam menumpuk → pH jatuh → metanogen mogok. Obatnya menahan diri, bukan menambah','Digestate (ampas) adalah produk kedua: pupuk organik cair — digester yang baik tak menyisakan limbah, hanya produk'],
+  next:['Pelajari rasio C/N umpan & co-digestion (campur kotoran ternak)','Dalami desulfurisasi H₂S sebelum genset','Eksplorasi bio-CNG: memurnikan biogas jadi setara gas alam']},
+});
+let mdi={};
+function buildDigester(){
+  freshScene(0x9ab088,0x121a10);
+  cam={theta:.1,phi:1.15,r:10,target:new THREE.Vector3(0,1.8,-.8)};
+  const ground=boxT(24,.1,14,TEX.concrete());ground.position.y=-.05;scene.add(ground);
+  /* digester tank besar + kubah gas */
+  const tank=cyl(2.2,2.4,2.8,0x4a6a4a,28,{roughness:.6});tank.position.set(-2,1.4,-2.5);scene.add(tank);
+  mdi.dome=new THREE.Mesh(new THREE.SphereGeometry(2.2,24,14,0,Math.PI*2,0,Math.PI/2),
+    new THREE.MeshStandardMaterial({color:0x8a96a2,roughness:.5,metalness:.2}));
+  mdi.dome.position.set(-2,2.8,-2.5);mdi.dome.scale.set(1,.5,1);scene.add(mdi.dome);
+  scene.add(label('DIGESTER 1.200 m³ · 37°C',.9).translateX(-2).translateY(4.4).translateZ(-2.5));
+  /* hopper umpan */
+  mdi.hop=boxT(1.4,1.0,1.0,TEX.metal(),{metalness:.3});mdi.hop.position.set(-6.2,.55,-1.6);scene.add(mdi.hop);
+  actMesh(mdi.hop,'UMPAN');
+  scene.add(label('HOPPER UMPAN + SORTIR',.65,'#5fd4ff').translateX(-6.2).translateY(1.4).translateZ(-1.6));
+  /* panel kondisi */
+  mdi.D=makeDisplay(1.9,1.1,400,230);
+  mdi.D.mesh.position.set(1.4,2.4,-3.0);scene.add(mdi.D.mesh);
+  actMesh(mdi.D.mesh,'KONDISI');
+  scene.add(label('PANEL KONDISI BIOLOGI',.7,'#5fd4ff').translateX(1.4).translateY(3.15).translateZ(-3.0));
+  mdi.ph=7.2;mdi.suhu=37;mdi.gas=58;mdi.sakit=false;
+  function panel(){
+    dispText(mdi.D,['pH '+mdi.ph.toFixed(1)+' · '+mdi.suhu.toFixed(0)+'°C',
+      'CH₄ '+mdi.gas.toFixed(0)+'%'+(mdi.sakit?' ⚠ ASAM!':' · sehat')],
+      [mdi.sakit?'#ff5a5a':'#46ff8e',mdi.sakit?'#ffd23f':'#8aa3bd']);}
+  panel();
+  /* genset + pupuk */
+  mdi.gen=boxT(1.4,1.0,.9,TEX.metal(),{metalness:.3});mdi.gen.position.set(4.6,.55,-2.2);scene.add(mdi.gen);
+  actMesh(mdi.gen,'PANEN');
+  scene.add(label('GENSET BIOGAS 250 kW',.65).translateX(4.6).translateY(1.35).translateZ(-2.2));
+  mdi.pupuk=cyl(.4,.4,.8,0x6a5a2a);mdi.pupuk.position.set(6.4,.45,-.8);scene.add(mdi.pupuk);
+  scene.add(label('DIGESTATE → PUPUK CAIR',.6,'#8df0b8').translateX(6.4).translateY(1.1).translateZ(-.8));
+  startSeq([
+   {type:'act',aid:'UMPAN',done:false,targets:()=>[mdi.hop],
+    desc:'Siapkan UMPAN harian: sortir & atur rasio (klik hopper).',
+    why:'Sampah pasar disortir (plastik kresek = musuh pengaduk), dicacah, dicampur air resirkulasi sampai bubur 10% padatan. Jadwal makan mikroba dijaga: 20 ton dibagi merata sepanjang hari — mikroba menyukai rutinitas seperti bayi menyukai jam menyusu.',
+    fx(){toast('🥬 Umpan siap: tersortir, tercacah, terjadwal merata.','ok',2800);}},
+   {type:'act',aid:'KONDISI',done:false,targets:()=>[mdi.D.mesh],
+    desc:'Periksa KONDISI biologi: suhu, pH, kualitas gas (klik panel).',
+    why:'37°C stabil (pemanas dari genset sendiri — sirkular!), pH 7,2 netral nyaman, CH₄ 58%: triliunan ternak tak kasat mata sedang bekerja sehat. Operator digester membaca panel ini seperti dokter membaca tanda vital — tiap hari, tanpa absen.',
+    fx(){toast('🌡️ 37°C · pH 7,2 · CH₄ 58% — koloni bahagia.','ok',2800);}},
+   {type:'act',aid:'KRISIS',done:false,targets:()=>[mdi.D.mesh],
+    desc:'Hari ke-40, pasar banjir kiriman: pH mulai TURUN — baca alarmnya.',
+    why:'Truk ekstra kemarin menggoda operator menaikkan umpan 30% — dan kini tagihannya: asam lemak menumpuk lebih cepat dari yang bisa dimakan metanogen, pH merosot 6,4, CH₄ anjlok 41%. Digester sedang "masuk angin" — dan penyebabnya klasik: terlalu bersemangat memberi makan.',
+    fx(){mdi.sakit=true;mdi.ph=6.4;mdi.gas=41;panel();
+      toast('🤢 pH 6,4 · CH₄ 41% — overfeeding! Koloni mogok.','bad',3000);}},
+   {type:'act',aid:'OBATI',done:false,targets:()=>[mdi.hop],
+    desc:'OBATI dengan benar: puasakan & pulihkan perlahan (klik hopper).',
+    why:'Naluri awam: tambah umpan biar gas naik — itu memperparah. Resep yang benar: STOP umpan 2 hari (puasa), resirkulasi diperbanyak, sedikit kapur menyangga pH... hari keempat pH merangkak 7,0, CH₄ pulih 56%. Mikroba memaafkan — asal diberi waktu, bukan dipaksa.',
+    fx(){mdi.sakit=false;mdi.ph=7.0;mdi.gas=56;panel();
+      toast('💊 Puasa 2 hari + buffer — koloni pulih, pelajaran tercatat.','ok',3200);}},
+   {type:'act',aid:'PANEN',done:false,targets:()=>[mdi.gen],
+    desc:'PANEN ganda: genset menyala & digestate jadi pupuk (klik genset).',
+    why:'Biogas (H₂S tersaring) menggerakkan genset 250 kW — pasar induk kini menyalakan lampunya dengan sayur busuknya sendiri. Dan ampasnya: pupuk organik cair yang diantri petani sekitar. Nol limbah: semua keluaran adalah produk. Ekonomi sirkular bukan jargon di sini — ia neraca harian.',
+    fx(){beep(80,1.0,'sawtooth',.08);
+      toast('🍲 250 kW dari sampah pasar + pupuk utk petani — panen ganda!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Peternakan mikroba beroperasi!</b> Diberi makan terjadwal, dijaga suhunya, diobati saat masuk angin — dan membayar dengan listrik plus pupuk. Digester yang dirawat seperti makhluk hidup akan bekerja seperti mesin.');
+    setTimeout(()=>showWin('digester'),2200);});
+  const s1d=seq.steps[1],of1d=s1d.fx;s1d.fx=()=>{of1d();mdi.D.mesh.userData.aid='KRISIS';};
+  const s2d=seq.steps[2],of2d=s2d.fx;s2d.fx=()=>{of2d();mdi.hop.userData.aid='OBATI';};
+  say('VOLTA di sini 🍲 Level baru dunia sampah: <b>membuat metana dengan sengaja</b>. Reaktor ini berisi triliunan makhluk hidup yang harus dijaga jadwal makan, suhu, dan pH-nya. Dan satu pantangan besar: jangan memberi makan berlebihan!');
+  $('#modTitle').textContent='J13·M6 — Anaerobic Digester';
+  $('#taskHead').textContent='PETERNAKAN TAK KASAT MATA';}
+MISSIONS.digester.build=buildDigester;
+Object.assign(REAL,{
+ digester:[
+  'Pantau rasio FOS/TAC (asam vs buffer) mingguan — indikator dini sebelum pH jatuh',
+  'Sortir umpan ketat: plastik & pasir mengendap merusak pengaduk dan menyita volume reaktor',
+  'H₂S wajib desulfurisasi sebelum genset — korosi mesin biogas itu cepat dan mahal',
+  'Digestate diuji & diizinkan sebagai pupuk sesuai regulasi sebelum diedarkan ke petani'],
+});

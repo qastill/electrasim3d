@@ -533,6 +533,7 @@ function buildVibra(){
     fx(){toast('🔧 Spalling terkonfirmasi · baru terpasang · 1,2 mm/s ✓','ok',3200);sfx.big();}},
   ],()=>{say('🎉 <b>Kerusakan tertangkap 3 minggu sebelum pecah!</b> Spektrum menyebut nama penyakitnya, tren memberi tanggalnya, jadwal mengeksekusi tanpa kejutan. Itulah predictive maintenance: mendengar sebelum menjerit.');
     setTimeout(()=>showWin('vibra'),2200);});
+  const s1v=seq.steps[1],of1v=s1v.fx;s1v.fx=()=>{of1v();mvb.D.mesh.userData.aid='TREN';};
   say('VOLTA di sini 📳 Mesin yang akan rusak selalu <b>bernyanyi lebih dulu</b> — dalam bahasa getaran. Hari ini rute bulanan menemukan nada sumbang di P-203. Ambil analyzer, kita dengarkan bersama.');
   $('#modTitle').textContent='J02·M5 — Analisis Vibrasi';
   $('#taskHead').textContent='DENGAR · DIAGNOSA · JADWALKAN';}
@@ -543,4 +544,101 @@ Object.assign(REAL,{
   'Hitung frekuensi cacat (BPFO/BPFI/BSF/FTF) dari geometri bearing & rpm aktual, simpan di database aset',
   'Bearing dipasang dengan pemanas induksi/penekan sleeve — palu adalah pembuat cacat baru',
   'Simpan bearing bekas yang rusak untuk analisis akar (pelumasan? beban? arus bearing dari VFD?)'],
+});
+
+/* =====================================================================
+   MISI 6 — POWER QUALITY: MEMBURU HARMONISA
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ harmonisa:{lvl:'JALUR 02 · INDUSTRI & MANUFAKTUR · MISI 6',icon:'〰️',title:'Power Quality: Memburu Harmonisa',strict:false,
+  loc:'📍 Pabrik tekstil · Pasca-upgrade VFD massal',
+  story:'Sukses VFD-mu menular: kini 14 drive terpasang di seluruh pabrik. Tapi sukses itu membawa tamu tak diundang — kapasitor bank tua meledap dua kali, trafo mendengung lebih keras, dan netral panas misterius. Tersangkanya tak terlihat di amperemeter biasa: HARMONISA, arus berfrekuensi tinggi yang ditiupkan elektronika daya ke segala arah.',
+  goal:'Harmonisa terukur & teridentifikasi sumbernya, filter terpasang pada tempat yang benar, dan THD turun ke batas aman standar.',
+  obj:['Ukur THD tegangan & arus dengan PQ analyzer','Identifikasi orde dominan & sumbernya','Pasang solusi & verifikasi THD turun'],
+  learn:['VFD & rectifier menarik arus tidak sinus — pecahannya adalah harmonisa orde 5, 7, 11... yang memanaskan apa pun yang dilaluinya','THD (total harmonic distortion) adalah rapor: arus boleh tinggi di mesin, tapi THD-V di busbar harus tetap di bawah ~5-8% agar tetangga tak ikut menderita','Harmonisa kelipatan-3 (3, 9...) dari beban 1 fasa MENUMPUK di netral — netral panas pada sistem "seimbang" hampir selalu ulahnya','Solusi bertingkat: line reactor per drive → filter pasif tuned → filter aktif; dan kapasitor polos di jaringan berharmonisa = resonansi = ledakan'],
+  next:['Pelajari resonansi paralel: kenapa kapasitor + harmonisa = bom','Dalami standar batas harmonisa (IEEE 519) per titik sambung','Eksplorasi drive AFE (active front end) — VFD yang bersih dari lahir']},
+});
+let mhr={};
+function buildHarmonisa(){
+  freshScene(0xb0bfcc,0x131c26);
+  cam={theta:-.05,phi:1.18,r:8,target:new THREE.Vector3(0,1.7,-.8)};
+  const Z=room(0x55606a,0xb9bfc6,16,11);
+  /* deretan VFD */
+  for(let i=0;i<4;i++){
+    const v=box(.5,.7,.2,0x2b3a4a);v.position.set(-5.2+i*.7,2.3,Z+.1);scene.add(v);}
+  scene.add(label('14x VFD TERPASANG',.7).translateX(-4.2).translateY(3.1).translateZ(Z+.1));
+  /* trafo mendengung & kapasitor bekas ledak */
+  const trf=boxT(1.2,1.2,.9,TEX.metal(),{metalness:.3});trf.position.set(-1.4,.65,-1.8);scene.add(trf);
+  scene.add(label('TRAFO (mendengung!)',.65,'#ffd23f').translateX(-1.4).translateY(1.55).translateZ(-1.8));
+  mhr.cap=box(.7,.9,.5,0x6a6a72);mhr.cap.position.set(.8,.5,-1.8);scene.add(mhr.cap);
+  const gosong=box(.3,.3,.05,0x1a1410);gosong.position.set(.8,.7,-1.52);scene.add(gosong);
+  actMesh(mhr.cap,'KAPASITOR');
+  scene.add(label('KAPASITOR (meledap 2x)',.65,'#ff8d8d').translateX(.8).translateY(1.25).translateZ(-1.8));
+  /* PQ analyzer + layar spektrum */
+  mhr.pq=box(.34,.24,.26,0xd8b020);mhr.pq.position.set(2.8,1.1,.4);scene.add(mhr.pq);
+  actMesh(mhr.pq,'UKUR');
+  const tbl=boxT(1.0,.07,.6,TEX.wood());tbl.position.set(2.8,.95,.4);scene.add(tbl);
+  const tleg=boxT(.08,.95,.08,TEX.wood());tleg.position.set(2.8,.47,.4);scene.add(tleg);
+  scene.add(label('PQ ANALYZER',.55,'#5fd4ff').translateX(2.8).translateY(1.45).translateZ(.4));
+  const frame=boxT(3.4,2.0,.16,TEX.metal(),{metalness:.4});frame.position.set(3.2,2.5,Z+.05);scene.add(frame);
+  frame.add(label('SPEKTRUM HARMONISA',.8).translateY(1.25));
+  mhr.D=makeDisplay(3.1,1.7,520,300);
+  mhr.D.mesh.position.set(3.2,2.5,Z+.15);scene.add(mhr.D.mesh);
+  function spek(filtered){
+    const g=mhr.D.g,W=520,H=300;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.strokeStyle='#2a3a4c';g.lineWidth=2;
+    g.beginPath();g.moveTo(36,16);g.lineTo(36,H-40);g.lineTo(W-12,H-40);g.stroke();
+    const ords=[[1,1],[5,filtered?.07:.42],[7,filtered?.05:.31],[11,filtered?.03:.14],[13,filtered?.02:.09]];
+    ords.forEach(o=>{
+      const x=36+o[0]*32,h=o[1]*(H-80);
+      g.strokeStyle=o[0]===1?'#5fd4ff':(o[1]>.1?'#ff5a5a':'#46ff8e');g.lineWidth=14;
+      g.beginPath();g.moveTo(x,H-40);g.lineTo(x,H-40-h);g.stroke();
+      g.fillStyle='#8aa3bd';g.font='600 14px Consolas';g.textAlign='center';
+      g.fillText('H'+o[0],x,H-20);});
+    g.font='700 17px Consolas';g.textAlign='left';
+    g.fillStyle=filtered?'#46ff8e':'#ff5a5a';
+    g.fillText(filtered?'THD-I 8% · THD-V 3,1% ✓ (IEEE 519)':'THD-I 38% · THD-V 9,4% — DI ATAS BATAS',44,32);
+    mhr.D.tex.needsUpdate=true;}
+  spek(false);mhr.D.mesh.visible=true;
+  /* filter pasif */
+  mhr.filter=boxT(.9,1.1,.7,TEX.metal(),{metalness:.35});mhr.filter.position.set(5.6,.6,-1.8);scene.add(mhr.filter);
+  actMesh(mhr.filter,'FILTER');
+  scene.add(label('FILTER HARMONISA (baru)',.6,'#8df0b8').translateX(5.6).translateY(1.45).translateZ(-1.8));
+  startSeq([
+   {type:'act',aid:'UKUR',done:false,targets:()=>[mhr.pq],
+    desc:'Pasang PQ ANALYZER di busbar utama — rekam 24 jam (klik alat).',
+    why:'Amperemeter biasa buta terhadap bentuk gelombang; PQ analyzer membedahnya per orde. Hasil: THD-I 38%, THD-V 9,4% — tegangan busbar sendiri sudah tercemar. Setiap beban di pabrik ini, bersalah atau tidak, kini meminum listrik yang keruh.',
+    fx(){toast('〰️ THD-I 38% · THD-V 9,4% — jauh di atas batas sehat.','bad',3000);}},
+   {type:'act',aid:'ORDE',done:false,targets:()=>[mhr.D.mesh],
+    desc:'Baca SPEKTRUM: orde mana yang dominan? (klik layar)',
+    why:'H5 menjulang 42%, H7 31% — tanda tangan khas rectifier 6-pulsa: keluarga VFD-mu. Bukan kebetulan kapasitor tua yang meledak: impedansinya MENURUN di frekuensi tinggi, jadi ia menelan harmonisa paling rakus sampai kenyang... lalu pecah.',
+    fx(){toast('🔍 H5+H7 dominan = rectifier VFD · kapasitor jadi korban resonansi.','bad',3000);}},
+   {type:'act',aid:'KAPASITOR',done:false,targets:()=>[mhr.cap],
+    desc:'Amankan dulu: lepas KAPASITOR polos dari jaringan (klik kapasitor).',
+    why:'Kapasitor polos + jaringan kaya H5 = sirkuit resonansi paralel yang MEMPERKUAT harmonisa, bukan meredam. Sebelum filter terpasang, kapasitor tua ini justru bahan peledak. Dilepas dulu; penggantinya nanti yang ber-detuned reactor.',
+    fx(){toast('🔌 Kapasitor polos dilepas — sirkuit resonansi dibubarkan.','ok',2800);}},
+   {type:'act',aid:'FILTER',done:false,targets:()=>[mhr.filter],
+    desc:'Pasang FILTER harmonisa tuned H5/H7 + reactor per drive besar (klik filter).',
+    why:'Dua lapis: line reactor 3% di tiap VFD besar (meredam dari sumbernya) + filter pasif tuned 4,7th di busbar (menyerap sisa H5/H7 ke dirinya, bukan ke trafo). Filter sekaligus menyumbang kVAr — kapasitor tua tergantikan oleh sesuatu yang paham zamannya.',
+    fx(){toast('🧲 Reactor + filter tuned terpasang — harmonisa punya rumah baru.','ok',3000);}},
+   {type:'act',aid:'VERIF',done:false,targets:()=>[mhr.D.mesh],
+    desc:'Ukur ulang: VERIFIKASI THD turun (klik layar).',
+    why:'Spektrum baru: H5 tinggal 7%, THD-V 3,1% — di bawah batas IEEE 519 ✓. Dengung trafo melembut, netral mendingin, dan cosφ malah membaik. Listrik pabrik kembali jernih: VFD boleh tetap 14, asalkan ditemani filter yang tepat.',
+    fx(){spek(true);
+      toast('✅ THD-V 9,4% → 3,1% — jaringan kembali jernih!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Hantu harmonisa tertangkap!</b> Diukur per orde, dilacak ke rectifier, kapasitor korban diamankan, filter dipasang di tempat yang benar. Elektronika daya itu hebat — asal sampahnya dikelola.');
+    setTimeout(()=>showWin('harmonisa'),2200);});
+  actMesh(mhr.D.mesh,'ORDE');
+  const s1h=seq.steps[1],of1h=s1h.fx;s1h.fx=()=>{of1h();mhr.D.mesh.userData.aid='VERIF';};
+  say('VOLTA di sini 〰️ Upgrade VFD-mu sukses... terlalu sukses: kapasitor meledap, trafo mendengung, netral panas. Tersangkanya tak terlihat amperemeter biasa: <b>harmonisa</b>. Ambil PQ analyzer — kita buru per orde!');
+  $('#modTitle').textContent='J02·M6 — Memburu Harmonisa';
+  $('#taskHead').textContent='UKUR ORDE, JANGAN MENEBAK';}
+MISSIONS.harmonisa.build=buildHarmonisa;
+Object.assign(REAL,{
+ harmonisa:[
+  'Rekam PQ minimal 1 siklus produksi penuh — harmonisa berubah mengikuti pola beban drive',
+  'Desain filter tuned WAJIB studi resonansi jaringan — filter yang salah tala jadi masalah baru',
+  'Verifikasi batas THD di titik sambung sesuai IEEE 519 / ketentuan utilitas setempat',
+  'Saat menambah drive baru: spesifikasikan line reactor/AFE sejak pengadaan — mencegah lebih murah'],
 });

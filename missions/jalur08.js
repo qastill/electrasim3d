@@ -473,3 +473,103 @@ Object.assign(REAL,{
   'Tindakan perbaikan diberi penanggung jawab + tenggat + verifikasi efektivitas (bukan sekadar "sudah dibuat")',
   'Bagikan pembelajaran lintas departemen tanpa menyebut nama — pelajaran menyebar, aib tidak'],
 });
+
+/* =====================================================================
+   MISI 6 — HOT WORK: IZIN KERJA PANAS
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ panas:{lvl:'JALUR 08 · K3 LISTRIK · MISI 6',icon:'🔥',title:'Hot Work: Izin Kerja Panas',strict:true,
+  loc:'📍 Gudang bahan kimia · Perbaikan rak butuh pengelasan',
+  story:'Rak baja di gudang bahan kimia patah dan harus dilas HARI INI — di ruangan yang sama dengan drum pelarut mudah terbakar. Pengelasan menyemburkan percikan 1000°C sejauh meteran; statistik kebakaran industri menempatkan hot work di urutan teratas penyebabnya. Antara tukang las dan bencana, hanya ada satu lembar kertas yang bekerja: izin kerja panas.',
+  goal:'Pengelasan tuntas tanpa satu percikan pun menjadi api: area disterilkan, gas diuji, fire watch berjaga sampai 30 menit SETELAH pekerjaan selesai.',
+  obj:['Terbitkan izin kerja panas & sterilkan radius percikan','Gas test area & siapkan proteksi api','Las dengan fire watch, dan jaga 30 menit setelahnya'],
+  learn:['Percikan las terbang sejauh 10+ meter dan menyusup ke celah — radius disterilkan dari bahan terbakar, yang tak bisa dipindah DITUTUP selimut api','Gas test sebelum & SELAMA kerja di area berpotensi uap: pelarut menguap tak terlihat, dan busur las adalah pemantik sempurna','Fire watch adalah jabatan, bukan formalitas: satu orang, satu APAR, satu tugas — menonton percikan, BUKAN membantu mengelas','Aturan 30 menit: mayoritas kebakaran hot work menyala SETELAH tukang las pulang — bara mengintip di celah, menunggu sepi'],
+  next:['Pelajari klasifikasi area & jarak aman hot work per jenis pekerjaan','Dalami alternatif dingin: sambungan mekanik saat las terlalu berisiko','Integrasikan izin panas dengan sistem izin kerja terpadu (PTW)']},
+});
+let mhw={};
+function buildPanas(){
+  freshScene(0xb8c6d4,0x141d28);
+  cam={theta:.1,phi:1.17,r:7.5,target:new THREE.Vector3(0,1.5,-.8)};
+  const Z=room(0x5a5f66,0xccd4cf,16,11);
+  /* rak patah */
+  mhw.rak=boxT(2.2,2.2,.5,TEX.metal(),{metalness:.5});mhw.rak.position.set(2.6,1.2,-2.2);scene.add(mhw.rak);
+  const patah=box(.7,.1,.45,0x8a939e);patah.position.set(2.2,1.0,-1.9);patah.rotation.z=.4;scene.add(patah);
+  scene.add(label('RAK PATAH — perlu las',.65,'#ffd23f').translateX(2.6).translateY(2.7).translateZ(-2.2));
+  /* drum pelarut */
+  mhw.drums=[];
+  [[-1.2,-1.6],[-.4,-2.2],[-1.8,-2.4]].forEach(o=>{
+    const d=cyl(.32,.32,.8,0xd83a3a);d.position.set(o[0],.45,o[1]);scene.add(d);mhw.drums.push(d);});
+  actMesh(mhw.drums[0],'STERIL');
+  scene.add(label('DRUM PELARUT ⚠ MUDAH TERBAKAR',.65,'#ff8d8d').translateX(-1.2).translateY(1.4).translateZ(-2.0));
+  /* papan izin */
+  mhw.permit=box(.55,.7,.05,0xffd8c0);mhw.permit.position.set(-4.6,1.6,Z+.06);scene.add(mhw.permit);
+  actMesh(mhw.permit,'IZIN');
+  scene.add(label('IZIN KERJA PANAS',.6,'#ff9d6a').translateX(-4.6).translateY(2.15).translateZ(Z+.1));
+  /* gas detector + selimut api + APAR */
+  mhw.gas=box(.2,.3,.1,0xd8b020);mhw.gas.position.set(-3.0,1.0,.6);scene.add(mhw.gas);
+  actMesh(mhw.gas,'GAS');
+  const tbl=boxT(.9,.07,.6,TEX.wood());tbl.position.set(-3.0,.92,.6);scene.add(tbl);
+  const tleg=boxT(.07,.92,.07,TEX.wood());tleg.position.set(-3.0,.46,.6);scene.add(tleg);
+  scene.add(label('GAS DETECTOR',.55,'#5fd4ff').translateX(-3.0).translateY(1.35).translateZ(.6));
+  mhw.blanket=box(.8,.06,.8,0x8a6a3a);mhw.blanket.position.set(.6,.5,-.2);scene.add(mhw.blanket);
+  scene.add(label('FIRE BLANKET',.5,'#5fd4ff').translateX(.6).translateY(.85).translateZ(-.2));
+  /* fire watch + APAR */
+  mhw.fw=new THREE.Group();
+  const badan=cyl(.22,.28,.9,0xd83a3a);badan.position.y=.72;mhw.fw.add(badan);
+  const kepala=new THREE.Mesh(new THREE.SphereGeometry(.15,14,12),
+    new THREE.MeshStandardMaterial({color:0xd8b090}));kepala.position.y=1.36;mhw.fw.add(kepala);
+  const helm2=new THREE.Mesh(new THREE.SphereGeometry(.17,14,10,0,Math.PI*2,0,Math.PI/2),
+    new THREE.MeshStandardMaterial({color:0xd83a3a}));helm2.position.y=1.42;mhw.fw.add(helm2);
+  mhw.fw.position.set(4.4,-2.5,-.6);scene.add(mhw.fw); /* tersembunyi */
+  mhw.fwBtn=cyl(.12,.14,.5,0xd83a3a);mhw.fwBtn.position.set(4.6,.3,.6);scene.add(mhw.fwBtn);
+  actMesh(mhw.fwBtn,'WATCH');
+  scene.add(label('APAR + FIRE WATCH',.6,'#5fd4ff').translateX(4.6).translateY(.85).translateZ(.6));
+  /* timer 30 menit */
+  mhw.D=makeDisplay(1.1,.55,280,140);
+  mhw.D.mesh.position.set(4.6,2.3,Z+.1);scene.add(mhw.D.mesh);
+  dispText(mhw.D,['PASCA-LAS','—'],['#7d8f84','#7d8f84']);
+  actMesh(mhw.D.mesh,'JAGA');
+  mhw.las=false;mhw.t30=0;
+  moduleTick=(dt,T)=>{
+    if(mhw.las){spark(new THREE.Vector3(2.2+Math.random()*.3,1.1,-1.9),0xffd23f);
+      if(Math.random()<.05)beep(2000+Math.random()*800,.03,'square',.03);}
+    if(mhw.t30>0){mhw.t30-=dt;
+      dispText(mhw.D,['PASCA-LAS',Math.max(0,mhw.t30).toFixed(0)+' dtk tersisa'],
+        [mhw.t30<=0?'#46ff8e':'#ffd23f','#8aa3bd']);}};
+  startSeq([
+   {type:'act',aid:'IZIN',done:false,targets:()=>[mhw.permit],
+    desc:'Terbitkan IZIN KERJA PANAS — nilai dulu: haruskah dilas DI SINI? (klik izin)',
+    why:'Pertanyaan pertama izin panas selalu: bisakah pekerjaan dipindah/diganti metode dingin? Rak tak bisa dipindah, sambungan baut tak memenuhi beban — las disetujui DENGAN syarat berlapis. Izin yang baik dimulai dari mempertanyakan pekerjaannya sendiri.',
+    fx(){toast('📋 Izin terbit bersyarat: sterilkan, gas test, fire watch, +30 menit.','ok',3000);}},
+   {type:'act',aid:'STERIL',done:false,targets:()=>[mhw.drums[0]],
+    desc:'STERILKAN radius 10 m: pindahkan drum, tutup yang tak bisa pindah (klik drum).',
+    why:'Tiga drum pelarut digulingkan keluar ruangan; saluran kabel di lantai (celah favorit percikan!) ditutup fire blanket; lantai disapu dari debu & kardus. Percikan 1000°C tak bisa dilarang terbang — tapi bisa dipastikan mendarat di tempat yang tak menjawab.',
+    fx(){mhw.drums.forEach(d=>d.position.x-=6);
+      toast('🧹 Radius steril: drum keluar, celah tertutup blanket.','ok',3000);}},
+   {type:'act',aid:'GAS',done:false,targets:()=>[mhw.gas],
+    desc:'GAS TEST area sebelum menyalakan apa pun (klik detector).',
+    why:'Uap pelarut bisa bertahan setelah drumnya pergi: detector menyapu lantai (uap pelarut lebih berat dari udara) — 0% LEL ✓. Monitoring menyala TERUS selama pengelasan: pintu gudang yang terbuka bisa mengundang uap kembali tanpa permisi.',
+    fx(){toast('🧪 0% LEL ✓ — monitor kontinu menyala selama kerja.','ok',2800);}},
+   {type:'act',aid:'WATCH',done:false,targets:()=>[mhw.fwBtn],
+    desc:'Tugaskan FIRE WATCH ber-APAR, lalu LAS dimulai (klik APAR).',
+    why:'Satu orang, satu APAR teruji, satu tugas tunggal: mata mengikuti tiap percikan jatuh. Ia BUKAN asisten tukang las — ia tidak memegang apa pun selain APAR. Busur menyala... percikan berhamburan... dan setiap satunya ditonton sampai padam.',
+    fx(){mhw.fw.position.set(4.4,0,-.6);mhw.las=true;
+      toast('🔥 Las berjalan — fire watch tak berkedip.','ok',3000);}},
+   {type:'act',aid:'JAGA',done:false,targets:()=>[mhw.D.mesh],
+    desc:'Las selesai — mulai JAGA 30 MENIT pasca-kerja (klik timer).',
+    why:'Tukang las membereskan alat... fire watch TETAP di tempat: mayoritas kebakaran hot work menyala justru di babak ini — bara kecil di celah menunggu ruangan sepi. Tiga puluh menit kemudian: inspeksi akhir dengan punggung tangan & termal, nol titik panas. Izin ditutup resmi.',
+    fx(){mhw.las=false;mhw.t30=30; /* dipersingkat utk simulasi */
+      toast('⏱️ Jaga pasca-las berjalan… inspeksi akhir: NOL titik panas ✓','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Pengelasan paling membosankan tahun ini — alias sempurna!</b> Area steril, gas nol, fire watch setia, dan 30 menit kesabaran terakhir. Kebakaran hot work tidak dicegah oleh keberuntungan; ia dicegah oleh kertas izin yang dipatuhi.');
+    setTimeout(()=>showWin('panas'),2200);});
+  say('VOLTA di sini 🔥 Pengelasan di gudang bahan kimia — kombinasi yang menulis banyak berita buruk. Pemutus rantainya satu lembar: <b>izin kerja panas</b>, dengan pasal paling sering dilupakan: 30 menit SETELAH selesai. Mulai!');
+  $('#modTitle').textContent='J08·M6 — Izin Kerja Panas';
+  $('#taskHead').textContent='STERIL · GAS · WATCH · +30 MENIT';}
+MISSIONS.panas.build=buildPanas;
+Object.assign(REAL,{
+ panas:[
+  'Radius aman & durasi jaga pasca-kerja mengikuti standar/asuransi setempat (umum: 10-11 m, 30-60 menit)',
+  'Selalu uji alternatif dingin dulu — izin panas terbaik adalah yang tidak perlu diterbitkan',
+  'Fire watch dilatih menggunakan APAR & tahu jalur alarm — bukan sekadar orang yang kebetulan kosong',
+  'Di area proses aktif: gas test KONTINU dengan alarm, bukan sekali di awal'],
+});

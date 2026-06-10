@@ -511,3 +511,108 @@ Object.assign(REAL,{
   'Pengujian tahanan dilakukan tahunan & setelah ada sambaran — dicatat di kartu inspeksi bak kontrol',
   'Lengkapi dengan SPD bertingkat di panel — proteksi eksternal tanpa internal hanya setengah perlindungan'],
 });
+
+/* =====================================================================
+   MISI 6 — SMART HOME: OTOMASI RUMAH PINTAR
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ smart:{lvl:'JALUR 01 · INSTALASI BANGUNAN · MISI 6',icon:'📱',title:'Smart Home: Otomasi Rumah Pintar',strict:false,
+  loc:'📍 Rumah Pak Dadang (lagi!) · Upgrade rumah pintar',
+  story:'Pelanggan pertamamu kembali — kini dengan permintaan zaman baru: "Saya mau lampu bisa dari HP, AC mati otomatis kalau rumah kosong, dan tagihan kelihatan real-time." Smart home bukan soal gadget mahal: ia soal instalasi listrik yang BENAR dipadukan logika yang masuk akal. Wiring rapimu lima misi lalu kini jadi pondasi rumah pintar.',
+  goal:'Rumah Pak Dadang menjadi pintar dengan benar: saklar pintar terpasang aman, sensor & skenario logis, monitoring energi berjalan, dan tetap berfungsi saat internet mati.',
+  obj:['Pasang modul saklar pintar di titik strategis','Susun skenario otomasi yang masuk akal','Pasang monitoring energi & uji mode offline'],
+  learn:['Modul saklar pintar butuh NETRAL di kotak saklar — instalasi lama yang hanya menarik fasa ke saklar harus ditarik ulang: smart home dimulai dari wiring','Skenario yang baik berbasis KEJADIAN nyata (rumah kosong, malam, tarif), bukan sekadar jadwal jam — otomasi yang salah lebih mengganggu daripada manual','Perangkat kritis (lampu, saklar) wajib tetap berfungsi MANUAL saat WiFi/server mati — internet boleh padam, rumah tidak boleh lumpuh','CT clamp monitoring di panel memberi data real-time: penghuni yang MELIHAT konsumsinya rata-rata berhemat 10-15% tanpa disuruh'],
+  next:['Pelajari protokol: WiFi vs Zigbee/Thread — kapan butuh hub','Dalami integrasi PLTS atap + baterai ke skenario rumah','Eksplorasi keamanan IoT: jaringan tamu terpisah untuk perangkat'],},
+});
+let msm={};
+function buildSmart(){
+  freshScene(0xa8c0d4,0x141e2a);
+  cam={theta:.05,phi:1.16,r:7,target:new THREE.Vector3(0,1.8,-.8)};
+  const floor=boxT(13,.1,9,TEX.concrete());floor.position.y=-.05;scene.add(floor);
+  const wall=boxT(12,4.4,.15,TEX.plaster());wall.position.set(0,2.2,-3);scene.add(wall);
+  const Z=-2.86;
+  /* saklar lama → modul pintar */
+  msm.sk=box(.4,.4,.14,COL.cream);msm.sk.position.set(-4.2,1.5,Z);scene.add(msm.sk);
+  actMesh(msm.sk,'MODUL');
+  scene.add(label('SAKLAR RUANG TAMU',.55).translateX(-4.2).translateY(2.0).translateZ(Z+.1));
+  /* lampu */
+  msm.lampu=new THREE.Mesh(new THREE.SphereGeometry(.16,16,12),
+    new THREE.MeshStandardMaterial({color:0xfff4c2,roughness:.3,emissive:0x000000}));
+  msm.lampu.position.set(-4.2,3.6,Z+.2);scene.add(msm.lampu);
+  /* sensor pintu + PIR */
+  msm.pintu=box(.1,.18,.06,0xe8edf2);msm.pintu.position.set(-1.8,2.2,Z+.08);scene.add(msm.pintu);
+  scene.add(label('SENSOR PINTU',.5,'#5fd4ff').translateX(-1.8).translateY(2.6).translateZ(Z+.1));
+  /* tablet skenario */
+  msm.D=makeDisplay(2.4,1.6,460,300);
+  msm.D.mesh.position.set(1.2,2.3,Z+.1);scene.add(msm.D.mesh);
+  actMesh(msm.D.mesh,'SKEN');
+  scene.add(label('APLIKASI RUMAH',.7,'#5fd4ff').translateX(1.2).translateY(3.35).translateZ(Z+.1));
+  msm.st={mod:false,sken:false,energi:false,off:false};
+  function app(){
+    const g=msm.D.g,W=460,H=300;
+    g.fillStyle='#101820';g.fillRect(0,0,W,H);
+    g.font='700 18px Consolas';g.textAlign='left';
+    g.fillStyle='#5fd4ff';g.fillText('RUMAH DADANG',16,30);
+    g.font='600 15px Consolas';
+    g.fillStyle=msm.st.mod?'#46ff8e':'#5d748c';
+    g.fillText((msm.st.mod?'●':'○')+' Lampu tamu — online',16,72);
+    g.fillStyle=msm.st.sken?'#46ff8e':'#5d748c';
+    g.fillText((msm.st.sken?'●':'○')+' Skenario: pergi/pulang/malam',16,108);
+    g.fillStyle=msm.st.energi?'#46ff8e':'#5d748c';
+    g.fillText((msm.st.energi?'●':'○')+' Energi: '+(msm.st.energi?'842 W sekarang':'—'),16,144);
+    if(msm.st.off){g.fillStyle='#ffd23f';
+      g.fillText('⚠ internet OFF — kontrol lokal AKTIF',16,196);}
+    if(msm.st.energi){g.strokeStyle='#46ff8e';g.lineWidth=2;g.beginPath();
+      for(let x=0;x<200;x+=4)g.lineTo(230+x,250-Math.sin(x*.08)*16-(x>120?10:0));
+      g.stroke();}
+    msm.D.tex.needsUpdate=true;}
+  app();
+  /* panel + CT monitoring */
+  const phb=boxT(.9,1.2,.2,TEX.metal(),{metalness:.35});phb.position.set(4.2,2.0,Z);scene.add(phb);
+  phb.add(label('PANEL',.6).translateY(.85));
+  msm.ct=new THREE.Mesh(new THREE.TorusGeometry(.1,.03,10,20),
+    new THREE.MeshStandardMaterial({color:0x2a72c8}));
+  msm.ct.position.set(4.2,1.6,Z+.16);scene.add(msm.ct);
+  actMesh(msm.ct,'ENERGI');
+  scene.add(label('CT MONITORING',.55,'#5fd4ff').translateX(4.2).translateY(1.2).translateZ(Z+.1));
+  /* router (untuk uji offline) */
+  msm.router=box(.4,.1,.3,0x18242f);msm.router.position.set(-.4,1.0,.8);scene.add(msm.router);
+  actMesh(msm.router,'OFFLINE');
+  const tbl2=boxT(.8,.07,.5,TEX.wood());tbl2.position.set(-.4,.92,.8);scene.add(tbl2);
+  const tl2=boxT(.07,.92,.07,TEX.wood());tl2.position.set(-.4,.46,.8);scene.add(tl2);
+  scene.add(label('ROUTER WIFI',.5,'#5fd4ff').translateX(-.4).translateY(1.3).translateZ(.8));
+  startSeq([
+   {type:'act',aid:'MODUL',done:false,targets:()=>[msm.sk],
+    desc:'Pasang MODUL saklar pintar di kotak saklar (klik saklar).',
+    why:'Buka kotak: untung wiring-mu dulu rapi — tapi modul butuh NETRAL untuk menghidupi otaknya, dan kotak saklar klasik hanya berisi fasa. Satu tarikan netral dari tee-dus terdekat, modul terpasang di belakang saklar asli: dari luar tetap saklar biasa, di dalam sudah berotak.',
+    fx(){msm.st.mod=true;app();msm.lampu.material.emissive.setHex(0xffd97a);
+      msm.lampu.material.emissiveIntensity=.8;
+      toast('📱 Modul online — lampu kini punya dua majikan: saklar & HP.','ok',3000);}},
+   {type:'act',aid:'SKEN',done:false,targets:()=>[msm.D.mesh],
+    desc:'Susun SKENARIO otomasi yang masuk akal (klik aplikasi).',
+    why:'Tiga skenario berbasis kejadian: PERGI (pintu terkunci dari luar + 10 menit tanpa gerakan → semua mati kecuali kulkas), PULANG (pintu terbuka + malam → lampu jalur menyala), MALAM (23:00 → AC kamar saja). Bukan jam-jaman buta: rumah mengikuti penghuninya, bukan sebaliknya.',
+    fx(){msm.st.sken=true;app();
+      toast('🧠 3 skenario aktif — rumah mulai berpikir.','ok',2800);}},
+   {type:'act',aid:'ENERGI',done:false,targets:()=>[msm.ct],
+    desc:'Pasang CT MONITORING energi di panel (klik CT).',
+    why:'Clamp di fasa utama (panah ke beban — ilmu lama yang sama), data mengalir ke aplikasi: 842 W saat ini, grafik harian, perkiraan tagihan. Pak Dadang bisa MELIHAT water heater-nya menelan 30% tagihan — dan manusia yang melihat angka, berubah sendiri tanpa diceramahi.',
+    fx(){msm.st.energi=true;app();
+      toast('📊 Monitoring hidup — 842 W real-time di genggaman.','ok',2800);}},
+   {type:'act',aid:'OFFLINE',done:false,targets:()=>[msm.router],
+    desc:'Ujian terpenting: CABUT internet — rumah harus tetap waras (klik router).',
+    why:'Router dimatikan: saklar fisik tetap bekerja ✓, skenario lokal tetap jalan (logika tersimpan di perangkat, bukan di awan) ✓, hanya akses jarak jauh yang pamit. Rumah pintar yang lumpuh tanpa internet bukan pintar — ia manja. Punya Pak Dadang lulus ujian mati gaya.',
+    fx(){msm.st.off=true;app();
+      toast('🔌 Internet mati — rumah TETAP berfungsi penuh. Lulus!','ok',3200);sfx.big();}},
+  ],()=>{say('🎉 <b>Rumah pertamamu kini berpikir!</b> Wiring benar jadi pondasi, skenario masuk akal jadi otak, monitoring jadi mata — dan saat internet padam, ia tetap rumah yang baik. Smart home yang sejati: teknologi yang tak terasa.');
+    setTimeout(()=>showWin('smart'),2200);});
+  say('VOLTA di sini 📱 Pak Dadang kembali — kali ini minta rumahnya <b>pintar</b>. Rahasia smart home yang baik: wiring benar, skenario masuk akal, dan tetap hidup saat internet mati. Mulai dari saklar ruang tamu!');
+  $('#modTitle').textContent='J01·M6 — Smart Home';
+  $('#taskHead').textContent='PINTAR TAPI TAK MANJA';}
+MISSIONS.smart.build=buildSmart;
+Object.assign(REAL,{
+ smart:[
+  'Pastikan modul tersertifikasi (SNI/CE) & rating arus sesuai beban — modul abal-abal adalah sumber api di kotak saklar',
+  'Pisahkan perangkat IoT di jaringan/VLAN tamu — kamera & saklar murah adalah pintu belakang favorit peretas',
+  'Dokumentasikan skenario & berikan ke penghuni — otomasi yang tak dipahami akan dimatikan',
+  'Pilih perangkat dengan kontrol LOKAL (bukan cloud-only) — layanan cloud bisa tutup, rumah tetap harus jalan'],
+});
