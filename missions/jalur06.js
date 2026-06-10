@@ -473,3 +473,101 @@ Object.assign(REAL,{
   'Program water treatment cooling tower adalah pengawal approach — audit kimianya juga',
   'Pasang sub-meter listrik per chiller permanen: kW/TR harian jadi KPI operator, bukan temuan auditor'],
 });
+
+/* =====================================================================
+   MISI 6 — M&V: MEMBUKTIKAN PENGHEMATAN (IPMVP)
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ mnv:{lvl:'JALUR 06 · ENERGY AUDITOR · MISI 6',icon:'⚖️',title:'M&V: Membuktikan Penghematan',strict:false,
+  loc:'📍 PT Maju Plastik · Setahun pasca-proyek efisiensi',
+  story:'Semua rekomendasimu telah dieksekusi — VFD, tarif, boiler, chiller. Tagihan turun... tapi direktur keuangan menatap angka dengan curiga: "Produksi kami juga berubah. Cuaca beda. DARI MANA kalian tahu ini hasil proyek, bukan kebetulan?" Pertanyaan yang adil — dan jawabannya adalah disiplin bernama M&V: measurement & verification.',
+  goal:'Penghematan terbukti secara metodologis: baseline ternormalisasi terbangun, penyesuaian sah diterapkan, dan laporan M&V meyakinkan direktur keuangan yang paling skeptis.',
+  obj:['Bangun model baseline dari data pra-proyek','Normalisasi terhadap produksi & variabel cuaca','Hitung penghematan terverifikasi & laporkan'],
+  learn:['Penghematan tidak bisa DIUKUR langsung — ia selisih antara konsumsi nyata dan dunia paralel "seandainya proyek tak ada": baseline yang dinormalisasi','Baseline = model regresi pra-proyek (kWh vs produksi, suhu): konsumsi diprediksi pada kondisi SEKARANG memakai perilaku DULU','Penyesuaian itu sah dan wajib: produksi naik bukan kegagalan hemat — model menghitung berapa seharusnya kWh pada produksi itu','Tanpa M&V, proyek efisiensi selamanya dianggap kebetulan — dengan M&V, ia baris yang bisa diaudit di laporan keuangan'],
+  next:['Pelajari opsi IPMVP A/B/C/D & kapan masing-masing dipakai','Dalami uji statistik model baseline (R², CV-RMSE)','Eksplorasi kontrak ESCO: pembayaran dari penghematan terverifikasi']},
+});
+let mmv={};
+function buildMnV(){
+  freshScene(0xb8c6d4,0x141d28);
+  cam={theta:0,phi:1.17,r:7.5,target:new THREE.Vector3(0,1.9,-1)};
+  const floor=boxT(16,.1,10,TEX.concrete());floor.position.y=-.05;scene.add(floor);
+  const wall=boxT(14,4.4,.2,TEX.plaster());wall.position.set(0,2.2,-3.2);scene.add(wall);
+  /* layar baseline */
+  const frame=boxT(4.8,2.6,.16,TEX.metal(),{metalness:.4});frame.position.set(-1.6,2.4,-3.1);scene.add(frame);
+  frame.add(label('M&V — BASELINE vs AKTUAL',.85).translateY(1.6));
+  mmv.D=makeDisplay(4.5,2.3,600,330);
+  mmv.D.mesh.position.set(-1.6,2.4,-3.0);scene.add(mmv.D.mesh);
+  actMesh(mmv.D.mesh,'BASE');
+  function grafik(mode){
+    const g=mmv.D.g,W=600,H=330;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.strokeStyle='#2a3a4c';g.lineWidth=2;
+    g.beginPath();g.moveTo(46,16);g.lineTo(46,H-40);g.lineTo(W-12,H-40);g.stroke();
+    g.font='600 14px Consolas';g.textAlign='left';
+    /* titik scatter baseline */
+    g.fillStyle='#5fd4ff';
+    [[20,.42],[35,.55],[48,.66],[60,.76],[75,.9],[42,.6],[55,.71],[68,.82]].forEach(p=>{
+      g.fillRect(46+p[0]*6-3,H-40-p[1]*(H-90)-3,6,6);});
+    if(mode>=1){g.strokeStyle='#5fd4ff';g.lineWidth=2;g.setLineDash([2,4]);
+      g.beginPath();g.moveTo(46+15*6,H-40-.36*(H-90));g.lineTo(46+80*6,H-40-.95*(H-90));
+      g.stroke();g.setLineDash([]);
+      g.fillStyle='#5fd4ff';g.fillText('BASELINE: kWh = 41.000 + 9,2/ton (R² 0,93)',54,30);}
+    if(mode>=2){g.fillStyle='#46ff8e';
+      [[58,.58],[66,.65],[74,.72],[80,.77]].forEach(p=>{
+        g.beginPath();g.arc(46+p[0]*6,H-40-p[1]*(H-90),5,0,7);g.fill();});
+      g.fillText('AKTUAL pasca-proyek (produksi LEBIH TINGGI)',54,54);
+      g.fillStyle='#ffd23f';g.font='700 16px Consolas';
+      g.fillText('celah vertikal = PENGHEMATAN ternormalisasi',54,82);}
+    g.fillStyle='#8aa3bd';g.font='600 13px Consolas';g.textAlign='center';
+    g.fillText('produksi (ton/bulan) →',W/2,H-14);
+    mmv.D.tex.needsUpdate=true;}
+  grafik(0);
+  /* kartu penyesuaian + laporan + direktur */
+  mmv.adj=box(.95,.6,.07,0x8a5a2a);mmv.adj.position.set(2.4,2.9,-3.05);scene.add(mmv.adj);
+  actMesh(mmv.adj,'NORMAL');
+  scene.add(label('NORMALISASI',.55,'#e8c890').translateX(2.4).translateY(3.4).translateZ(-3.0));
+  mmv.rep=box(.6,.7,.05,0xe8e4d8);mmv.rep.position.set(2.4,1.7,-3.07);scene.add(mmv.rep);
+  actMesh(mmv.rep,'LAPOR');
+  scene.add(label('LAPORAN M&V',.55,'#5fd4ff').translateX(2.4).translateY(2.25).translateZ(-3.0));
+  mmv.dir=new THREE.Group();
+  const badan=cyl(.22,.28,.9,0x2a3a55);badan.position.y=.72;mmv.dir.add(badan);
+  const kepala=new THREE.Mesh(new THREE.SphereGeometry(.16,14,12),
+    new THREE.MeshStandardMaterial({color:0xd8b090}));kepala.position.y=1.38;mmv.dir.add(kepala);
+  mmv.dir.position.set(4.8,0,-1.4);scene.add(mmv.dir);
+  actMesh(badan,'SKEPTIS');
+  scene.add(label('DIREKTUR KEUANGAN (skeptis)',.6).translateX(4.8).translateY(1.9).translateZ(-1.4));
+  startSeq([
+   {type:'act',aid:'BASE',done:false,targets:()=>[mmv.D.mesh],
+    desc:'Bangun MODEL BASELINE dari 12 bulan pra-proyek (klik layar).',
+    why:'Data lama (logger-mu dulu!) di-regresi: kWh = 41.000 + 9,2 × ton produksi, R² 0,93 — perilaku energi pabrik LAMA kini terawetkan dalam rumus. Inilah mesin dunia-paralel: berapa pabrik versi lama akan mengonsumsi, pada kondisi apa pun.',
+    fx(){grafik(1);toast('📐 Baseline: 41.000 + 9,2/ton · R² 0,93 — sah.','ok',3000);}},
+   {type:'act',aid:'NORMAL',done:false,targets:()=>[mmv.adj],
+    desc:'NORMALISASI: produksi naik 18% — hitung yang seharusnya (klik kartu).',
+    why:'Tanpa normalisasi, kenaikan produksi MENYEMBUNYIKAN penghematan: kWh aktual hanya turun 4%. Tapi masukkan produksi sekarang ke rumus baseline: pabrik LAMA akan butuh 612 MWh — aktualnya 514 MWh. Apel dibandingkan dengan apel di keranjang yang sama.',
+    fx(){grafik(2);toast('⚖️ Baseline @produksi kini: 612 MWh vs aktual 514 MWh.','ok',3000);}},
+   {type:'act',aid:'HEMAT',done:false,targets:()=>[mmv.D.mesh],
+    desc:'Baca celahnya: berapa PENGHEMATAN terverifikasi?',
+    why:'612 − 514 = 98 MWh/bulan = 16% ternormalisasi ≈ Rp 137 juta/bulan — pada produksi yang justru LEBIH TINGGI. Titik hijau menggantung di bawah garis biru: tiap milimeter celah itu adalah uang yang dulu menguap dan kini tidak.',
+    fx(){toast('💰 Terverifikasi: 16% = Rp 137 jt/bln, di produksi +18%.','ok',3200);}},
+   {type:'act',aid:'LAPOR',done:false,targets:()=>[mmv.rep],
+    desc:'Susun LAPORAN M&V lengkap dengan batas ketidakpastian (klik laporan).',
+    why:'Metodologi (opsi whole-facility), model & statistiknya, penyesuaian yang diambil, dan kejujuran terakhir: penghematan 16% ± 2,1% pada keyakinan 90%. Rentang ketidakpastian bukan kelemahan — ia tanda tangan seorang profesional yang tahu batas datanya.',
+    fx(){toast('📋 Laporan M&V: 16% ±2,1% @90% — siap diaudit siapa pun.','ok',3000);}},
+   {type:'act',aid:'SKEPTIS',done:false,targets:()=>[mmv.dir.children[0]],
+    desc:'Hadapi sang skeptis: presentasikan ke DIREKTUR KEUANGAN (klik beliau).',
+    why:'Beliau menguji: "kalau produksi turun tahun depan?" — model menjawab. "Kalau cuaca?" — variabel suhu sudah di dalam. Hening... lalu: "Baik. Masukkan penghematan ini ke laporan keuangan, dan audit energi jadi program tahunan." Skeptis yang terjawab adalah sekutu terkuat.',
+    fx(){toast('🤝 Direktur keuangan MENERIMA — efisiensi resmi masuk pembukuan!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Penghematan yang tahan digugat!</b> Baseline mengawetkan masa lalu, normalisasi mengadilkan perbandingan, dan ketidakpastian diakui dengan kepala tegak. M&V: bedanya "kayaknya hemat" dengan "terbukti hemat".');
+    setTimeout(()=>showWin('mnv'),2200);});
+  const s1m=seq.steps[1],of1m=s1m.fx;s1m.fx=()=>{of1m();mmv.D.mesh.userData.aid='HEMAT';};
+  say('VOLTA di sini ⚖️ Pertanyaan paling adil dari direktur keuangan: <b>"dari mana kalian tahu ini hasil proyek, bukan kebetulan?"</b> Jawabannya disiplin bernama M&V. Bangun dunia-paralelnya: baseline.');
+  $('#modTitle').textContent='J06·M6 — M&V Penghematan';
+  $('#taskHead').textContent='BUKTIKAN, JANGAN KLAIM';}
+MISSIONS.mnv.build=buildMnV;
+Object.assign(REAL,{
+ mnv:[
+  'Rencana M&V disepakati SEBELUM proyek dimulai — baseline tak bisa dibangun mundur dengan jujur',
+  'Uji kualitas model: R² > 0,75 & CV-RMSE dalam batas — model lemah = klaim lemah',
+  'Catat penyesuaian non-rutin (mesin baru, shift berubah) dengan bukti — bukan dikira-kira',
+  'Untuk kontrak ESCO: pihak ketiga independen melakukan M&V — pembayar dan penghitung dipisah'],
+});

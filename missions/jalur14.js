@@ -477,3 +477,94 @@ Object.assign(REAL,{
   'Driver wajib pelatihan B3 + APD & detector pribadi; rute disurvei (hindari terowongan & padat)',
   'Prosedur darurat perjalanan disepakati dengan pelanggan: nomor kontak, titik aman, skenario bocor'],
 });
+
+/* =====================================================================
+   MISI 6 — EFISIENSI STACK: MERAWAT JANTUNG ELEKTROLISER
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ stack:{lvl:'JALUR 14 · HYDROGEN ENERGY · MISI 6',icon:'💓',title:'Efisiensi Stack: Merawat Jantung Elektroliser',strict:false,
+  loc:'📍 Plant H₂ · Evaluasi kinerja tahun kedua',
+  story:'Dua tahun plant-mu beroperasi, dan akuntan menemukan tren yang mengganggu: biaya listrik per kg H₂ merangkak naik 9%. Listriknya tidak menjadi mahal — STACK-nya yang menua: membran menipis, katalis terkikis, tiap kg hidrogen kini menuntut lebih banyak kWh. Hari ini kamu dokter jantung elektroliser: ukur degradasinya, temukan penyebab yang bisa dilawan, dan putuskan kapan transplantasi.',
+  goal:'Kinerja stack terdiagnosis: efisiensi spesifik terukur vs baseline, penyebab degradasi yang reversible tertangani, dan keputusan penggantian terjadwal berbasis ekonomi.',
+  obj:['Ukur kWh/kg aktual vs baseline komisioning','Bedah penyebab: kualitas air & suhu operasi','Koreksi yang bisa dikoreksi, jadwalkan yang tidak'],
+  learn:['Efisiensi elektroliser diukur satu angka: kWh per kg H₂ — baseline 52, teori 39,4; tiap kenaikan adalah uang dan jejak karbon','Degradasi stack ada dua jenis: reversible (kontaminasi air, suhu salah) dan permanen (membran menipis, katalis larut) — bedakan sebelum memvonis','Kemurnian air umpan adalah nyawa membran PEM: konduktivitas naik sedikit = ion pengotor menempel di katalis — water treatment adalah perawatan jantung juga','Keputusan ganti stack adalah hitungan ekonomi: selisih biaya listrik kumulatif vs harga stack baru — ada titik di mana terus memakai yang tua justru lebih mahal'],
+  next:['Pelajari kurva polarisasi: diagnosa elektrokimia yang presisi','Dalami strategi operasi: load factor vs umur stack','Eksplorasi recycling stack: platinum & iridium terlalu mahal untuk dibuang']},
+});
+let msk={};
+function buildStack(){
+  freshScene(0xa8c4d8,0x0e1a22);
+  cam={theta:-.05,phi:1.17,r:8.5,target:new THREE.Vector3(0,1.6,-.8)};
+  const ground=boxT(20,.1,12,TEX.concrete());ground.position.y=-.05;scene.add(ground);
+  /* elektroliser stack */
+  msk.elc=box(2.2,1.8,1.4,0xd8e0e8);msk.elc.position.set(-3.4,.95,-2);scene.add(msk.elc);
+  for(let i=0;i<6;i++){const fin=box(.04,1.6,1.3,0x9aa7b4);fin.position.set(-4.3+i*.36,.95,-2);scene.add(fin);}
+  scene.add(label('STACK PEM — tahun ke-2',.8).translateX(-3.4).translateY(2.25).translateZ(-2));
+  /* layar kinerja */
+  const frame=boxT(3.8,2.2,.16,TEX.metal(),{metalness:.4});frame.position.set(1.2,2.4,-3.0);scene.add(frame);
+  frame.add(label('KINERJA: kWh per kg H₂',.8).translateY(1.35));
+  msk.D=makeDisplay(3.5,1.9,540,310);
+  msk.D.mesh.position.set(1.2,2.4,-2.9);scene.add(msk.D.mesh);
+  actMesh(msk.D.mesh,'UKUR');
+  function kurva(mode){
+    const g=msk.D.g,W=540,H=310;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.strokeStyle='#2a3a4c';g.lineWidth=2;
+    g.beginPath();g.moveTo(50,16);g.lineTo(50,H-40);g.lineTo(W-12,H-40);g.stroke();
+    g.font='600 14px Consolas';g.textAlign='left';
+    g.fillStyle='#8aa3bd';g.fillText('60',16,60);g.fillText('52',16,160);
+    const pts=[[0,52],[6,52.8],[12,53.9],[18,55.4],[24,56.7]];
+    g.strokeStyle='#ffd23f';g.lineWidth=3;g.beginPath();
+    pts.forEach((p,i)=>{const x=50+p[0]*19,y=H-40-(60-p[1])*26;
+      i===0?g.moveTo(x,y):g.lineTo(x,y);g.fillStyle='#ffd23f';g.fillRect(x-3,y-3,6,6);});
+    g.stroke();
+    g.fillStyle='#ffd23f';g.font='700 17px Consolas';
+    g.fillText('52 → 56,7 kWh/kg (+9%) dalam 24 bulan',58,34);
+    if(mode>=1){g.strokeStyle='#46ff8e';g.setLineDash([6,5]);g.lineWidth=3;
+      g.beginPath();g.moveTo(50+24*19,H-40-(60-54.8)*26);g.lineTo(50+25.5*19,H-40-(60-54.6)*26);
+      g.stroke();g.setLineDash([]);
+      g.fillStyle='#46ff8e';g.fillText('pasca-koreksi: 54,8 (separuh pulih)',58,60);}
+    msk.D.tex.needsUpdate=true;}
+  kurva(0);
+  /* water treatment */
+  msk.wt=boxT(1.0,1.2,.7,TEX.metal(),{metalness:.3});msk.wt.position.set(4.4,.65,-2);scene.add(msk.wt);
+  actMesh(msk.wt,'AIR');
+  scene.add(label('WATER TREATMENT (resin DI)',.6,'#5fd4ff').translateX(4.4).translateY(1.55).translateZ(-2));
+  /* sensor suhu / chiller */
+  msk.suhu=box(.4,.4,.2,0x2a5a8a);msk.suhu.position.set(-1.0,1.4,-1.2);scene.add(msk.suhu);
+  actMesh(msk.suhu,'SUHU');
+  scene.add(label('LOOP PENDINGIN STACK',.55,'#5fd4ff').translateX(-1.0).translateY(1.95).translateZ(-1.1));
+  /* lembar keputusan ekonomi */
+  msk.eco=box(.5,.66,.04,0xe8e4d8);msk.eco.position.set(5.8,2.0,-2.9);scene.add(msk.eco);
+  actMesh(msk.eco,'EKONOMI');
+  scene.add(label('ANALISIS EKONOMI',.55,'#5fd4ff').translateX(5.8).translateY(2.55).translateZ(-2.9));
+  startSeq([
+   {type:'act',aid:'UKUR',done:false,targets:()=>[msk.D.mesh],
+    desc:'Ukur kinerja: berapa kWh per kg HARI INI vs baseline? (klik layar)',
+    why:'Meter listrik ÷ massa H₂ terproduksi pada beban standar: 56,7 kWh/kg — baseline komisioning 52. Kenaikan 9% dalam dua tahun: separuh wajar (membran memang menua), separuh lagi... mencurigakan. Kurva tidak berbohong, tapi ia juga belum menyebut pelakunya.',
+    fx(){toast('💓 56,7 kWh/kg (baseline 52) — +9%, sebagian bisa dilawan.','bad',3000);}},
+   {type:'act',aid:'AIR',done:false,targets:()=>[msk.wt],
+    desc:'Tersangka #1: periksa KUALITAS AIR umpan (klik water treatment).',
+    why:'Konduktivitas air umpan: 0,9 µS/cm — spesifikasi menuntut <0,1! Resin deionisasi ternyata jenuh sejak entah kapan, dan ion-ion pengotor pelan-pelan meracuni katalis. Resin diganti, konduktivitas pulih 0,06. Sebagian degradasi itu ternyata bukan takdir — ia kelalaian yang bisa ditebus.',
+    fx(){toast('💧 Resin DI jenuh! Diganti → 0,06 µS/cm ✓','bad',3000);}},
+   {type:'act',aid:'SUHU',done:false,targets:()=>[msk.suhu],
+    desc:'Tersangka #2: audit SUHU operasi stack (klik loop pendingin).',
+    why:'Log menunjukkan stack sering beroperasi 49°C — di bawah titik optimal 58°C (sensor chiller terkalibrasi melenceng). Stack terlalu dingin = membran kurang konduktif = tegangan sel naik = boros. Sensor dikalibrasi, setpoint dikembalikan: efisiensi naik tanpa menyentuh stack itu sendiri.',
+    fx(){kurva(1);
+      toast('🌡️ Setpoint pulih 58°C — kWh/kg turun ke 54,8 (separuh pulih).','ok',3000);}},
+   {type:'act',aid:'EKONOMI',done:false,targets:()=>[msk.eco],
+    desc:'Sisa degradasi permanen: hitung KAPAN ganti stack (klik analisis).',
+    why:'54,8 vs 52: sisa 2,8 kWh/kg adalah penuaan sejati (membran menipis — tak ada obatnya). Proyeksi: pada bulan ke-40, kelebihan biaya listrik kumulatif menyamai harga stack baru — itulah tanggal transplantasi yang rasional. Dipesan sekarang (lead time 6 bulan), diganti tepat sebelum merugi. Stack lama? Di-recycle: iridiumnya lebih berharga dari emas.',
+    fx(){toast('📉 Ganti stack terjadwal bln-40 + PO dipesan — ekonomi menang.','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Jantung plant terdiagnosis tuntas!</b> Separuh degradasi ternyata kelalaian yang tertebus (air & suhu), separuhnya penuaan yang dijadwalkan ekonominya. Merawat elektroliser = merawat angka kWh/kg — satu desimal pun berarti.');
+    setTimeout(()=>showWin('stack'),2200);});
+  say('VOLTA di sini 💓 Akuntan menemukan yang teknisi lewatkan: <b>biaya per kg H₂ naik 9%</b>. Stack-mu menua — tapi berapa persen takdir, berapa persen kelalaian? Hari ini kita jadi dokter jantung. Mulai dari mengukur!');
+  $('#modTitle').textContent='J14·M6 — Efisiensi Stack';
+  $('#taskHead').textContent='kWh/kg: DETAK YANG DIHITUNG';}
+MISSIONS.stack.build=buildStack;
+Object.assign(REAL,{
+ stack:[
+  'Ukur efisiensi pada kondisi standar yang sama (beban, suhu, tekanan) — tren butuh apel-ke-apel',
+  'Pantau konduktivitas air umpan online dengan alarm — kontaminasi sehari merusak berbulan-bulan',
+  'Simpan kurva polarisasi tahunan per stack — sidik jari degradasi untuk klaim garansi',
+  'Kontrak recycling stack sejak pembelian: logam grup platinum wajib pulang ke rantai pasok'],
+});

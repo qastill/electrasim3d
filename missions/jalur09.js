@@ -413,3 +413,98 @@ Object.assign(REAL,{
   'Punch list diberi tenggat & penanggung jawab tertulis; BAST bisa bersyarat bila ada item tersisa',
   'Arsipkan seluruh paket SAT — sengketa garansi dimenangkan oleh dokumentasi, bukan ingatan'],
 });
+
+/* =====================================================================
+   MISI 6 — KEY ACCOUNT & QUARTERLY BUSINESS REVIEW
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ qbr:{lvl:'JALUR 09 · SALES & TECHNICAL MARKETING · MISI 6',icon:'📅',title:'Key Account: Quarterly Business Review',strict:false,
+  loc:'📍 PT Sinar Logam · QBR kuartal pertama pasca-instalasi',
+  story:'Tiga bulan sejak BAST — dan inilah perbedaan vendor biasa dengan partner: vendor biasa kembali saat ada yang rusak; partner kembali MEMBAWA DATA. QBR pertamamu dengan PT Sinar Logam: bukan kunjungan basa-basi, melainkan rapat berstruktur yang membuktikan nilai, menangkap masalah dini, dan — bila dikerjakan benar — memanen proyek berikutnya.',
+  goal:'QBR pertama sukses: kinerja terpasang dilaporkan dengan data, isu kecil ditangkap sebelum membesar, dan dua peluang baru teridentifikasi bersama pelanggan.',
+  obj:['Siapkan data kinerja kuartal & agenda','Laporkan nilai yang terealisasi + tangkap isu dini','Gali kebutuhan berikutnya & susun rencana bersama'],
+  learn:['QBR adalah ritual partnership: datang berkala MEMBAWA data, bukan menunggu komplain — kursi vendor berubah jadi kursi penasihat','Buka selalu dengan nilai terealisasi vs janji: cosφ, denda hilang, uptime — angka yang dulu di proposal kini di realisasi','Isu kecil yang ditangkap di QBR (step kapasitor sering switching) adalah komplain besar yang dibatalkan tiga bulan lebih awal','Pertanyaan terbaik QBR bukan "ada keluhan?" tapi "apa rencana pabrik 12 bulan ke depan?" — proyek berikutnya bersembunyi di jawaban itu'],
+  next:['Susun kalender QBR semua key account + template materi','Pelajari account plan: peta organisasi & roadmap 3 tahun pelanggan','Dalami metrik kesehatan akun: NPS, share of wallet, churn risk']},
+});
+let mqb={};
+function buildQBR(){
+  freshScene(0xc6d2dc,0x18222c);
+  cam={theta:0,phi:1.18,r:7,target:new THREE.Vector3(0,1.5,-.8)};
+  const Z=room(0x6b5a45,0xd8d2c4);
+  /* meja QBR */
+  const desk=boxT(3.6,.08,1.5,TEX.wood());desk.position.set(0,1.0,-.4);scene.add(desk);
+  [[-1.6,-1.0],[1.6,-1.0],[-1.6,.1],[1.6,.1]].forEach(p=>{
+    const l=boxT(.08,1,.08,TEX.wood());l.position.set(p[0],.5,p[1]-.4+.4);scene.add(l);});
+  /* layar kinerja */
+  const frame=boxT(3.8,2.2,.16,TEX.metal(),{metalness:.4});frame.position.set(-1.8,2.5,Z+.05);scene.add(frame);
+  frame.add(label('QBR Q1 — KINERJA TERPASANG',.8).translateY(1.35));
+  mqb.D=makeDisplay(3.5,1.9,540,310);
+  mqb.D.mesh.position.set(-1.8,2.5,Z+.15);scene.add(mqb.D.mesh);
+  actMesh(mqb.D.mesh,'DATA');
+  function layar(mode){
+    const g=mqb.D.g,W=540,H=310;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.font='700 18px Consolas';g.textAlign='left';
+    g.fillStyle='#5fd4ff';g.fillText('REALISASI vs JANJI PROPOSAL',16,32);
+    g.font='600 16px Consolas';
+    const rows=[['cosφ rata-rata','0,958','janji ≥0,95','#46ff8e'],
+      ['denda kVArh','Rp 0','3 bln beruntun','#46ff8e'],
+      ['uptime bank','99,7%','—','#46ff8e'],
+      ['switching/hari','142x','agak tinggi ⚠','#ffd23f']];
+    rows.forEach((r,i)=>{const y=76+i*42;
+      g.fillStyle='#8aa3bd';g.fillText(r[0],16,y);
+      g.fillStyle=r[3];g.fillText(r[1],240,y);
+      g.fillStyle='#5d748c';g.fillText(r[2],360,y);});
+    if(mode>=1){g.fillStyle='#ffd23f';g.font='700 15px Consolas';
+      g.fillText('isu dini: step 3 switching berlebih → cek setting C/K',16,H-18);}
+    mqb.D.tex.needsUpdate=true;}
+  layar(0);
+  /* direktur & manajer produksi */
+  function figur(x,warna,nama){
+    const grp=new THREE.Group();
+    const badan=cyl(.22,.28,.9,warna);badan.position.y=.72;grp.add(badan);
+    const kepala=new THREE.Mesh(new THREE.SphereGeometry(.15,14,12),
+      new THREE.MeshStandardMaterial({color:0xd8b090}));kepala.position.y=1.36;grp.add(kepala);
+    grp.position.set(x,0,.9);scene.add(grp);
+    scene.add(label(nama,.55).translateX(x).translateY(1.85).translateZ(.9));
+    return grp;}
+  mqb.dir=figur(-1.2,0x2a3a55,'DIREKTUR');
+  mqb.prod=figur(1.2,0x4a6a3a,'MGR PRODUKSI');
+  actMesh(mqb.prod.children[0],'GALI');
+  /* lembar isu & rencana bersama */
+  mqb.isu=box(.5,.66,.04,0xffe8c0);mqb.isu.position.set(1.6,2.3,Z+.06);scene.add(mqb.isu);
+  actMesh(mqb.isu,'ISU');
+  scene.add(label('LEMBAR ISU',.55,'#ffd23f').translateX(1.6).translateY(2.85).translateZ(Z+.1));
+  mqb.plan=box(.5,.66,.04,0xd8e8d8);mqb.plan.position.set(3.0,2.3,Z+.06);scene.add(mqb.plan);
+  actMesh(mqb.plan,'PLAN');
+  scene.add(label('RENCANA BERSAMA',.55,'#8df0b8').translateX(3.0).translateY(2.85).translateZ(Z+.1));
+  startSeq([
+   {type:'act',aid:'DATA',done:false,targets:()=>[mqb.D.mesh],
+    desc:'Buka QBR dengan DATA: realisasi vs janji proposal (klik layar).',
+    why:'Slide pertama bukan produk baru — melainkan janji lama yang ditagih sendiri: cosφ 0,958 (janji ≥0,95 ✓), denda kVArh NOL tiga bulan beruntun, uptime 99,7%. Direktur melirik direktur keuangan: angka proposal itu ternyata bukan bualan sales. Kepercayaan = mata uang QBR.',
+    fx(){toast('📊 Janji ditagih sendiri: semua KPI hijau — meja mencair.','ok',3000);}},
+   {type:'act',aid:'ISU',done:false,targets:()=>[mqb.isu],
+    desc:'Jujur duluan: angkat ISU DINI yang kamu temukan (klik lembar isu).',
+    why:'Baris kuning itu kamu yang membukanya: step 3 switching 142×/hari — terlalu sering, kontaktornya bisa pendek umur. Penyebab: setting C/K terlalu sensitif; dikoreksi gratis minggu ini. Vendor yang melaporkan masalahnya SENDIRI sebelum pelanggan sadar — itu definisi partner.',
+    fx(){layar(1);toast('🔍 Isu diangkat & dijadwalkan koreksi — sebelum jadi komplain.','ok',3000);}},
+   {type:'act',aid:'GALI',done:false,targets:()=>[mqb.prod.children[0]],
+    desc:'GALI rencana pelanggan: tanya manajer produksi (klik beliau).',
+    why:'"Apa rencana pabrik 12 bulan ke depan?" — dan pintu terbuka: line baru kuartal 3 (butuh studi beban + kemungkinan trafo), dan keluhan harmonisa di area CNC. Dua peluang muncul bukan dari brosur — dari pertanyaan yang tepat di kursi yang sudah dipercaya.',
+    fx(){toast('🎣 Tertangkap: line baru Q3 + isu harmonisa CNC — dua peluang!','ok',3200);}},
+   {type:'act',aid:'PLAN',done:false,targets:()=>[mqb.plan],
+    desc:'Tutup dengan RENCANA BERSAMA ber-tanggal (klik lembar hijau).',
+    why:'Bukan "nanti kami hubungi": koreksi C/K (minggu ini, gratis) · audit harmonisa CNC (bulan depan, proposal menyusul) · studi beban line baru (Juli) · QBR berikutnya (tanggal terkunci). Empat baris, empat tanggal — akun ini kini punya masa depan yang terjadwal.',
+    fx(){toast('🗓️ 4 agenda ber-tanggal — QBR Q2 sudah dinanti pelanggan!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>QBR pertama, standar baru!</b> Janji ditagih sendiri, isu diangkat sebelum dikomplain, peluang digali dari rencana pelanggan. Penjualan terbaik memang tak terasa seperti penjualan — ia terasa seperti kemitraan.');
+    setTimeout(()=>showWin('qbr'),2200);});
+  say('VOLTA di sini 📅 Tiga bulan pasca-BAST — saatnya <b>QBR</b>: rapat yang membedakan vendor dari partner. Bawa data, jujur soal isu, dan dengarkan rencana mereka. Proyek berikutnya bersembunyi di sana.');
+  $('#modTitle').textContent='J09·M6 — Key Account & QBR';
+  $('#taskHead').textContent='DATANG MEMBAWA DATA';}
+MISSIONS.qbr.build=buildQBR;
+Object.assign(REAL,{
+ qbr:[
+  'Kirim materi QBR H-2 agar pelanggan datang siap — rapat untuk memutuskan, bukan membaca',
+  'Undang lapisan operasional DAN pengambil keputusan — dua telinga yang berbeda kebutuhannya',
+  'Catat semua komitmen dua arah dengan PIC & tanggal, kirim notulen hari yang sama',
+  'Ukur kesehatan akun dari QBR ke QBR (isu turun? peluang naik?) — tren akun = tren bisnismu'],
+});

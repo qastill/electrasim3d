@@ -529,3 +529,103 @@ Object.assign(REAL,{
   'Sisakan headroom SoC untuk smoothing — baterai penuh tak bisa menyerap hentakan awan',
   'Evaluasi bulanan: cuaca berubah musiman, jadwal charge-discharge ikut dikalibrasi ulang'],
 });
+
+/* =====================================================================
+   MISI 6 — GRID-FORMING: BESS MENGHIDUPKAN MICROGRID
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ gridform:{lvl:'JALUR 15 · BATERAI & BESS · MISI 6',icon:'🏝️',title:'Grid-Forming: BESS Menghidupkan Microgrid',strict:true,
+  loc:'📍 Kawasan industri · Blackout area, 19:40',
+  story:'Gangguan besar memutus kawasan industri dari jaringan — gelap total. Tapi kawasan ini punya kartu rahasia yang kamu pasang sendiri: BESS dengan inverter GRID-FORMING. Tak seperti inverter biasa yang hanya bisa mengikuti jaringan, ia mampu MENCIPTAKAN jaringan: menetapkan 50 Hz-nya sendiri di tengah kehampaan. Malam ini baterai naik takhta jadi pembangkit utama.',
+  goal:'Microgrid hidup dari nol: BESS membentuk tegangan & frekuensi referensi, beban dipanggil bertahap, PLTS bergabung, dan resinkronisasi mulus saat jaringan utama pulih.',
+  obj:['Mode grid-forming: bentuk 50 Hz dari kehampaan','Black start microgrid: panggil beban bertahap','Resinkronisasi ke jaringan saat pulih'],
+  learn:['Inverter grid-following BUTUH jaringan untuk diikuti; grid-forming MENJADI jaringan: ia sumber tegangan & frekuensi, bukan penumpang','Cold load pickup: beban yang lama padam menarik arus lonjakan saat dinyalakan — dipanggil per blok, dari kritis ke biasa','Selama islanding, BESS menjadi slack bus mini: tiap watt beban & PLTS yang berubah, baterailah yang menyerap selisihnya','Resinkronisasi = ilmu synchroscope yang sama: samakan tegangan-frekuensi-fase microgrid dengan jaringan, tutup breaker di momen nol'],
+  next:['Pelajari droop control antar beberapa sumber grid-forming','Dalami proteksi microgrid: setting ganda mode island vs grid','Eksplorasi seamless transfer: islanding tanpa kedip sama sekali']},
+});
+let mgf={};
+function buildGridform(){
+  freshScene(0x0e131c,0x05080d);
+  cam={theta:.1,phi:1.16,r:9.5,target:new THREE.Vector3(0,1.7,-.8)};
+  const ground=boxT(22,.1,13,TEX.concrete());ground.position.y=-.05;scene.add(ground);
+  /* BESS + PCS grid-forming */
+  const cont=boxT(2.8,2.0,1.4,TEX.metal(),{metalness:.3});cont.position.set(-4.4,1.0,-2.2);scene.add(cont);
+  cont.add(label('BESS 1 MWh · GRID-FORMING',.8).translateY(1.3));
+  mgf.pcs=boxT(1.1,1.5,.7,TEX.metal(),{metalness:.35});mgf.pcs.position.set(-2.2,.8,-2.2);scene.add(mgf.pcs);
+  actMesh(mgf.pcs,'FORM');
+  scene.add(label('PCS — mode: ?',.65,'#5fd4ff').translateX(-2.2).translateY(1.8).translateZ(-2.2));
+  /* layar microgrid */
+  const frame=boxT(3.8,2.2,.16,TEX.metal(),{metalness:.4});frame.position.set(1.4,2.4,-3.0);scene.add(frame);
+  frame.add(label('MICROGRID CONTROLLER',.8).translateY(1.35));
+  mgf.D=makeDisplay(3.5,1.9,540,310);
+  mgf.D.mesh.position.set(1.4,2.4,-2.9);scene.add(mgf.D.mesh);
+  actMesh(mgf.D.mesh,'BEBAN');
+  mgf.formed=false;mgf.blok=0;mgf.pv=false;mgf.sync=false;mgf.f=0;
+  function layar(){
+    const g=mgf.D.g,W=540,H=310;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.font='700 18px Consolas';g.textAlign='left';
+    g.fillStyle=mgf.formed?'#46ff8e':'#ff5a5a';
+    g.fillText(mgf.formed?mgf.f.toFixed(2)+' Hz · 400 V — ISLAND':'0,00 Hz — GELAP TOTAL',16,38);
+    g.font='600 15px Consolas';
+    const bloks=[['Blok 1: kritis (panel, IT, lampu)',1],['Blok 2: produksi ringan',2],['Blok 3: umum',3]];
+    bloks.forEach((b,i)=>{
+      g.fillStyle=mgf.blok>=b[1]?'#46ff8e':'#5d748c';
+      g.fillText((mgf.blok>=b[1]?'●':'○')+' '+b[0],16,86+i*36);});
+    g.fillStyle=mgf.pv?'#46ff8e':'#5d748c';
+    g.fillText((mgf.pv?'●':'○')+' PLTS 2 MWp '+(mgf.pv?'bergabung (following)':'menunggu'),16,196);
+    if(mgf.sync){g.fillStyle='#5fd4ff';g.font='700 16px Consolas';
+      g.fillText('RESYNC: jaringan pulih — fase disamakan…',16,250);}
+    mgf.D.tex.needsUpdate=true;}
+  layar();
+  moduleTick=(dt)=>{if(mgf.formed&&mgf.f<50){mgf.f=Math.min(50,mgf.f+dt*25);layar();}};
+  /* kawasan beban */
+  [[3.8,-1.6,'PABRIK A'],[5.6,-2.4,'PABRIK B'],[4.8,.2,'KANTOR']].forEach(o=>{
+    const b=boxT(1.2,.9,.9,TEX.plaster());b.position.set(o[0],.5,o[1]);scene.add(b);
+    scene.add(label(o[2],.5).translateX(o[0]).translateY(1.25).translateZ(o[1]));});
+  mgf.lamp=new THREE.Mesh(new THREE.SphereGeometry(.08,12,10),
+    new THREE.MeshStandardMaterial({color:0x553322,emissive:0x000000}));
+  mgf.lamp.position.set(4.8,1.7,-1.2);scene.add(mgf.lamp);
+  /* PLTS + breaker jaringan */
+  mgf.pvm=box(1.6,.05,.9,0x16263e,{roughness:.25});mgf.pvm.position.set(-.2,1.2,.8);
+  mgf.pvm.rotation.x=-.25;scene.add(mgf.pvm);
+  actMesh(mgf.pvm,'PV');
+  scene.add(label('PLTS KAWASAN 2 MWp',.6).translateX(-.2).translateY(1.8).translateZ(.8));
+  mgf.brk=box(.4,.55,.2,0x18242f);mgf.brk.position.set(-6.8,1.0,-.4);scene.add(mgf.brk);
+  actMesh(mgf.brk,'RESYNC');
+  scene.add(label('BREAKER KE JARINGAN UTAMA',.6,'#5fd4ff').translateX(-6.8).translateY(1.6).translateZ(-.4));
+  startSeq([
+   {type:'act',aid:'FORM',done:false,targets:()=>[mgf.pcs],
+    desc:'Aktifkan mode GRID-FORMING: ciptakan 50 Hz dari kehampaan (klik PCS).',
+    why:'Inverter berhenti mencari jaringan untuk diikuti — ia MENJADI jaringan: gelombang sinus 400 V / 50 Hz lahir dari firmware dan energi baterai, referensi bagi semua yang akan menyala setelahnya. Di kegelapan kawasan, satu kotak putih ini kini adalah "PLN".',
+    fx(){mgf.formed=true;mgf.f=0;beep(110,.8,'sine',.08);
+      toast('🌅 Grid-forming AKTIF — 50 Hz tercipta dari baterai.','ok',3000);}},
+   {type:'act',aid:'BEBAN',done:false,targets:()=>[mgf.D.mesh],
+    desc:'Black start microgrid: panggil BEBAN per blok (klik controller).',
+    why:'Cold load pickup mengintai: motor & trafo yang lama padam menyedot lonjakan saat bangun. Blok kritis dulu (200 kW), tunggu stabil... blok produksi (350 kW)... blok umum. Frekuensi bergetar kecil di tiap penutupan — baterai menelan semuanya tanpa mengeluh.',
+    fx(){mgf.blok=3;layar();
+      mgf.lamp.material.color.setHex(0xffd97a);mgf.lamp.material.emissive.setHex(0xffd97a);
+      mgf.lamp.material.emissiveIntensity=1;
+      toast('💡 3 blok menyala bertahap — kawasan hidup di pulau sendiri.','ok',3200);}},
+   {type:'act',aid:'PV',done:false,targets:()=>[mgf.pvm],
+    desc:'Undang PLTS kawasan BERGABUNG ke microgrid (klik panel).',
+    why:'Inverter PLTS (grid-following) kini menemukan "jaringan" untuk diikuti — jaringan buatan baterai-mu. Ia sinkron & menyumbang 800 kW; BESS otomatis mundur jadi penyeimbang: mengisi saat surya surplus, menopang saat awan. Pulau kecil ini kini punya dua kaki.',
+    fx(){mgf.pv=true;layar();
+      toast('☀️ PLTS sinkron ke microgrid — BESS jadi penyeimbang.','ok',3000);}},
+   {type:'act',aid:'RESYNC',done:false,targets:()=>[mgf.brk],
+    desc:'Jaringan utama PULIH: resinkronisasi & kembali normal (klik breaker).',
+    why:'Ilmu synchroscope PLTU-mu terpakai lagi: controller menggeser frekuensi microgrid sehalus rambut sampai fase berhimpit dengan jaringan... breaker menutup di momen nol — TANPA kedip. BESS turun takhta dengan anggun: dari raja pulau kembali jadi penjaga frekuensi. Kawasan bahkan tak sadar pernah dipimpin baterai.',
+    fx(){mgf.sync=true;layar();
+      toast('🔗 RESYNC mulus — kembali ke jaringan tanpa kedip!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Baterai sempat menjadi PLN — dan tak ada yang menyadarinya!</b> Membentuk 50 Hz dari nol, memanggil beban dengan sabar, mengasuh PLTS, lalu menyerahkan takhta tanpa kedip. Grid-forming: masa depan keandalan ada di firmware.');
+    setTimeout(()=>showWin('gridform'),2200);});
+  say('VOLTA di sini 🏝️ Kawasan gelap total — tapi BESS-mu menyimpan kemampuan rahasia: <b>grid-forming</b>, mencipta jaringan dari kehampaan. Malam ini baterai naik takhta. Mulai dari PCS!');
+  $('#modTitle').textContent='J15·M6 — Grid-Forming Microgrid';
+  $('#taskHead').textContent='MENCIPTA 50 Hz DARI NOL';}
+MISSIONS.gridform.build=buildGridform;
+Object.assign(REAL,{
+ gridform:[
+  'Skema proteksi butuh setting GANDA: arus hubung singkat mode island jauh lebih kecil dari mode grid',
+  'Urutan blok beban & kapasitas pickup diuji drill nyata berkala — bukan hanya di studi',
+  'Anti-islanding di inverter PLTS harus dikoordinasikan dengan mode microgrid (izin island terkendali)',
+  'Resinkronisasi memakai sync-check relay — fase yang salah menghapus semua kerja baik sebelumnya'],
+});

@@ -508,3 +508,85 @@ Object.assign(REAL,{
   'Uji jatuh tegangan ujung kabel saat arus penuh — jalur panjang ke garasi sering diremehkan',
   'Beri label sirkit EV di panel & edukasi pemilik: dilarang ekstensi/rol kabel untuk charging'],
 });
+
+/* =====================================================================
+   MISI 6 — KOMISIONING DC FAST CHARGER 150 kW
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ dcfc:{lvl:'JALUR 12 · EV & EV CHARGING · MISI 6',icon:'⚡',title:'Komisioning DC Fast Charger 150 kW',strict:true,
+  loc:'📍 Rest area KM 158 · Upgrade: ultra fast charging',
+  story:'Rest area pertamamu naik kelas: unit DC 150 kW tiba — enam kali lebih besar dari yang dulu, dengan kabel berpendingin cairan dan tegangan kerja sampai 920 VDC. Di level ini charger bukan lagi kotak elektronik: ia gardu mini yang bicara langsung ke baterai mobil. Komisioningnya pun naik kelas: HV-DC menuntut hormat dua kali lipat.',
+  goal:'DC fast charger 150 kW beroperasi: suplai & proteksi terverifikasi, sistem pendingin sehat, insulasi HV-DC lolos, dan sesi 150 kW pertama tercatat.',
+  obj:['Verifikasi suplai, proteksi & pembumian unit','Komisioning sistem pendingin kabel & power module','Uji insulasi HV-DC lalu sesi pengisian penuh'],
+  learn:['DC fast charging memindahkan konverter dari mobil ke charger: unit menyuapi baterai langsung dengan DC tegangan tinggi — 400-920 V sesuai permintaan BMS mobil','Kabel 150 kW tanpa pendingin akan setebal lengan: liquid cooling membuatnya tetap bisa diangkat manusia — dan menjadikan pompa & coolant bagian dari keselamatan','Insulation monitoring HV-DC bekerja TERUS MENERUS: di tegangan ini kebocoran kecil tak diberi kesempatan kedua','Handshake CCS sesungguhnya: mobil & charger bernegosiasi tegangan-arus tiap detik — BMS mobil yang memimpin, charger yang melayani'],
+  next:['Pelajari arsitektur power module & redundansinya (N+1)','Dalami manajemen antrian & pricing ultra fast charging','Eksplorasi megawatt charging (MCS) untuk truk listrik']},
+});
+let mdc={};
+function buildDCFC(){
+  freshScene(0x9fb6cc,0x101a26);
+  cam={theta:.15,phi:1.16,r:8,target:new THREE.Vector3(0,1.6,-.6)};
+  const ground=boxT(20,.1,12,TEX.concrete());ground.position.y=-.05;scene.add(ground);
+  /* unit DC besar */
+  const unit=boxT(1.6,2.3,.9,TEX.metal(),{metalness:.35});unit.position.set(0,1.15,-2.2);scene.add(unit);
+  const stripe=box(1.62,.4,.92,0x18b06a);stripe.position.set(0,2.0,-2.2);scene.add(stripe);
+  unit.add(label('DC FAST 150 kW · 920 VDC',.8).translateY(1.5));
+  mdc.scr=makeDisplay(.8,.5,260,160);
+  mdc.scr.mesh.position.set(0,1.5,-1.74);scene.add(mdc.scr.mesh);
+  dispText(mdc.scr,['OFFLINE','—'],['#7d8f84','#7d8f84']);
+  actMesh(mdc.scr.mesh,'SESI');
+  /* panel suplai */
+  const pnl=boxT(1.2,1.6,.4,TEX.metal(),{metalness:.35});pnl.position.set(-3.8,.85,-2.4);scene.add(pnl);
+  pnl.add(label('PANEL 200 kVA',.65).translateY(1.05));
+  actMesh(pnl,'SUPLAI');
+  /* radiator pendingin */
+  mdc.cool=boxT(.9,.7,.4,TEX.metal(),{metalness:.4});mdc.cool.position.set(1.6,.4,-2.3);scene.add(mdc.cool);
+  actMesh(mdc.cool,'COOL');
+  scene.add(label('LIQUID COOLING UNIT',.6,'#5fd4ff').translateX(1.8).translateY(1.0).translateZ(-2.2));
+  /* insulation tester */
+  mdc.meg=box(.34,.22,.26,0xcc6020);mdc.meg.position.set(3.4,1.05,.4);scene.add(mdc.meg);
+  actMesh(mdc.meg,'INSUL');
+  const tbl=boxT(1.0,.07,.6,TEX.wood());tbl.position.set(3.4,.92,.4);scene.add(tbl);
+  const tleg=boxT(.08,.92,.08,TEX.wood());tleg.position.set(3.4,.46,.4);scene.add(tleg);
+  scene.add(label('INSULATION TESTER 1kV',.55,'#5fd4ff').translateX(3.4).translateY(1.35).translateZ(.4));
+  /* mobil premium */
+  const body=box(2.5,.6,1.2,0x222a31,{roughness:.3,metalness:.4});body.position.set(-2.6,.65,1.2);scene.add(body);
+  const cab=box(1.4,.45,1.1,0x222a31,{roughness:.25,metalness:.4});cab.position.set(-2.7,1.15,1.2);scene.add(cab);
+  [[-1,-.5],[1,-.5],[-1,.5],[1,.5]].forEach(w=>{
+    const wh=cyl(.27,.27,.2,0x14181d);wh.rotation.x=Math.PI/2;
+    wh.position.set(-2.6+w[0]*.9,.28,1.2+w[1]);scene.add(wh);});
+  scene.add(label('EV 800V — siap uji',.65).translateX(-2.6).translateY(1.75).translateZ(1.2));
+  mdc.kw=0;mdc.on=false;
+  moduleTick=(dt)=>{if(mdc.on&&mdc.kw<150){mdc.kw=Math.min(150,mdc.kw+dt*30);
+    dispText(mdc.scr,[mdc.kw.toFixed(0)+' kW',(mdc.kw>=150?'FULL POWER ✓':'ramping…')+' · 805V'],
+      [mdc.kw>=150?'#46ff8e':'#5fd4ff','#8aa3bd']);}};
+  startSeq([
+   {type:'act',aid:'SUPLAI',done:false,targets:()=>[pnl],
+    desc:'Verifikasi SUPLAI 200 kVA: proteksi, pembumian, urutan fasa (klik panel).',
+    why:'150 kW DC butuh ±170 kVA AC di sisi masuk: breaker 250 A, pembumian terukur 0,9 Ω, urutan fasa benar (power module tiga fasa peka urutan). Ilmu komisioning lamamu tetap fondasi — hanya angkanya yang membesar enam kali.',
+    fx(){toast('🔌 Suplai ✓ pembumian 0,9Ω ✓ urutan fasa R-S-T ✓','ok',2800);}},
+   {type:'act',aid:'COOL',done:false,targets:()=>[mdc.cool],
+    desc:'Komisioning LIQUID COOLING: coolant, pompa, alarm (klik unit pendingin).',
+    why:'Kabel 150 kW hanya seukuran lengan bayi BERKAT cairan yang mengalir di dalamnya — coolant diisi sesuai spesifikasi, pompa di-priming, aliran terverifikasi, dan alarm suhu/aliran diuji: pendingin gagal = charger wajib menurunkan daya SENDIRI. Di sini pendingin adalah keselamatan, bukan kenyamanan.',
+    fx(){toast('🧊 Coolant ✓ pompa ✓ alarm derating teruji ✓','ok',2800);}},
+   {type:'act',aid:'INSUL',done:false,targets:()=>[mdc.meg],
+    desc:'Uji INSULASI jalur HV-DC sampai konektor (klik tester).',
+    why:'920 VDC tak mengenal ampun: insulasi diuji 1 kV dari power module sampai pin gun — 480 MΩ ✓. Lalu fungsi pengawal permanennya diuji: insulation monitoring device disimulasikan bocor — unit memutus dalam 80 ms. Penjaga yang terbukti bangun, bukan dipercaya tidur.',
+    fx(){toast('🔍 Insulasi 480MΩ ✓ IMD trip 80ms ✓ — HV-DC terkawal.','ok',3000);}},
+   {type:'act',aid:'SESI',done:false,targets:()=>[mdc.scr.mesh],
+    desc:'Momen 150 kW: colok EV 800V & saksikan FULL POWER (klik layar).',
+    why:'Handshake CCS: mobil meminta 805 V / 187 A, charger menyanggupi... daya menanjak — 50, 100, 150 kW PENUH: 10-80% dalam 18 menit, kabel tetap hangat-ramah berkat coolant yang bekerja. Rest area-mu kini melayani kelas tercepat di jalan tol.',
+    fx(){mdc.on=true;beep(160,.7,'sine',.08);
+      toast('⚡ 150 kW FULL — 10-80% hanya 18 menit. Naik kelas resmi!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Ultra fast charging beroperasi!</b> Suplai besar dihormati, pendingin diperlakukan sebagai keselamatan, HV-DC dikawal monitor yang terbukti sigap. Dari 25 kW ke 150 kW: jalur EV-mu tumbuh secepat industrinya.');
+    setTimeout(()=>showWin('dcfc'),2200);});
+  say('VOLTA di sini ⚡ Barang besar datang: <b>DC fast charger 150 kW, 920 VDC, kabel berpendingin cairan</b>. Di level ini charger adalah gardu mini — dan komisioningnya menuntut hormat dua kali lipat. Mulai dari panel suplai!');
+  $('#modTitle').textContent='J12·M6 — DC Fast Charger 150 kW';
+  $('#taskHead').textContent='HV-DC MENUNTUT HORMAT GANDA';}
+MISSIONS.dcfc.build=buildDCFC;
+Object.assign(REAL,{
+ dcfc:[
+  'Ikuti prosedur komisioning pabrikan HV: urutan energize power module & kalibrasi IMD spesifik tiap merek',
+  'Coolant memakai spesifikasi pabrikan (umumnya glikol khusus) — salah cairan = korosi loop pendingin',
+  'Uji interoperabilitas dengan beberapa model EV — handshake CCS punya dialek antar pabrikan',
+  'Sediakan SOP penanganan kabel & gun: drop test, inspeksi pin berkala — konektor adalah titik aus utama'],
+});

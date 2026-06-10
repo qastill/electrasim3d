@@ -439,3 +439,91 @@ Object.assign(REAL,{
   'Sistem pencatatan energi per line produksi memudahkan alokasi — investasi metering terbayar di tarif',
   'Simulasikan dampak dekarbonisasi (PLTS, efisiensi) langsung ke tarif CBAM — bahasa baru untuk ROI hijau'],
 });
+
+/* =====================================================================
+   MISI 6 — SCOPE 3: DEKARBONISASI RANTAI PASOK
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ scope3:{lvl:'JALUR 11 · SUSTAINABILITY & CARBON · MISI 6',icon:'🔗',title:'Scope 3: Dekarbonisasi Rantai Pasok',strict:false,
+  loc:'📍 PT Maju Plastik · Program supplier engagement',
+  story:'Scope 1 & 2 sudah kamu taklukkan — tapi gajah di ruangan bernama Scope 3 masih berdiri: emisi 40 pemasok yang bukan milikmu, tak bisa kamu perintah, namun menempel di laporanmu. Mengirim surat ancaman? Mereka akan diam. Seni dekarbonisasi rantai pasok adalah membuat pemasok MAU — dan itu dimulai dari data, prioritas, dan bantuan nyata.',
+  goal:'Program supplier engagement berjalan: hotspot teridentifikasi dari spend analysis, pemasok prioritas terlibat sukarela, dan satu pilot project membuktikan model bisa ditiru.',
+  obj:['Petakan emisi pemasok dengan spend analysis','Prioritaskan & dekati pemasok kunci dengan tawaran bantuan','Jalankan pilot & rancang skema insentif berkelanjutan'],
+  learn:['Scope 3 dihitung bertingkat: mulai kasar dari spend-based (rupiah × faktor industri), lalu naik presisi ke data primer pemasok prioritas','Hukum pareto rantai pasok: ±20% pemasok menyumbang ±80% emisi — energi engagement difokuskan, bukan disebar rata','Pemasok bergerak karena insentif, bukan ceramah: kontrak lebih panjang, volume, pendampingan teknis gratis — bahasa yang mereka pahami','Satu pilot sukses bernilai lebih dari seratus webinar: pemasok percaya pada tetangganya yang hemat, bukan pada slide-mu'],
+  next:['Pelajari supplier scorecard & integrasi kriteria karbon ke procurement','Dalami PCF exchange: pemasok mengirim data produk terverifikasi','Eksplorasi pembiayaan hijau rantai pasok (supply chain finance)']},
+});
+let ms3={};
+function buildScope3(){
+  freshScene(0xb8d0c0,0x121d18);
+  cam={theta:.05,phi:1.17,r:8,target:new THREE.Vector3(0,1.8,-.8)};
+  const Z=room(0x6b5a45,0xd8d2c4,16,11);
+  /* layar spend analysis */
+  const frame=boxT(4.2,2.4,.16,TEX.metal(),{metalness:.4});frame.position.set(-2.4,2.4,Z+.05);scene.add(frame);
+  frame.add(label('PETA EMISI 40 PEMASOK',.85).translateY(1.5));
+  ms3.D=makeDisplay(3.9,2.1,560,320);
+  ms3.D.mesh.position.set(-2.4,2.4,Z+.15);scene.add(ms3.D.mesh);
+  actMesh(ms3.D.mesh,'PETA');
+  function peta(mode){
+    const g=ms3.D.g,W=560,H=320;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.font='700 17px Consolas';g.textAlign='left';
+    g.fillStyle='#5fd4ff';g.fillText('SPEND ANALYSIS → EMISI (tCO2e/thn)',16,30);
+    const bars=[['Resin A (PT Polindo)',420,'#ff5a5a'],['Transportir',180,'#ffd23f'],
+      ['Kemasan',95,'#ffd23f'],['Resin B',88,'#ffd23f'],['36 lainnya',117,'#46ff8e']];
+    bars.forEach((b,i)=>{const y=66+i*48;
+      g.fillStyle='#8aa3bd';g.font='600 14px Consolas';g.fillText(b[0],16,y);
+      g.fillStyle=b[2];g.fillRect(220,y-14,b[1]*.62,20);
+      g.fillText(b[1]+'',230+b[1]*.62,y);});
+    if(mode>=1){g.fillStyle='#ffd23f';g.font='700 15px Consolas';
+      g.fillText('4 pemasok = 78% emisi → fokus di sini',16,H-16);}
+    ms3.D.tex.needsUpdate=true;}
+  peta(0);
+  /* figur pemasok */
+  ms3.sup=new THREE.Group();
+  const badan=cyl(.22,.28,.9,0x6a4a8a);badan.position.y=.72;ms3.sup.add(badan);
+  const kepala=new THREE.Mesh(new THREE.SphereGeometry(.15,14,12),
+    new THREE.MeshStandardMaterial({color:0xd8b090}));kepala.position.y=1.36;ms3.sup.add(kepala);
+  ms3.sup.position.set(2.2,0,.6);scene.add(ms3.sup);
+  actMesh(badan,'DEKATI');
+  scene.add(label('DIREKTUR PT POLINDO (resin)',.6).translateX(2.2).translateY(1.85).translateZ(.6));
+  /* pabrik pemasok mini (pilot) */
+  ms3.pab=boxT(1.8,1.2,1.0,TEX.plaster());ms3.pab.position.set(4.8,.65,-1.8);scene.add(ms3.pab);
+  ms3.pv=box(1.2,.05,.7,0x16263e,{roughness:.25});ms3.pv.position.set(4.8,1.35,-1.8);
+  ms3.pv.rotation.x=-.2;ms3.pv.visible=false;scene.add(ms3.pv);
+  actMesh(ms3.pab,'PILOT');
+  scene.add(label('PABRIK POLINDO — kandidat pilot',.6,'#5fd4ff').translateX(4.8).translateY(1.95).translateZ(-1.8));
+  /* lembar insentif */
+  ms3.ins=box(.5,.66,.04,0xd8e8d8);ms3.ins.position.set(1.2,2.3,Z+.06);scene.add(ms3.ins);
+  actMesh(ms3.ins,'INSENTIF');
+  scene.add(label('SKEMA INSENTIF',.55,'#8df0b8').translateX(1.2).translateY(2.85).translateZ(Z+.1));
+  startSeq([
+   {type:'act',aid:'PETA',done:false,targets:()=>[ms3.D.mesh],
+    desc:'Petakan 40 pemasok dengan SPEND ANALYSIS (klik layar).',
+    why:'Belum perlu menyurvei 40 perusahaan: belanja per kategori × faktor emisi industri memberi peta kasar yang cukup untuk MEMILIH medan perang. Hasil: pemasok resin A sendirian menyumbang 420 ton — hampir setengah Scope 3 upstream. Pareto bekerja seperti biasa.',
+    fx(){peta(1);toast('🗺️ 4 dari 40 pemasok = 78% emisi — medan dipilih.','ok',3000);}},
+   {type:'act',aid:'DEKATI',done:false,targets:()=>[ms3.sup.children[0]],
+    desc:'DEKATI pemasok terbesar — dengan tawaran, bukan tuntutan (klik beliau).',
+    why:'Kalimat pembukanya menentukan nasib program: bukan "kalian harus lapor emisi" melainkan "kami ingin membantu pabrik Anda hemat energi — gratis, auditor kami yang turun." Direktur Polindo, yang tadinya defensif, bertanya: "gratis... seriusan?" Pintu terbuka oleh nilai, bukan tekanan.',
+    fx(){toast('🤝 Polindo setuju walkthrough audit gratis — pintu terbuka.','ok',3000);}},
+   {type:'act',aid:'PILOT',done:false,targets:()=>[ms3.pab],
+    desc:'Jalankan PILOT: audit + quick win di pabrik Polindo (klik pabrik).',
+    why:'Ilmu audit-mu dipinjamkan ke seberang pagar: kompresor bocor, setting chiller, jadwal WBP — hemat 11% tagihan TANPA investasi, emisi turun 46 ton. Polindo senang (biaya turun), kamu senang (Scope 3 turun), dan ceritanya mulai berkeliling ke pemasok lain. Bukti menular.',
+    fx(){ms3.pv.visible=true;
+      toast('🏭 Pilot sukses: Polindo hemat 11% · Scope 3 −46 t — cerita menyebar.','ok',3200);}},
+   {type:'act',aid:'INSENTIF',done:false,targets:()=>[ms3.ins],
+    desc:'Lembagakan: rancang SKEMA INSENTIF jangka panjang (klik lembar).',
+    why:'Agar tak berhenti di satu cerita: pemasok yang melapor data & punya target reduksi mendapat kontrak 2 tahun (bukan tahunan) + prioritas volume. Procurement memegang kuncinya kini — kriteria karbon resmi masuk scorecard pemasok. Rantai pasok mulai berlomba ke arah yang benar.',
+    fx(){toast('📜 Insentif terlembaga: kontrak panjang utk yang bergerak — 9 pemasok mendaftar!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Gajah Scope 3 mulai berjalan!</b> Dipetakan dengan pareto, didekati dengan nilai, dibuktikan dengan pilot, dilembagakan dengan insentif. Rantai pasok tak bisa diperintah — tapi bisa diajak menang bersama.');
+    setTimeout(()=>showWin('scope3'),2200);});
+  say('VOLTA di sini 🔗 Musuh terakhir akuntansi karbon: <b>Scope 3</b> — emisi orang lain yang menempel di laporanmu. Empat puluh pemasok takkan tunduk pada surat edaran. Senjatamu: pareto, tawaran bantuan, dan satu pilot yang menular.');
+  $('#modTitle').textContent='J11·M6 — Dekarbonisasi Rantai Pasok';
+  $('#taskHead').textContent='AJAK MENANG, BUKAN PERINTAH';}
+MISSIONS.scope3.build=buildScope3;
+Object.assign(REAL,{
+ scope3:[
+  'Mulai spend-based lalu tingkatkan ke data primer untuk pemasok prioritas — presisi bertahap itu sah',
+  'Sediakan template pelaporan sederhana — pemasok UKM mundur melihat spreadsheet 14 tab',
+  'Lindungi kerahasiaan data pemasok (NDA) — data energi adalah data biaya produksi mereka',
+  'Ukur program dengan dua angka: % emisi tercakup data primer & tren intensitas pemasok prioritas'],
+});

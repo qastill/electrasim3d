@@ -502,3 +502,103 @@ Object.assign(REAL,{
   'Proteksi yang bekerja TIDAK pernah di-bypass demi kejar start — itu garis merah industri pembangkitan',
   'Tindak lanjut prosedural (checklist, label selector) diverifikasi audit berikutnya — kertas harus jadi budaya'],
 });
+
+/* =====================================================================
+   MISI 6 — KIMIA AIR BOILER: MUSUH TAK KASAT MATA
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ kimia:{lvl:'JALUR 07 · PEMBANGKITAN · MISI 6',icon:'🧪',title:'Kimia Air: Musuh Tak Kasat Mata',strict:false,
+  loc:'📍 PLTU unit 2 · Laboratorium kimia, shift pagi',
+  story:'Turbin & boiler yang kamu rawat lewat misi-misi sebelumnya punya musuh yang tak pernah tidur: AIR-nya sendiri. Silika menyelinap menjadi kerak di sudu turbin, oksigen menggigiti pipa dari dalam, pH yang melenceng melarutkan logam pelan-pelan. Hari ini kamu petugas kimia: penjaga yang perangnya dimenangkan dalam satuan ppb — part per billion.',
+  goal:'Parameter kimia air terjaga: sampling benar, anomali oksigen terdeteksi & akarnya ditemukan, dosing dikoreksi, dan blowdown diatur seimbang.',
+  obj:['Sampling & analisis parameter kunci','Diagnosa anomali DO tinggi sampai akarnya','Koreksi dosing & atur continuous blowdown'],
+  learn:['Air boiler tekanan tinggi dituntut kemurnian ekstrem: silika ppb-level — di tekanan tinggi silika MENGUAP bersama uap & mengerak di sudu turbin','Dissolved oxygen (DO) adalah penggigit pipa: deaerator membuang mayoritas, oxygen scavenger menghabisi sisanya — DO naik = ada yang bocor di rantai itu','pH dijaga sedikit basa (AVT): terlalu rendah melarutkan besi, terlalu tinggi menyerang tembaga — keseimbangan, bukan maksimum','Blowdown adalah pajak kemurnian: membuang air pekat menjaga TDS, tapi tiap liter buangan membawa energi — diatur, bukan dimaksimalkan'],
+  next:['Pelajari rezim kimia AVT vs OT untuk boiler bertekanan tinggi','Dalami analisis kerak & deposit (turbine deposit analysis)','Eksplorasi online chemistry monitoring & alarm otomatis']},
+});
+let mkm={};
+function buildKimia(){
+  freshScene(0x8aa0b8,0x10181f);
+  cam={theta:.05,phi:1.17,r:8,target:new THREE.Vector3(0,1.6,-.8)};
+  const Z=room(0x55606a,0xc4cdd6,16,11);
+  /* panel sampling (deretan keran) */
+  const rack=boxT(2.6,1.8,.3,TEX.metal(),{metalness:.4});rack.position.set(-4.2,1.3,Z-.02);scene.add(rack);
+  rack.add(label('SAMPLE PANEL',.75).translateY(1.2));
+  mkm.keran=[];
+  [['FW','-5.0'],['DRUM','-4.2'],['UAP','-3.4']].forEach((o,i)=>{
+    const k=cyl(.05,.05,.18,0xd83a3a);k.rotation.x=Math.PI/2;
+    k.position.set(parseFloat(o[1]),1.3,Z+.18);scene.add(k);mkm.keran.push(k);
+    scene.add(label(o[0],.42).translateX(parseFloat(o[1])).translateY(1.0).translateZ(Z+.14));});
+  actMesh(mkm.keran[0],'SAMPEL');
+  /* meja lab + alat */
+  const tbl=boxT(2.4,.08,.9,TEX.wood());tbl.position.set(-.6,.95,-.6);scene.add(tbl);
+  [[-1,.3],[1,.3],[-1,-.3],[1,-.3]].forEach(o=>{
+    const l=boxT(.08,.95,.08,TEX.wood());l.position.set(-.6+o[0],.47,-.6+o[1]*.8);scene.add(l);});
+  mkm.alat=box(.4,.3,.3,0xe8edf2);mkm.alat.position.set(-.6,1.15,-.6);scene.add(mkm.alat);
+  actMesh(mkm.alat,'ANALISA');
+  scene.add(label('FOTOMETER + DO METER',.6,'#5fd4ff').translateX(-.6).translateY(1.55).translateZ(-.6));
+  /* layar hasil */
+  mkm.D=makeDisplay(2.6,1.5,480,290);
+  mkm.D.mesh.position.set(2.6,2.4,Z+.1);scene.add(mkm.D.mesh);
+  actMesh(mkm.D.mesh,'DIAG');
+  scene.add(label('LOG KIMIA AIR',.75,'#5fd4ff').translateX(2.6).translateY(3.35).translateZ(Z+.1));
+  function hasil(mode){
+    const g=mkm.D.g,W=480,H=290;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.font='600 16px Consolas';g.textAlign='left';
+    const rows=[['pH','9,1','9,0-9,6','#46ff8e'],['Silika','12 ppb','<20','#46ff8e'],
+      ['DO','28 ppb','<7','#ff5a5a'],['Konduktivitas','x','batas','#46ff8e']];
+    g.fillStyle='#5fd4ff';g.font='700 18px Consolas';
+    g.fillText('FEEDWATER — 08:00',16,32);
+    g.font='600 16px Consolas';
+    rows.forEach((r,i)=>{const y=72+i*38;
+      g.fillStyle='#8aa3bd';g.fillText(r[0],16,y);
+      g.fillStyle=r[3];g.fillText(r[1],170,y);
+      g.fillStyle='#5d748c';g.fillText('('+r[2]+')',300,y);});
+    if(mode>=1){g.fillStyle='#ffd23f';g.font='700 15px Consolas';
+      g.fillText('DO 4x batas → telusur: deaerator? dosing? bocor?',16,H-46);}
+    if(mode>=2){g.fillStyle='#46ff8e';
+      g.fillText('AKAR: pompa dosing scavenger kehabisan — DO pulih 5 ppb',16,H-18);}
+    mkm.D.tex.needsUpdate=true;}
+  hasil(0);
+  /* pompa dosing + blowdown valve */
+  mkm.dos=box(.5,.6,.4,0x2a5a8a);mkm.dos.position.set(5.4,.35,-1.6);scene.add(mkm.dos);
+  actMesh(mkm.dos,'DOSING');
+  scene.add(label('POMPA DOSING SCAVENGER',.6,'#5fd4ff').translateX(5.4).translateY(1.0).translateZ(-1.6));
+  mkm.bd=cyl(.08,.08,.3,0xcc8830);mkm.bd.rotation.z=Math.PI/2;
+  mkm.bd.position.set(5.4,1.8,-1.6);scene.add(mkm.bd);
+  actMesh(mkm.bd,'BLOWDOWN');
+  scene.add(label('CONTINUOUS BLOWDOWN',.55,'#5fd4ff').translateX(5.4).translateY(2.2).translateZ(-1.6));
+  startSeq([
+   {type:'act',aid:'SAMPEL',done:false,targets:()=>[mkm.keran[0]],
+    desc:'Ambil SAMPEL rutin tiga titik: feedwater, drum, uap (klik keran).',
+    why:'Ritual pagi yang menjaga aset miliaran: alirkan dulu sampai segar (air mati di pipa sampling berbohong), suhu sampel dikondisikan, botol khusus per parameter. Sampling buruk membuat lab menebak — dan boiler tak punya waktu untuk tebakan.',
+    fx(){toast('🧴 3 titik tersampling segar — menuju meja analisa.','ok',2800);}},
+   {type:'act',aid:'ANALISA',done:false,targets:()=>[mkm.alat],
+    desc:'ANALISIS parameter kunci di lab (klik alat).',
+    why:'pH 9,1 ✓, silika 12 ppb ✓, konduktivitas ✓... tapi dissolved oxygen 28 ppb — EMPAT KALI batas. Di tekanan tinggi, oksigen sebanyak itu adalah ribuan gigitan kecil di dinding pipa tiap jam. Angka kecil, musuh besar.',
+    fx(){hasil(1);toast('🧪 DO 28 ppb (batas <7) — pitting corrosion mengintai!','bad',3000);}},
+   {type:'act',aid:'DIAG',done:false,targets:()=>[mkm.D.mesh],
+    desc:'TELUSUR akarnya: deaerator, dosing, atau kebocoran? (klik log)',
+    why:'Deaerator: tekanan & venting normal — bukan dia. Seal pompa kondensat: tak ada tanda vakum bocor. Tangki oxygen scavenger... nyaris KERING, dan pompa dosingnya menghisap udara sejak semalam. Akar ketemu: bukan sistem yang rusak, logistik kimia yang lengah.',
+    fx(){toast('🔍 Tangki scavenger kering — dosing macet sejak semalam!','bad',3000);}},
+   {type:'act',aid:'DOSING',done:false,targets:()=>[mkm.dos],
+    desc:'KOREKSI: isi tangki, priming pompa, kalibrasi laju dosing (klik pompa).',
+    why:'Tangki diisi, pompa di-priming sampai bebas udara, laju dikalibrasi ulang terhadap aliran feedwater. Dua jam kemudian DO merosot ke 5 ppb ✓. Plus satu perbaikan sistemik: alarm level rendah tangki kimia — kelengahan yang sama tak boleh dapat kesempatan kedua.',
+    fx(){hasil(2);toast('💉 Dosing pulih — DO 28 → 5 ppb + alarm level dipasang.','ok',3000);}},
+   {type:'act',aid:'BLOWDOWN',done:false,targets:()=>[mkm.bd],
+    desc:'Tutup ronde: atur CONTINUOUS BLOWDOWN seimbang (klik valve).',
+    why:'TDS drum merayap naik mendekati batas — blowdown dinaikkan dari 1,2% ke 1,8%: cukup menjaga kemurnian, tak berlebihan membuang energi (tiap liter blowdown membawa panas yang sudah dibayar). Kimia air selalu soal keseimbangan, tak pernah soal maksimum.',
+    fx(){toast('🌊 Blowdown 1,8% — TDS terjaga, energi tak terbuang sia-sia.','ok',3200);sfx.big();}},
+  ],()=>{say('🎉 <b>Perang ppb dimenangkan hari ini!</b> Oksigen tertangkap di angka 28, akar ditemukan di tangki kering, dan keseimbangan blowdown dijaga. Boiler & turbin menua pelan — karena petugas kimianya tak pernah lengah.');
+    setTimeout(()=>showWin('kimia'),2200);});
+  say('VOLTA di sini 🧪 Musuh hari ini tak terlihat dan terlarut: <b>oksigen, silika, pH</b>. Perangnya dimenangkan dalam part-per-billion. Ambil botol sampelmu — boiler menunggu diagnosa paginya.');
+  $('#modTitle').textContent='J07·M6 — Kimia Air Boiler';
+  $('#taskHead').textContent='PERANG DALAM SATUAN PPB';}
+MISSIONS.kimia.build=buildKimia;
+Object.assign(REAL,{
+ kimia:[
+  'Ikuti batas kimia sesuai tekanan boiler & rezim (AVT/OT) dari pabrikan dan standar pembangkit',
+  'Kalibrasi alat analisa & verifikasi silang dengan lab eksternal berkala',
+  'Tren-kan parameter di log digital — kimia air adalah permainan tren, bukan snapshot',
+  'Kelola stok & alarm level bahan kimia — kerusakan jutaan dolar bisa berawal dari tangki kosong'],
+});
