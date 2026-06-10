@@ -707,3 +707,101 @@ Object.assign(REAL,{
   'Reclose/penutup balik dinonaktifkan & dikonfirmasi dispatcher sebelum tim mendekat',
   'Batas cuaca (kelembapan, angin, petir) tertulis di SOP — pembatalan bukan kegagalan, itu kedewasaan'],
 });
+
+/* =====================================================================
+   MISI 8 — PMU & WAMS: MELIHAT DETAK SISTEM SE-PULAU
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ pmu:{lvl:'JALUR 04 · TRANSMISI · MISI 8',icon:'🛰️',title:'PMU & WAMS: Melihat Detak Sistem Se-Pulau',strict:false,
+  loc:'📍 GI Kosambi & pusat WAMS · Era pengukuran sinkron',
+  story:'SCADA lamamu memotret sistem tiap 2-4 detik — cukup untuk operasi, buta untuk dinamika. Teknologi barunya: PMU (phasor measurement unit) — 50 potret per DETIK, semua GI distempel waktu GPS yang sama, sehingga SUDUT fasa antar kota bisa dibandingkan langsung. Hari ini kamu memasang PMU di Kosambi… dan WAMS pusat segera menangkap sesuatu yang selama ini tak terlihat: sistem berayun pelan, seperti jembatan yang bergoyang.',
+  goal:'PMU terpasang & tersinkron GPS, data phasor mengalir ke WAMS, dan osilasi antar-area 0,3 Hz yang selama ini tak kasat terdeteksi & ditindaklanjuti.',
+  obj:['Pasang PMU: sumber sinyal CT/PT & antena GPS','Validasi sinkronisasi & aliran data ke WAMS','Analisis: temukan & laporkan osilasi antar-area'],
+  learn:['PMU mengukur phasor (besar + SUDUT) 25-50x/detik dengan stempel GPS — sudut tegangan Kosambi vs Surabaya bisa dibandingkan seperti dua jam yang disetel satelit yang sama','Sudut fasa antar bus = "kemiringan" aliran daya: membesar pelan berarti sistem makin tertekan — alarm yang SCADA biasa tak pernah bisa bunyikan','Osilasi antar-area (0,1-0,8 Hz) adalah goyangan kelompok pembangkit barat vs timur: kecil tak berbahaya, membesar bisa memutus pulau — PMU adalah satu-satunya yang melihatnya','Damping diukur: osilasi teredam cepat = sehat; teredam lambat = PSS (power system stabilizer) pembangkit perlu ditala'],
+  next:['Pelajari penalaan PSS bersama tim pembangkit','Dalami aplikasi WAMS: pendeteksi pulau, validasi model dinamis','Eksplorasi proteksi wide-area (RAS/SIPS) berbasis phasor']},
+});
+let mpm={};
+function buildPMU(){
+  freshScene(0x7f9cc0,0x0d1726);
+  cam={theta:.05,phi:1.16,r:8.5,target:new THREE.Vector3(0,1.8,-.8)};
+  const Z=room(0x55606a,0xc4cdd6,16,11);
+  /* panel relay + slot PMU */
+  const panel=boxT(1.6,2.4,.4,TEX.metal(),{metalness:.35});panel.position.set(-4.6,1.3,Z-.02);scene.add(panel);
+  panel.add(label('PANEL PROTEKSI GI',.7).translateY(1.5));
+  mpm.pmu=box(.6,.3,.3,0x2a5a8a);mpm.pmu.position.set(-4.6,1.4,Z+.22);scene.add(mpm.pmu);
+  actMesh(mpm.pmu,'PASANG');
+  scene.add(label('UNIT PMU (baru)',.55,'#5fd4ff').translateX(-4.6).translateY(1.0).translateZ(Z+.2));
+  /* antena GPS di atap */
+  mpm.gps=cyl(.06,.1,.3,0xe8edf2);mpm.gps.position.set(-4.6,3.6,Z+.3);scene.add(mpm.gps);
+  actMesh(mpm.gps,'GPS');
+  scene.add(label('ANTENA GPS',.55,'#5fd4ff').translateX(-4.6).translateY(4.0).translateZ(Z+.3));
+  /* layar WAMS */
+  const frame=boxT(4.6,2.6,.16,TEX.metal(),{metalness:.4});frame.position.set(1.2,2.5,Z+.05);scene.add(frame);
+  frame.add(label('WAMS — PUSAT PENGATUR',.85).translateY(1.6));
+  mpm.D=makeDisplay(4.3,2.3,600,330);
+  mpm.D.mesh.position.set(1.2,2.5,Z+.15);scene.add(mpm.D.mesh);
+  actMesh(mpm.D.mesh,'SINKRON');
+  mpm.mode=0;mpm.t=0;
+  function wams(){
+    const g=mpm.D.g,W=600,H=330;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.font='600 15px Consolas';g.textAlign='left';
+    if(mpm.mode===0){g.fillStyle='#5d748c';g.font='700 17px Consolas';
+      g.fillText('menunggu stream phasor…',24,H/2);}
+    else{
+      g.fillStyle='#5fd4ff';g.font='700 17px Consolas';
+      g.fillText('SUDUT ANTAR-AREA (Kosambi ref)',16,28);
+      g.strokeStyle='#46ff8e';g.lineWidth=2.5;g.beginPath();
+      for(let x=0;x<W-40;x++){
+        const osc=(mpm.mode>=2?Math.sin((x+mpm.t*60)*.06)*Math.exp(0)*14:0);
+        g.lineTo(20+x,150-x*.04-osc*(mpm.mode>=2?1:0));}
+      g.stroke();
+      if(mpm.mode>=2){g.fillStyle='#ffd23f';g.font='700 16px Consolas';
+        g.fillText('OSILASI 0,32 Hz · damping 3,8% (lemah!)',16,60);
+        g.fillStyle='#8aa3bd';g.font='600 14px Consolas';
+        g.fillText('mode antar-area: barat ↔ timur',16,86);}
+      if(mpm.mode>=3){g.fillStyle='#46ff8e';g.font='700 16px Consolas';
+        g.fillText('pasca tala PSS: damping 9,6% ✓',16,H-24);}}
+    mpm.D.tex.needsUpdate=true;}
+  wams();
+  moduleTick=(dt)=>{if(mpm.mode>=2){mpm.t+=dt;if((mpm.t*10|0)%2===0)wams();}};
+  /* laporan */
+  mpm.rep=box(.5,.66,.04,0xe8e4d8);mpm.rep.position.set(4.8,1.2,Z+.06);scene.add(mpm.rep);
+  actMesh(mpm.rep,'LAPOR');
+  scene.add(label('LAPORAN KE PEMBANGKIT',.55,'#5fd4ff').translateX(4.8).translateY(1.75).translateZ(Z+.1));
+  startSeq([
+   {type:'act',aid:'PASANG',done:false,targets:()=>[mpm.pmu],
+    desc:'Pasang UNIT PMU: cabang sinyal dari CT/PT existing (klik unit).',
+    why:'PMU menumpang sinyal CT/PT yang sama dengan relay — lewat terminal uji, TANPA mengganggu proteksi (proteksi adalah raja; PMU hanya tamu yang mendengarkan). 50 frame phasor per detik mulai dihitung di dalamnya, menunggu satu hal: waktu yang presisi.',
+    fx(){toast('🔌 PMU tersambung via terminal uji — proteksi tak tersentuh.','ok',3000);}},
+   {type:'act',aid:'GPS',done:false,targets:()=>[mpm.gps],
+    desc:'Pasang ANTENA GPS — jantung sinkronisasi mikrodetik (klik antena).',
+    why:'Tanpa GPS, PMU hanyalah meteran cepat. Dengan GPS (presisi <1 µs), stempel waktunya identik dengan PMU di Surabaya, Bandung, di mana pun — dan barulah SUDUT antar kota bermakna. Satu mikrodetik meleset = 0,018° salah baca: presisi waktu adalah segalanya di dunia phasor.',
+    fx(){toast('🛰️ GPS lock 11 satelit — stempel waktu <1 µs.','ok',3000);}},
+   {type:'act',aid:'SINKRON',done:false,targets:()=>[mpm.D.mesh],
+    desc:'Validasi: stream phasor mengalir ke WAMS pusat (klik layar).',
+    why:'50 frame/detik mengalir via jaringan khusus ke phasor data concentrator — Kosambi kini satu dari 28 mata sinkron se-pulau. Layar WAMS menggambar sudut antar-area secara LIVE: untuk pertama kalinya, GI-mu bukan hanya melapor besaran, tapi ikut menggambar detak jantung sistem.',
+    fx(){mpm.mode=1;wams();toast('📡 Stream 50 fps masuk WAMS — mata ke-28 menyala.','ok',3000);}},
+   {type:'act',aid:'OSILASI',done:false,targets:()=>[mpm.D.mesh],
+    desc:'WAMS menangkap sesuatu: analisis OSILASI itu (klik layar).',
+    why:'Mata baru langsung bekerja: sudut barat-timur berayun 0,32 Hz dengan damping hanya 3,8% — kelompok pembangkit dua area saling bergoyang seperti dua anak di jungkat-jungkit, teredam terlalu lambat. SCADA 2-detik selamanya buta pada ini; gangguan besar di momen yang salah bisa membuatnya membesar. Sistem ternyata sudah lama berbisik — baru hari ini ada yang mendengar.',
+    fx(){mpm.mode=2;toast('🌊 Osilasi 0,32 Hz · damping 3,8% — bisikan tertangkap!','bad',3400);}},
+   {type:'act',aid:'LAPOR',done:false,targets:()=>[mpm.rep],
+    desc:'Tindak lanjut: LAPORKAN untuk penalaan PSS pembangkit (klik laporan).',
+    why:'Laporan + rekaman phasor dikirim ke tim pembangkit: PSS dua unit besar area timur ditala ulang berdasar data nyata (bukan model lama). Sebulan kemudian WAMS memvonis: damping 9,6% — ayunan kini teredam dalam hitungan detik. Pengukuran yang lebih tajam melahirkan sistem yang lebih tenang.',
+    fx(){mpm.mode=3;wams();
+      toast('📤 PSS ditala dari data PMU — damping 3,8→9,6% ✓','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Sistem se-pulau kini punya detak yang terlihat!</b> PMU memotret 50 kali per detik, GPS menyamakan jamnya, dan osilasi yang berbisik bertahun-tahun akhirnya terdengar & diredam. Selamat datang di era pengukuran sinkron.');
+    setTimeout(()=>showWin('pmu'),2200);});
+  const s2p=seq.steps[2],of2p2=s2p.fx;s2p.fx=()=>{of2p2();mpm.D.mesh.userData.aid='OSILASI';};
+  say('VOLTA di sini 🛰️ SCADA memotret tiap 2 detik — cukup untuk operasi, buta untuk dinamika. Teknologi barumu: <b>PMU, 50 potret per detik berstempel GPS</b>. Dan begitu matanya terbuka… sistem ternyata sedang berayun. Pasang!');
+  $('#modTitle').textContent='J04·M8 — PMU & WAMS';
+  $('#taskHead').textContent='50 POTRET PER DETIK';}
+MISSIONS.pmu.build=buildPMU;
+Object.assign(REAL,{
+ pmu:[
+  'Penyambungan sinyal CT/PT lewat terminal uji dengan izin & pengawasan proteksi — relay tak boleh terganggu',
+  'Redundansi waktu (GPS + holdover oscillator) — kehilangan sinyal waktu = data phasor tak berarti',
+  'Jaringan komunikasi PMU butuh latensi & jitter terjaga — pisahkan dari trafik kantor',
+  'Kalibrasi & uji kelas P/M PMU sesuai standar sinkrofasor sebelum dinyatakan andal'],
+});

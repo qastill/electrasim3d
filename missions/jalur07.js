@@ -696,3 +696,88 @@ Object.assign(REAL,{
   'Kualitas air pendingin (klorinasi, side-stream filter) adalah pertahanan pertama melawan fouling',
   'Hitung dampak rupiah tiap kPa vakum untuk justifikasi investasi perbaikan'],
 });
+
+/* =====================================================================
+   MISI 8 — CO-FIRING BIOMASSA: BATUBARA BERBAGI TUNGKU
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ cofiring:{lvl:'JALUR 07 · PEMBANGKITAN · MISI 8',icon:'🌿',title:'Co-Firing Biomassa: Batubara Berbagi Tungku',strict:false,
+  loc:'📍 PLTU unit 2 · Program co-firing 5% serbuk kayu',
+  story:'Mandat transisi tiba di unitmu: co-firing — mencampur biomassa (serbuk kayu) ke batubara, memangkas emisi tanpa membangun pembangkit baru. Terdengar sesederhana mencampur kopi… sampai kamu tahu detailnya: biomassa lebih ringan, lebih basah, kalornya beda, dan abunya bisa LENGKET di dinding boiler. Co-firing yang asal campur merusak boiler; yang berilmu, menyelamatkan target emisi.',
+  goal:'Co-firing 5% beroperasi stabil: kualitas biomassa terverifikasi, pencampuran & mill aman, pembakaran ditala ulang, dan dampak (emisi turun, boiler sehat) tervalidasi.',
+  obj:['Uji kualitas biomassa: kalor, moisture, kandungan abu','Atur rasio campuran & kewaspadaan mill','Tala ulang pembakaran & pantau slagging'],
+  learn:['Co-firing 5% serbuk kayu ≈ memangkas emisi CO₂ fosil 5% TANPA pembangkit baru — biomassa dianggap netral karbon dalam siklusnya','Biomassa bukan batubara muda: moisture tinggi mencuri kalor, dan abunya kaya alkali — di suhu boiler bisa MELELEH & menempel (slagging) di dinding','Mill (penggiling) adalah titik rawan: serbuk kayu lebih mudah terbakar di dalam mill — suhu keluaran mill diturunkan & dipantau ketat','Tiap rasio baru = pembakaran ditala ulang: udara, kehalusan, suhu — boiler tua diajari menu baru pelan-pelan, bukan dipaksa'],
+  next:['Pelajari rantai pasok biomassa: kontinuitas adalah tantangan terbesarnya','Dalami uji abu (ash fusion temperature) untuk vonis slagging','Eksplorasi rasio lebih tinggi & torrefied biomass']},
+});
+let mcf={};
+function buildCofiring(){
+  freshScene(0x8aa0b8,0x10181f);
+  cam={theta:.1,phi:1.16,r:9,target:new THREE.Vector3(0,1.7,-.8)};
+  const ground=boxT(20,.1,12,TEX.concrete());ground.position.y=-.05;scene.add(ground);
+  /* dua gunungan: batubara & biomassa */
+  const coal=new THREE.Mesh(new THREE.ConeGeometry(1.2,1.0,16),
+    new THREE.MeshStandardMaterial({color:0x1a1a1c,roughness:.95}));
+  coal.position.set(-6.4,.55,-1.6);scene.add(coal);
+  scene.add(label('BATUBARA',.65).translateX(-6.4).translateY(1.4).translateZ(-1.6));
+  mcf.bio=new THREE.Mesh(new THREE.ConeGeometry(1.0,.85,16),
+    new THREE.MeshStandardMaterial({color:0xb8945a,roughness:.95}));
+  mcf.bio.position.set(-4.2,.48,-1.6);scene.add(mcf.bio);
+  actMesh(mcf.bio,'UJI');
+  scene.add(label('SERBUK KAYU (sawdust)',.65,'#ffd23f').translateX(-4.2).translateY(1.3).translateZ(-1.6));
+  /* conveyor blending + mill */
+  const belt=box(4.5,.2,.9,0x222a31);belt.position.set(-2.6,1.3,-2.6);scene.add(belt);
+  mcf.blend=box(.7,.5,.5,0x2a5a8a);mcf.blend.position.set(-2.6,1.9,-2.6);scene.add(mcf.blend);
+  actMesh(mcf.blend,'RASIO');
+  scene.add(label('BLENDING 5%',.6,'#5fd4ff').translateX(-2.6).translateY(2.5).translateZ(-2.6));
+  mcf.mill=cyl(.6,.7,1.2,0x6a7682,18,{metalness:.4});mcf.mill.position.set(-.2,.65,-2.4);scene.add(mcf.mill);
+  actMesh(mcf.mill,'MILL');
+  scene.add(label('MILL — suhu dijaga!',.65,'#ffd23f').translateX(-.2).translateY(1.6).translateZ(-2.4));
+  /* boiler + layar */
+  const blr=boxT(2.2,2.8,1.6,TEX.metal(),{metalness:.2});blr.position.set(2.6,1.45,-2.2);scene.add(blr);
+  scene.add(label('BOILER',.75).translateX(2.6).translateY(3.1).translateZ(-2.2));
+  mcf.D=makeDisplay(1.9,1.1,400,230);
+  mcf.D.mesh.position.set(5.6,2.2,-2.2);scene.add(mcf.D.mesh);
+  actMesh(mcf.D.mesh,'TALA');
+  scene.add(label('PEMBAKARAN & SLAGGING',.7,'#5fd4ff').translateX(5.6).translateY(2.95).translateZ(-2.2));
+  function layar(mode){
+    dispText(mcf.D,
+      mode===0?['CO-FIRING OFF','batubara 100%']:
+      mode===1?['BIO 5% ⚠','O2 & suhu perlu tala']:
+      ['BIO 5% STABIL ✓','slagging: aman · CO₂ −5%'],
+      [mode===2?'#46ff8e':'#ffd23f','#8aa3bd']);}
+  layar(0);
+  startSeq([
+   {type:'act',aid:'UJI',done:false,targets:()=>[mcf.bio],
+    desc:'UJI dulu kiriman biomassa: kalor, moisture, abu (klik gunungan).',
+    why:'Lab cepat: kalor 16,8 MJ/kg (batubara 21), moisture 28% (agak basah — disepakati pengeringan oleh pemasok jadi <20%), dan UJI ABU: titik leleh abunya 1.190°C — di bawah suhu sebagian dinding boiler: kandidat slagging! Rasio & lokasi pembakar harus memperhitungkan ini. Bahan bakar baru selalu diinterogasi sebelum diberi makan ke boiler tua.',
+    fx(){toast('🧪 16,8 MJ/kg · moisture deal <20% · abu leleh 1.190°C ⚠','ok',3400);}},
+   {type:'act',aid:'RASIO',done:false,targets:()=>[mcf.blend],
+    desc:'Atur BLENDING 5% energi — konsisten, bukan asal tumpah (klik blender).',
+    why:'5% berbasis ENERGI (bukan berat — kalor beda!): feeder biomassa terkalibrasi menyuapi conveyor batubara dengan rasio terkunci. Campuran yang berfluktuasi membuat pembakaran bergelombang — boiler menyukai menu yang konsisten lebih dari menu yang enak.',
+    fx(){toast('⚖️ 5% energi terkunci di feeder — campuran konsisten.','ok',3000);}},
+   {type:'act',aid:'MILL',done:false,targets:()=>[mcf.mill],
+    desc:'Kewaspadaan MILL: turunkan suhu keluaran & siagakan inerting (klik mill).',
+    why:'Serbuk kayu menyala jauh lebih mudah dari batubara di dalam mill yang panas: suhu keluaran diturunkan 77→62°C, sensor CO dipasang di mill (deteksi bara dini), dan sistem inerting siaga. Co-firing gagal paling sering bukan di boiler — tapi terbakar duluan di penggiling.',
+    fx(){toast('🌡️ Mill 62°C + sensor CO + inerting — titik rawan dijaga.','ok',3200);}},
+   {type:'act',aid:'TALA',done:false,targets:()=>[mcf.D.mesh],
+    desc:'Campuran masuk: TALA ULANG pembakaran (klik layar).',
+    why:'Boiler mencicipi menu baru: O₂ ditala ulang (biomassa butuh udara beda), distribusi pembakar disesuaikan agar zona terpanas menjauhi dinding rawan-slagging, soot blower dijadwalkan lebih rapat di minggu-minggu pertama. Flame scanner stabil, steam temperatur terjaga — boiler tua menerima menu barunya.',
+    fx(){layar(1);toast('🔥 O2 & burner ditala — pembakaran stabil di menu baru.','ok',3200);}},
+   {type:'act',aid:'VALID',done:false,targets:()=>[mcf.D.mesh],
+    desc:'Dua minggu beroperasi: VALIDASI dampaknya (klik layar).',
+    why:'Inspeksi & data bicara: dinding boiler bersih (strategi anti-slagging bekerja), efisiensi turun hanya 0,3% (tertukar adil), dan emisi CO₂ fosil −5% = ±28.000 ton setahun — setara menanam hutan kecil, dari serbuk kayu yang dulu limbah gergajian. Unit tua, trik baru, planet sedikit lega.',
+    fx(){layar(2);toast('🌿 CO₂ fosil −5% (≈28 rb ton/thn) · boiler tetap sehat ✓','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Batubara resmi berbagi tungku!</b> Biomassa diinterogasi dulu, mill dijaga dari baranya sendiri, pembakaran ditala ulang, dan dinding boiler tetap bersih. Transisi energi nyata kadang tak gemerlap — ia berdebu serbuk kayu dan penuh perhitungan.');
+    setTimeout(()=>showWin('cofiring'),2200);});
+  const s3c=seq.steps[3],of3c=s3c.fx;s3c.fx=()=>{of3c();mcf.D.mesh.userData.aid='VALID';};
+  say('VOLTA di sini 🌿 Mandat transisi: <b>co-firing 5% serbuk kayu</b>. Terdengar seperti mencampur kopi — padahal abunya bisa lengket di boiler & serbuknya bisa terbakar di mill. Interogasi dulu bahan barunya!');
+  $('#modTitle').textContent='J07·M8 — Co-Firing Biomassa';
+  $('#taskHead').textContent='MENU BARU UNTUK BOILER TUA';}
+MISSIONS.cofiring.build=buildCofiring;
+Object.assign(REAL,{
+ cofiring:[
+  'Kontrak biomassa memuat spesifikasi (kalor, moisture, abu) + sanksi — kualitas kiriman pasti berfluktuasi',
+  'Uji ash fusion temperature tiap sumber biomassa baru — slagging lebih murah dicegah daripada dipahat',
+  'Pantau mill (suhu, CO) dgn alarm — riwayat kebakaran mill co-firing di industri itu panjang',
+  'Dokumentasikan baseline vs co-firing (efisiensi, emisi) untuk pelaporan program transisi'],
+});

@@ -603,3 +603,102 @@ Object.assign(REAL,{
   'Lindungi harga pasar dengan kebijakan harga lantai tertulis & sanksi pelanggarannya',
   'Kunjungi mitra terjadwal & ukur sell-out (bukan hanya sell-in) — stok menumpuk bukan penjualan'],
 });
+
+/* =====================================================================
+   MISI 8 — INBOUND MARKETING TEKNIS: DIDATANGI, BUKAN MENGEJAR
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ inbound:{lvl:'JALUR 09 · SALES & TECHNICAL MARKETING · MISI 8',icon:'🧲',title:'Inbound: Didatangi, Bukan Mengejar',strict:false,
+  loc:'📍 Kantor regional · Evaluasi: biaya akuisisi makin mahal',
+  story:'Rapat penjualan tahunan menyajikan angka yang melelahkan: biaya mendapatkan satu pelanggan baru naik terus — telepon dingin diabaikan, kunjungan ditolak satpam. Lalu satu anomali di data: tiga pelanggan terbaik tahun ini datang SENDIRI… setelah membaca artikel teknismu yang iseng diunggah. Itulah benih strategi baru: INBOUND — jadilah jawaban yang dicari orang, dan biarkan mereka yang menelepon duluan.',
+  goal:'Mesin inbound berjalan: konten teknis menjawab pencarian nyata, webinar mengubah pembaca jadi prospek, dan funnel terukur membuktikan biaya akuisisi turun.',
+  obj:['Riset pertanyaan nyata pasar & buat konten yang menjawab','Webinar teknis: dari pembaca menjadi prospek','Bangun funnel terukur & buktikan angkanya'],
+  learn:['Insinyur tidak suka ditelepon sales — tapi jam 11 malam mereka MENCARI "cara menghilangkan denda kVArh": jadilah jawaban itu, dan kepercayaan terbangun sebelum perkenalan','Konten teknis jujur (kalkulator, panduan, studi kasus dgn angka) mengalahkan brosur: yang membantu diingat, yang menjual di-skip','Webinar adalah jabat tangan massal: 100 pendaftar = 100 prospek yang MENDAFTAR SENDIRI — kualitasnya beda langit dgn daftar telepon dingin','Funnel diukur tiap anak tangga (pembaca→pendaftar→prospek→deal): yang tak diukur tak bisa diperbaiki — ilmu OEE-nya dunia pemasaran'],
+  next:['Pelajari SEO teknis: menulis untuk manusia & mesin pencari sekaligus','Bangun email nurture: merawat prospek yang belum siap beli','Dalami atribusi: dari artikel mana deal terbesar berasal'],},
+});
+let mib={};
+function buildInbound(){
+  freshScene(0xc6d2dc,0x18222c);
+  cam={theta:0,phi:1.16,r:8,target:new THREE.Vector3(0,1.9,-.9)};
+  const Z=room(0x6b5a45,0xd8d2c4,16,11);
+  /* layar riset keyword */
+  const frame=boxT(4.2,2.4,.16,TEX.metal(),{metalness:.4});frame.position.set(-2.6,2.4,Z+.05);scene.add(frame);
+  frame.add(label('RISET PERTANYAAN PASAR',.85).translateY(1.5));
+  mib.D=makeDisplay(3.9,2.1,560,320);
+  mib.D.mesh.position.set(-2.6,2.4,Z+.15);scene.add(mib.D.mesh);
+  actMesh(mib.D.mesh,'RISET');
+  mib.mode=0;
+  function layar(){
+    const g=mib.D.g,W=560,H=320;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.font='600 15px Consolas';g.textAlign='left';
+    if(mib.mode===0){
+      g.fillStyle='#5fd4ff';g.font='700 17px Consolas';
+      g.fillText('YANG DICARI ORANG TIAP BULAN:',16,32);
+      g.font='600 15px Consolas';
+      [['cara menghilangkan denda kVArh','720x','#46ff8e'],
+       ['penyebab listrik pabrik sering jeglek','480x','#46ff8e'],
+       ['kapasitor bank adalah','390x','#ffd23f'],
+       ['harga kapasitor bank 200 kvar','210x','#ffd23f']].forEach((r,i)=>{
+        const y=72+i*40;g.fillStyle='#eaf2fb';g.fillText('"'+r[0]+'"',16,y);
+        g.fillStyle=r[2];g.fillText(r[1],460,y);});
+      g.fillStyle='#8aa3bd';g.fillText('mereka bertanya tiap malam — siapa yang menjawab?',16,H-18);}
+    else{
+      g.fillStyle='#5fd4ff';g.font='700 17px Consolas';
+      g.fillText('FUNNEL 90 HARI:',16,32);
+      const f=[['pembaca artikel','4.218'],['pakai kalkulator','512'],
+        ['daftar webinar','118'],['minta survei','22'],['DEAL','5']];
+      f.forEach((r,i)=>{const y=70+i*46;const w=380*(1-(i*.21));
+        g.fillStyle=i===4?'#46ff8e':'#2a5a8a';
+        g.fillRect(90-((380-w)/-2)*0+ (380-w)/2,y-16,w,30);
+        g.fillStyle='#eaf2fb';g.fillText(r[0]+': '+r[1],100+(380-w)/2,y+4);});
+      g.fillStyle='#46ff8e';g.font='700 15px Consolas';
+      g.fillText('CAC turun 58% vs telepon dingin',16,H-16);}
+    mib.D.tex.needsUpdate=true;}
+  layar();
+  /* meja konten + kalkulator */
+  mib.art=box(.55,.04,.7,0xf0ead8);mib.art.position.set(1.2,1.06,-.4);scene.add(mib.art);
+  actMesh(mib.art,'KONTEN');
+  const desk=boxT(2.2,.08,1.1,TEX.wood());desk.position.set(1.2,1.0,-.4);scene.add(desk);
+  [[-1,-.4],[1,-.4],[-1,.4],[1,.4]].forEach(p=>{
+    const l=boxT(.08,1,.08,TEX.wood());l.position.set(1.2+p[0],.5,-.4+p[1]);scene.add(l);});
+  scene.add(label('KONTEN: ARTIKEL + KALKULATOR',.6,'#5fd4ff').translateX(1.2).translateY(1.5).translateZ(-.4));
+  /* layar webinar */
+  mib.web=makeDisplay(1.7,1.0,380,220);
+  mib.web.mesh.position.set(3.2,2.4,Z+.1);scene.add(mib.web.mesh);
+  dispText(mib.web,['WEBINAR','—'],['#5fd4ff','#7d8f84']);
+  actMesh(mib.web.mesh,'WEBINAR');
+  scene.add(label('WEBINAR TEKNIS',.65,'#5fd4ff').translateX(3.2).translateY(3.15).translateZ(Z+.1));
+  startSeq([
+   {type:'act',aid:'RISET',done:false,targets:()=>[mib.D.mesh],
+    desc:'RISET: apa yang sebenarnya dicari pasar tiap malam? (klik layar)',
+    why:'Data pencarian membuka mata: 720 orang/bulan mengetik "cara menghilangkan denda kVArh" — persis masalah yang produkmu selesaikan, dan TAK SATU PUN kompetitor menjawabnya dengan baik. Pasarmu sudah bertanya tiap malam ke mesin pencari; selama ini tak ada yang membalas.',
+    fx(){toast('🔍 720 pencarian/bln tanpa jawaban bagus — panggung kosong.','ok',3200);}},
+   {type:'act',aid:'KONTEN',done:false,targets:()=>[mib.art],
+    desc:'Buat KONTEN yang benar-benar menjawab + kalkulator (klik meja).',
+    why:'Artikel 2.000 kata yang JUJUR: cara membaca denda di rekening, rumus Q=P(tanφ1−tanφ2) — ilmu misi pertamamu! — kapan TIDAK butuh kapasitor, plus kalkulator online gratis: masukkan data rekening, keluar estimasi penghematan. Tanpa jualan di paragraf pertama: yang membantu akan diingat; yang menjual di-skip.',
+    fx(){toast('✍️ Artikel jujur + kalkulator gratis tayang — membantu dulu.','ok',3200);}},
+   {type:'act',aid:'WEBINAR',done:false,targets:()=>[mib.web.mesh],
+    desc:'Naikkan level: WEBINAR teknis bulanan (klik layar webinar).',
+    why:'"Bedah Tagihan Listrik Industri" — 60 menit ilmu murni oleh engineermu, studi kasus nyata (anonim), QnA terbuka. 118 pendaftar: manajer pabrik yang MENDAFTAR SENDIRI, mengorbankan jam makan siangnya. Bandingkan dengan 118 telepon dingin: di sini, merekalah yang datang membawa pertanyaan.',
+    fx(){dispText(mib.web,['118 PESERTA','22 minta survei!'],['#46ff8e','#ffd23f']);
+      toast('🎙️ 118 peserta · 22 langsung minta survei lokasi!','ok',3200);}},
+   {type:'act',aid:'FUNNEL',done:false,targets:()=>[mib.D.mesh],
+    desc:'Buktikan dengan angka: baca FUNNEL 90 hari (klik layar).',
+    why:'4.218 pembaca → 512 pemakai kalkulator → 118 peserta webinar → 22 survei → 5 DEAL. Biaya akuisisi: turun 58% dibanding cara lama — dan prospek inbound menutup lebih cepat karena datang sudah setengah percaya. Mesin ini kini berjalan saat timmu tidur: artikel tak pernah cuti.',
+    fx(){mib.mode=1;layar();
+      toast('📊 Funnel terbukti: CAC −58% · 5 deal dari konten!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Dari mengejar menjadi didatangi!</b> Pertanyaan pasar dijawab jujur, kalkulator membantu duluan, webinar menjabat tangan ratusan orang sekaligus — dan funnel membuktikan semuanya dengan angka. Penjualan terbaik dimulai jauh sebelum perkenalan.');
+    setTimeout(()=>showWin('inbound'),2200);});
+  const s0i=seq.steps[0],of0i=s0i.fx;s0i.fx=()=>{of0i();mib.D.mesh.userData.aid='FUNNEL';};
+  say('VOLTA di sini 🧲 Telepon dingin makin dingin, satpam makin galak — tapi tiga pelanggan terbaikmu datang SENDIRI dari satu artikel. Itu bukan kebetulan: itu strategi yang belum dibangun. Namanya <b>inbound</b>. Mulai dari riset!');
+  $('#modTitle').textContent='J09·M8 — Inbound Marketing Teknis';
+  $('#taskHead').textContent='JADILAH JAWABAN YANG DICARI';}
+MISSIONS.inbound.build=buildInbound;
+Object.assign(REAL,{
+ inbound:[
+  'Konten ditulis/direview engineer sungguhan — pembaca teknis mencium konten tukang tulis dalam dua paragraf',
+  'Kalkulator & alat gratis minta kontak SETELAH memberi nilai, bukan sebelum (gerbang terlalu dini membunuh trust)',
+  'Konsistensi mengalahkan ledakan: 2 artikel bagus/bulan selama setahun > 20 artikel lalu mati',
+  'Hubungkan CRM dgn sumber konten — tanpa atribusi, inbound tak akan pernah dapat anggaran'],
+});

@@ -646,3 +646,87 @@ Object.assign(REAL,{
   'Stop-work authority diberikan eksplisit ke pengawas & pekerja kontraktor tanpa takut sanksi',
   'Audit silang: K3 kontraktor diaudit, tapi fasilitas & izin milikmu juga dievaluasi mereka'],
 });
+
+/* =====================================================================
+   MISI 8 — HEAT STRESS: BEKERJA DI BAWAH MATAHARI TROPIS
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ heat:{lvl:'JALUR 08 · K3 LISTRIK · MISI 8',icon:'🥵',title:'Heat Stress: Bekerja di Bawah Matahari Tropis',strict:false,
+  loc:'📍 Proyek switchyard terbuka · Musim kemarau, 34°C',
+  story:'Dua kejadian dalam seminggu: teknisi pusing-mual di switchyard siang, dan operator hampir pingsan di dekat boiler. Bukan kebetulan — gelombang panas + APD lengkap + kerja fisik = HEAT STRESS, bahaya yang tak terlihat di JSA klasik. Kamu diminta membangun program perlindungan panas: dari pengukuran indeks, aklimatisasi, sampai keberanian menjadwal ulang pekerjaan siang.',
+  goal:'Program heat stress berjalan: indeks panas terukur & berzona, jadwal kerja-istirahat dihormati, pekerja teraklimatisasi & saling mengawasi, dan kasus minggu itu jadi nol.',
+  obj:['Ukur indeks panas (WBGT) & buat zonasi kerja','Terapkan jadwal kerja-istirahat & hidrasi terstruktur','Aklimatisasi pekerja baru & latih deteksi dini gejala'],
+  learn:['Tubuh mendingin lewat keringat yang MENGUAP — kelembapan tropis menggagalkannya: suhu 34°C + lembap 70% terasa & berdampak seperti 45°C','WBGT (wet bulb globe temperature) merangkum suhu+lembap+radiasi+angin jadi satu indeks berzona: hijau-kuning-merah menentukan rasio kerja:istirahat','Heat stroke adalah eskalasi cepat: pusing → berhenti berkeringat → kolaps — buddy system menangkap gejala yang korbannya sendiri tak sadari','Aklimatisasi itu fisiologis nyata: pekerja baru/habis cuti butuh 7-14 hari porsi bertahap — tubuh belajar berkeringat lebih efisien'],
+  next:['Pelajari pengukuran WBGT & standar ambang per beban kerja','Integrasi prakiraan cuaca ke perencanaan kerja mingguan','Eksplorasi APD penangkal panas: cooling vest & material baru']},
+});
+let mht={};
+function buildHeat(){
+  freshScene(0xf0d8a0,0x2a2010);
+  cam={theta:.1,phi:1.12,r:9,target:new THREE.Vector3(0,1.6,-.8)};
+  const ground=boxT(22,.1,13,TEX.gravel());ground.position.y=-.05;scene.add(ground);
+  /* matahari terik */
+  const sunM=new THREE.Mesh(new THREE.SphereGeometry(.5,16,12),
+    new THREE.MeshBasicMaterial({color:0xffd23f}));
+  sunM.position.set(5,6.5,-4);scene.add(sunM);
+  /* switchyard mini */
+  [[-4,-2],[-1.5,-2],[1,-2]].forEach(o=>{
+    const t=boxT(.2,3.2,.2,TEX.metal(),{metalness:.5});t.position.set(o[0],1.6,o[1]);scene.add(t);});
+  scene.add(label('SWITCHYARD TERBUKA · 34°C · RH 70%',.85,'#ffd23f').translateY(4.0).translateZ(-2));
+  /* alat WBGT */
+  mht.wbgt=box(.2,.5,.2,0xe8edf2);mht.wbgt.position.set(-2.6,1.0,.4);scene.add(mht.wbgt);
+  const tri=cyl(.03,.03,1.0,0x666666);tri.position.set(-2.6,.5,.4);scene.add(tri);
+  actMesh(mht.wbgt,'UKUR');
+  scene.add(label('WBGT METER',.6,'#5fd4ff').translateX(-2.6).translateY(1.5).translateZ(.4));
+  /* shelter istirahat + hidrasi */
+  mht.shelter=boxT(2.4,.12,2.0,TEX.metal(),{metalness:.4});mht.shelter.position.set(3.6,2.0,.8);scene.add(mht.shelter);
+  [[-1,-.8],[1,-.8],[-1,.8],[1,.8]].forEach(p=>{
+    const t=cyl(.05,.05,2.0,0x8a8a8a);t.position.set(3.6+p[0],1.0,.8+p[1]);scene.add(t);});
+  mht.galon=cyl(.18,.18,.45,0x5fd4ff,14,{transparent:true,opacity:.7});
+  mht.galon.position.set(3.6,.25,.8);scene.add(mht.galon);
+  actMesh(mht.galon,'JADWAL');
+  scene.add(label('SHELTER + HIDRASI',.65,'#5fd4ff').translateX(3.6).translateY(2.5).translateZ(.8));
+  /* pekerja baru */
+  mht.baru=new THREE.Group();
+  const badan=cyl(.2,.26,.85,0xd87a20);badan.position.y=.7;mht.baru.add(badan);
+  const kepala=new THREE.Mesh(new THREE.SphereGeometry(.14,14,12),
+    new THREE.MeshStandardMaterial({color:0xd8b090}));kepala.position.y=1.3;mht.baru.add(kepala);
+  mht.baru.position.set(-5.4,0,.8);scene.add(mht.baru);
+  actMesh(badan,'AKLIM');
+  scene.add(label('PEKERJA BARU (hari ke-2)',.6).translateX(-5.4).translateY(1.8).translateZ(.8));
+  /* papan zona */
+  mht.D=makeDisplay(1.8,1.0,400,220);
+  mht.D.mesh.position.set(.4,2.4,2.4);mht.D.mesh.rotation.y=Math.PI;scene.add(mht.D.mesh);
+  dispText(mht.D,['ZONA PANAS','belum diukur'],['#7d8f84','#7d8f84']);
+  scene.add(label('PAPAN ZONA HARIAN',.65,'#5fd4ff').translateX(.4).translateY(3.1).translateZ(2.4));
+  startSeq([
+   {type:'act',aid:'UKUR',done:false,targets:()=>[mht.wbgt],
+    desc:'Ukur WBGT di titik kerja — bukan di kantor ber-AC (klik alat).',
+    why:'WBGT switchyard jam 13: 31,2°C — untuk kerja sedang ber-APD itu ZONA MERAH: rasio kerja:istirahat wajib 25:75! Termometer biasa bilang "34, biasa saja"; WBGT yang menimbang lembap+radiasi bilang "tubuh kalian sedang dipanggang pelan-pelan". Dua kejadian minggu ini bukan kebetulan — mereka data.',
+    fx(){dispText(mht.D,['WBGT 31,2 MERAH','kerja 15mnt : rehat 45'],['#ff5a5a','#ffd23f']);
+      toast('🌡️ WBGT 31,2°C = zona merah — bukan hari kerja biasa.','bad',3200);}},
+   {type:'act',aid:'JADWAL',done:false,targets:()=>[mht.galon],
+    desc:'Terapkan JADWAL kerja-istirahat + hidrasi terstruktur (klik galon).',
+    why:'Zona merah dieksekusi: pekerjaan berat digeser ke 06:30-10:00 (PDKB pagi!), siang hanya tugas ringan dgn rotasi 15:45, shelter teduh berkipas + air & elektrolit tiap 20 menit TANPA menunggu haus — haus adalah alarm yang telat. Menjadwal ulang bukan kelemahan proyek; heat stroke-lah yang menghancurkan jadwal.',
+    fx(){toast('⏰ Kerja berat → pagi · rotasi 15:45 · hidrasi per 20 mnt.','ok',3200);}},
+   {type:'act',aid:'AKLIM',done:false,targets:()=>[mht.baru.children[0]],
+    desc:'Lindungi yang paling rentan: AKLIMATISASI pekerja baru (klik pekerja).',
+    why:'Statistik kelam heat stroke: mayoritas korban adalah pekerja MINGGU PERTAMA. Fisiologisnya nyata: tubuh butuh 7-14 hari belajar berkeringat efisien. Si baru dapat porsi 20% hari ini, naik bertahap, plus buddy senior yang mengawasi gejalanya — karena korban heat stroke tak pernah sadar dirinya sedang jadi korban.',
+    fx(){toast('🌱 Aklimatisasi 20%→100% dalam 10 hari + buddy system.','ok',3200);}},
+   {type:'act',aid:'LATIH',done:false,targets:()=>[mht.D.mesh],
+    desc:'Tutup program: LATIH deteksi dini & respons darurat (klik papan).',
+    why:'Toolbox meeting: kenali tangga gejala (pusing→mual→BERHENTI berkeringat = gawat darurat!), respons: pindah teduh, kompres dingin di leher-ketiak, panggil medis — dan budaya saling menegur "kamu pucat, istirahat". Sebulan berlalu: nol kejadian, produktivitas justru naik — tubuh yang dijaga bekerja lebih lama dari tubuh yang dipaksa.',
+    fx(){toast('🎓 Tim terlatih + zona harian rutin — kasus bulan ini: NOL.','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Matahari tropis dijinakkan dengan ilmu!</b> WBGT mengukur yang termometer sembunyikan, jadwal menghormati fisiologi, dan pekerja baru dilindungi di minggu paling rawannya. Bahaya yang tak terlihat di JSA klasik kini punya programnya sendiri.');
+    setTimeout(()=>showWin('heat'),2200);});
+  actMesh(mht.D.mesh,'LATIH');
+  say('VOLTA di sini 🥵 Dua hampir-pingsan dalam seminggu — musuhnya tak terlihat: <b>heat stress</b>. Termometer biasa berbohong di iklim lembap; WBGT yang jujur. Ukur dulu, baru jadwalkan ulang harimu!');
+  $('#modTitle').textContent='J08·M8 — Heat Stress';
+  $('#taskHead').textContent='HAUS ADALAH ALARM YANG TELAT';}
+MISSIONS.heat.build=buildHeat;
+Object.assign(REAL,{
+ heat:[
+  'Gunakan tabel ambang WBGT per beban kerja & koreksi APD dari standar higiene industri',
+  'Sediakan pengukuran WBGT di lokasi kerja aktual — indeks dari stasiun cuaca kota bisa menipu',
+  'Heat stroke = darurat medis: dinginkan agresif SAMBIL menunggu evakuasi, jangan hanya diangin-angin',
+  'Catat & investigasi semua kejadian panas (termasuk ringan) — mereka peta menuju korban berikutnya'],
+});

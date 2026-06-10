@@ -650,3 +650,83 @@ Object.assign(REAL,{
   'Tangki & perpipaan NH₃ punya kode material sendiri (tembaga DILARANG — korosi amonia)',
   'Drill kebocoran NH₃ dengan komunitas sekitar — bau menusuk akan memicu kepanikan publik'],
 });
+
+/* =====================================================================
+   MISI 8 — FUEL CELL STATIONARY: BACKUP TANPA ASAP
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ fcdc:{lvl:'JALUR 14 · HYDROGEN ENERGY · MISI 8',icon:'🔇',title:'Fuel Cell Stationary: Backup Tanpa Asap',strict:false,
+  loc:'📍 Data center daerah · Mengganti genset diesel backup',
+  story:'Data center yang pernah diaudit koleganya (PUE!) kini punya masalah citra & emisi: genset diesel backup-nya berisik, beremisi, dan tangki solarnya membusuk pelan. Mereka mendengar plant H₂-mu — dan lahirlah pilot paling elegan: FUEL CELL STATIONARY sebagai backup. Tanpa piston, tanpa asap, tanpa suara — hanya hidrogen, oksigen, dan listrik yang mengalir saat PLN pamit.',
+  goal:'Sistem backup fuel cell beroperasi: storage H₂ aman di lokasi urban, fuel cell terintegrasi dgn UPS, dan uji black-building membuktikan transisi tanpa kedip.',
+  obj:['Rancang storage H₂ untuk lingkungan data center','Integrasi fuel cell dgn arsitektur UPS existing','Uji transfer: PLN padam → fuel cell memikul'],
+  learn:['Fuel cell backup vs genset: tanpa bagian berputar besar — start cepat, nyaris sunyi, emisi hanya air; tantangannya pindah ke LOGISTIK hidrogen','Arsitekturnya bertingkat: UPS baterai menjembatani DETIK pertama, fuel cell bangun dalam puluhan detik & memikul JAM-nya — dua teknologi saling menutupi kelemahan','Storage H₂ di lingkungan urban menuntut disiplin plant-mu: jarak aman, ventilasi atap, deteksi — dipindahkan ke halaman data center','Ketersediaan diuji rutin seperti genset: backup yang tak pernah diuji adalah dekorasi mahal — drill bulanan tetap hukum'],
+  next:['Pelajari sizing storage: berapa jam autonomi yang rasional','Dalami paralel fuel cell + baterai + grid (mode peak shaving juga!)','Eksplorasi kontrak pasokan H₂ hijau jangka panjang sebagai layanan']},
+});
+let mfd={};
+function buildFCDC(){
+  freshScene(0x9fb6c8,0x0f1820);
+  cam={theta:.1,phi:1.16,r:9,target:new THREE.Vector3(0,1.6,-.8)};
+  const ground=boxT(22,.1,13,TEX.concrete());ground.position.y=-.05;scene.add(ground);
+  /* gedung DC */
+  const dc=boxT(3.5,2.8,2.5,TEX.plaster());dc.position.set(-5.5,1.4,-2.5);scene.add(dc);
+  dc.add(label('DATA CENTER',.85).translateY(1.85));
+  /* genset tua (akan pensiun) */
+  mfd.genset=boxT(1.8,1.2,1.0,TEX.metal(),{metalness:.3});mfd.genset.position.set(-1.6,.65,-2.4);scene.add(mfd.genset);
+  const asap=new THREE.Mesh(new THREE.SphereGeometry(.2,10,8),
+    new THREE.MeshStandardMaterial({color:0x444,transparent:true,opacity:.5}));
+  asap.position.set(-2.2,1.7,-2.4);scene.add(asap);
+  scene.add(label('GENSET DIESEL (pensiun)',.6,'#8aa3bd').translateX(-1.6).translateY(1.5).translateZ(-2.4));
+  /* storage H2 */
+  mfd.tank=cyl(.45,.45,1.8,0x9aa7b4,18,{metalness:.4});mfd.tank.position.set(2.2,1.4,-2.6);scene.add(mfd.tank);
+  actMesh(mfd.tank,'STORAGE');
+  scene.add(label('STORAGE H₂ (urban)',.65,'#5fd4ff').translateX(2.2).translateY(2.6).translateZ(-2.6));
+  /* fuel cell unit */
+  mfd.fc=boxT(1.4,1.2,.9,TEX.metal(),{metalness:.35});mfd.fc.position.set(4.6,.65,-2.4);scene.add(mfd.fc);
+  actMesh(mfd.fc,'INTEGRASI');
+  scene.add(label('FUEL CELL 200 kW',.7).translateX(4.6).translateY(1.5).translateZ(-2.4));
+  /* layar uji */
+  mfd.D=makeDisplay(2.4,1.4,460,270);
+  mfd.D.mesh.position.set(.6,2.5,2.4);mfd.D.mesh.rotation.y=Math.PI;scene.add(mfd.D.mesh);
+  actMesh(mfd.D.mesh,'UJI');
+  scene.add(label('PANEL UJI BLACK-BUILDING',.75,'#5fd4ff').translateX(.6).translateY(3.4).translateZ(2.4));
+  mfd.mode=0;
+  function layar(){
+    dispText(mfd.D,
+      mfd.mode===0?['PLN: ON','backup: standby']:
+      mfd.mode===1?['PLN: PADAM ⚠','UPS memikul · FC start…']:
+      ['FC 200 kW MEMIKUL','UPS recharge · DC aman'],
+      [mfd.mode===0?'#46ff8e':(mfd.mode===1?'#ffd23f':'#46ff8e'),'#8aa3bd']);}
+  layar();
+  startSeq([
+   {type:'act',aid:'STORAGE',done:false,targets:()=>[mfd.tank],
+    desc:'Rancang STORAGE H₂ untuk halaman urban (klik tangki).',
+    why:'Disiplin plant-mu dipindah ke kota: tangki di luar gedung dgn jarak aman terhitung, ventilasi tak terhalang (H₂ lari ke atas — tak ada atap menjebak), deteksi + ESD, pagar & placard. Kapasitas: 8 jam autonomi penuh — dan kontrak refill tube trailer (ilmu logistikmu!) dari plant sendiri. Hidrogen masuk kota dengan sopan santun lengkapnya.',
+    fx(){toast('🛢️ Storage urban: jarak ✓ ventilasi ✓ deteksi ✓ · 8 jam autonomi.','ok',3200);}},
+   {type:'act',aid:'INTEGRASI',done:false,targets:()=>[mfd.fc],
+    desc:'INTEGRASIKAN fuel cell ke arsitektur UPS (klik unit).',
+    why:'Pembagian peran yang elegan: saat PLN hilang, UPS baterai memikul DETIK-DETIK pertama (server tak boleh merasakan apa pun), fuel cell bangun ±45 detik lalu mengambil alih JAM-nya — sekaligus me-recharge UPS. Genset butuh peran yang sama; bedanya fuel cell melakukannya tanpa raungan & asap di tengah kota.',
+    fx(){toast('🔗 Arsitektur bertingkat: UPS (detik) → FC (jam) tersambung.','ok',3200);}},
+   {type:'act',aid:'UJI',done:false,targets:()=>[mfd.D.mesh],
+    desc:'Ujian sesungguhnya: BLACK-BUILDING test (klik panel).',
+    why:'Breaker PLN dibuka sungguhan — UPS menangkap tanpa satu server berkedip… 42 detik: fuel cell hidup, sunyi seperti lemari es besar, 200 kW mengalir dari hidrogen. Dua jam ditahan di beban penuh: stabil, knalpotnya meneteskan air murni di halaman data center. Backup era baru lulus ujian era lama.',
+    fx(){mfd.mode=1;layar();setTimeout(()=>{mfd.mode=2;layar();},1500);
+      toast('🔇 PLN padam → 42 dtk → FC memikul 200 kW. Tanpa kedip!','ok',3400);}},
+   {type:'act',aid:'SERAH',done:false,targets:()=>[mfd.D.mesh],
+    desc:'Serah terima + jadwal drill bulanan (klik panel).',
+    why:'Genset diesel resmi pensiun (dijual, tangki solar busuk ikut pergi). Serah terima lengkap: SOP, training operator DC, dan drill bulanan terjadwal — backup yang tak diuji adalah dekorasi. Bonus tak terduga: tim pemasaran DC menjadikan "backup hidrogen hijau" materi jualan ke kliennya. Keandalan bertemu citra — keduanya menang.',
+    fx(){toast('📜 Serah terima + drill bulanan — diesel pensiun dgn hormat.','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Backup tanpa asap, tanpa raungan!</b> Storage urban berdisiplin penuh, UPS & fuel cell berbagi peran detik-dan-jam, dan black-building lulus tanpa kedip. Hidrogenmu kini menjaga server kota — pekerjaan paling sunyi dalam portofolionya.');
+    setTimeout(()=>showWin('fcdc'),2200);});
+  const s2f=seq.steps[2],of2f=s2f.fx;s2f.fx=()=>{of2f();mfd.D.mesh.userData.aid='SERAH';};
+  say('VOLTA di sini 🔇 Data center bosan dengan genset: berisik, beremisi, solarnya membusuk. Penggantinya dari plant-mu: <b>fuel cell backup — sunyi, bersih, knalpotnya air</b>. Tapi hidrogen masuk kota harus dengan seluruh sopan santunnya. Mulai dari storage!');
+  $('#modTitle').textContent='J14·M8 — Fuel Cell Backup';
+  $('#taskHead').textContent='UPS PIKUL DETIK, FC PIKUL JAM';}
+MISSIONS.fcdc.build=buildFCDC;
+Object.assign(REAL,{
+ fcdc:[
+  'Kaji izin & jarak aman storage H₂ di kawasan urban dgn pemadam setempat sejak desain',
+  'Uji transfer menyeluruh (bukan hanya start FC): UPS handover, recharge, return-to-grid',
+  'Kontrak pasokan H₂ dgn SLA — backup tanpa kepastian refill = autonomi palsu',
+  'Bandingkan TCO jujur vs genset (capex FC tinggi, opex & emisi rendah) untuk replikasi'],
+});

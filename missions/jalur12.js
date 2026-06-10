@@ -695,3 +695,104 @@ Object.assign(REAL,{
   'Latih skenario gangguan: PLN padam jam 01:00 — bus mana yang dikorbankan, siapa memutuskan?',
   'Evaluasi mingguan: bus dgn konsumsi/km menyimpang = kandidat pemeriksaan (ban, AC, gaya mengemudi)'],
 });
+
+/* =====================================================================
+   MISI 8 — V2G: MOBIL YANG MENJUAL LISTRIK
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ v2g:{lvl:'JALUR 12 · EV & EV CHARGING · MISI 8',icon:'🔄',title:'V2G: Mobil yang Menjual Listrik',strict:false,
+  loc:'📍 Gedung perkantoran · Pilot vehicle-to-grid 10 mobil',
+  story:'Pemikiran yang mengubah segalanya: mobil pribadi parkir 95% hidupnya — dan di kolong gedung ini, sepuluh mobil listrik karyawan adalah BESS 500 kWh yang menganggur tiap jam kerja. Pilot V2G-mu menguji mimpi itu: mobil mengisi saat murah, MENJUAL kembali ke gedung saat tarif puncak — dengan satu janji yang tak boleh diingkari: baterai pemilik aman & mobil selalu siap pulang.',
+  goal:'Pilot V2G beroperasi: charger bidirectional terpasang, kontrak win-win dengan pemilik disepakati, discharge saat puncak terbukti memangkas tagihan gedung, dan SoC pulang terjamin.',
+  obj:['Pasang charger bidirectional & verifikasi standar','Rancang kontrak: insentif, batas SoC, jaminan pulang','Uji discharge saat puncak & validasi tiga pihak menang'],
+  learn:['V2G butuh tiga kesiapan sekaligus: mobil yang mendukung discharge, charger bidirectional bersertifikat, dan IZIN pemilik — teknologi termudah dari ketiganya','Kekhawatiran pemilik adalah degradasi & kepastian pulang: kontrak menjawab dgn batas siklus, jendela SoC (mis. tak pernah di bawah 60%), & jaminan penuh jam 17:00','Discharge 10×7 kW = 70 kW memangkas beban puncak gedung — tagihan demand turun, pemilik dapat insentif, jaringan lega: tiga pihak menang dari mobil yang tadinya cuma parkir','Smart charging (V1G) adalah gerbang masuknya: menggeser jam charging saja sudah bernilai — V2G adalah kelanjutannya saat ekosistem siap'],
+  next:['Pelajari standar charger bidirectional & dukungan tiap pabrikan mobil','Dalami perhitungan degradasi siklus V2G vs nilai insentifnya','Eksplorasi agregasi V2G lintas-gedung sebagai virtual power plant']},
+});
+let mvg={};
+function buildV2G(){
+  freshScene(0x9fb6cc,0x101a26);
+  cam={theta:.1,phi:1.15,r:9.5,target:new THREE.Vector3(0,1.6,-.8)};
+  const ground=boxT(24,.1,13,TEX.concrete());ground.position.y=-.05;scene.add(ground);
+  /* gedung */
+  const gedung=boxT(4,4.5,3,TEX.plaster());gedung.position.set(-6,2.25,-3);scene.add(gedung);
+  for(let f=0;f<4;f++)for(let c=0;c<3;c++){
+    const j=box(.6,.6,.06,0x224,{roughness:.2,metalness:.4});
+    j.position.set(-7+c*1,1+f*1.05,-1.46);scene.add(j);}
+  scene.add(label('GEDUNG — beban puncak 17:00',.8).translateX(-6).translateY(4.9).translateZ(-3));
+  /* deretan mobil + charger bidirectional */
+  mvg.cars=[];
+  for(let i=0;i<3;i++){
+    const b=box(2.0,.5,1.0,[0x2a72c8,0x3a8a6a,0x8a8a92][i],{roughness:.35});
+    b.position.set(-1.5+i*3,.55,-1.5);scene.add(b);
+    const cab=box(1.1,.35,.95,[0x2a72c8,0x3a8a6a,0x8a8a92][i]);cab.position.set(-1.6+i*3,.95,-1.5);scene.add(cab);
+    [[-0.7,-.45],[0.7,-.45],[-0.7,.45],[0.7,.45]].forEach(w=>{
+      const wh=cyl(.22,.22,.16,0x14181d);wh.rotation.x=Math.PI/2;
+      wh.position.set(-1.5+i*3+w[0],.24,-1.5+w[1]);scene.add(wh);});
+    mvg.cars.push(b);
+    const ch=boxT(.4,1.1,.3,TEX.metal(),{metalness:.35});ch.position.set(-1.5+i*3,.6,-2.5);scene.add(ch);}
+  scene.add(label('10 EV KARYAWAN (3 tampak) ≈ BESS 500 kWh parkir',.7).translateY(1.9).translateZ(-1.5));
+  actMesh(mvg.cars[0],'CHARGER');
+  /* layar energi gedung */
+  const frame=boxT(3.8,2.2,.16,TEX.metal(),{metalness:.4});frame.position.set(3.4,2.5,2.6);frame.rotation.y=Math.PI;scene.add(frame);
+  mvg.D=makeDisplay(3.5,1.9,540,310);
+  mvg.D.mesh.position.set(3.4,2.5,2.5);mvg.D.mesh.rotation.y=Math.PI;scene.add(mvg.D.mesh);
+  actMesh(mvg.D.mesh,'UJI');
+  scene.add(label('ENERGI GEDUNG REAL-TIME',.8,'#5fd4ff').translateX(3.4).translateY(3.8).translateZ(2.5));
+  mvg.mode=0;
+  function layar(){
+    const g=mvg.D.g,W=540,H=310;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.strokeStyle='#2a3a4c';g.lineWidth=2;
+    g.beginPath();g.moveTo(40,16);g.lineTo(40,H-36);g.lineTo(W-12,H-36);g.stroke();
+    g.strokeStyle='#7a2a2a';g.setLineDash([6,5]);
+    g.beginPath();g.moveTo(40,70);g.lineTo(W-12,70);g.stroke();g.setLineDash([]);
+    g.fillStyle='#ff8d8d';g.font='600 13px Consolas';g.textAlign='left';
+    g.fillText('demand kontrak',44,64);
+    g.strokeStyle=mvg.mode===0?'#ffd23f':'#46ff8e';g.lineWidth=3;g.beginPath();
+    for(let h=7;h<=20;h+=.25){
+      let v=.4+.45*Math.exp(-Math.pow(h-16.5,2)/4);
+      if(mvg.mode>=1&&h>15.5&&h<18.5)v-=.22; /* dipangkas V2G */
+      const x=40+(h-7)/13*(W-66),y=H-36-v*(H-80);
+      h===7?g.moveTo(x,y):g.lineTo(x,y);}
+    g.stroke();
+    g.font='700 16px Consolas';
+    g.fillStyle=mvg.mode===0?'#ffd23f':'#46ff8e';
+    g.fillText(mvg.mode===0?'puncak 17:00 menembus demand kontrak':'puncak terpangkas 70 kW oleh 10 mobil ✓',46,38);
+    mvg.D.tex.needsUpdate=true;}
+  layar();
+  /* kontrak */
+  mvg.kontrak=box(.5,.66,.04,0xe8d8a0);mvg.kontrak.position.set(6.6,1.6,-1.5);scene.add(mvg.kontrak);
+  actMesh(mvg.kontrak,'KONTRAK');
+  scene.add(label('KONTRAK PEMILIK',.6,'#ffd23f').translateX(6.6).translateY(2.15).translateZ(-1.5));
+  startSeq([
+   {type:'act',aid:'CHARGER',done:false,targets:()=>[mvg.cars[0]],
+    desc:'Pasang charger BIDIRECTIONAL & cek kesiapan mobil (klik mobil).',
+    why:'Sepuluh wallbox bidirectional terpasang (ilmu instalasimu: sirkit dedicated, RCD tepat — kini DUA arah). Dari 14 mobil karyawan, 10 model mendukung discharge — handshake diuji: mobil bersedia mengalirkan balik atas perintah & izin. Sisi teknis ternyata yang termudah; dua langkah berikutnya soal manusia & uang.',
+    fx(){toast('🔌 10 charger 2-arah aktif · 10 mobil kompatibel ✓','ok',3000);}},
+   {type:'act',aid:'KONTRAK',done:false,targets:()=>[mvg.kontrak],
+    desc:'Rancang KONTRAK yang menjawab kekhawatiran pemilik (klik kontrak).',
+    why:'Dua ketakutan dijawab hitam di atas putih: (1) degradasi — maksimal 1 siklus parsial/hari, jendela SoC 60-90% saja (zona ternyaman baterai), kompensasi Rp 450 rb/bulan; (2) kepastian — jam 17:00 SoC DIJAMIN ≥80%, tombol opt-out kapan pun tanpa penalti. Delapan dari sepuluh langsung teken; dua menyusul setelah melihat tetangganya gajian. V2G dimenangkan di kontrak, bukan di konverter.',
+    fx(){toast('📜 8/10 teken: insentif + SoC 60-90% + jaminan pulang 80%.','ok',3200);}},
+   {type:'act',aid:'UJI',done:false,targets:()=>[mvg.D.mesh],
+    desc:'Momen pembuktian: DISCHARGE saat puncak 17:00 (klik layar).',
+    why:'16:00 — sistem memberi aba-aba: sepuluh mobil serempak mengalir balik 7 kW masing-masing. Kurva gedung yang biasanya menembus demand kontrak kini terpangkas 70 kW rata — selama tiga jam termahal. Mobil-mobil itu, yang kemarin hanya menyusut nilainya di parkiran, sore ini bekerja.',
+    fx(){mvg.mode=1;layar();
+      toast('🔄 10 mobil → 70 kW ke gedung — puncak terpangkas!','ok',3200);}},
+   {type:'act',aid:'TIGA',done:false,targets:()=>[mvg.D.mesh],
+    desc:'Tutup bulan: validasi TIGA PIHAK menang (klik layar).',
+    why:'Rekap 30 hari: gedung hemat Rp 14 jt (demand charge turun), tiap pemilik mengantongi insentif dgn degradasi terukur <0,1% (jendela SoC bekerja!), dan jam 17:00 SEMUA mobil selalu ≥80% — janji tak sekali pun diingkari. Tiga pihak menang dari aset yang tadinya hanya parkir: itulah tanda tangan masa depan energi.',
+    fx(){toast('🏆 Gedung −Rp14jt · pemilik +insentif · SoC janji 100% ditepati!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Mobil-mobil itu kini punya pekerjaan sampingan!</b> Charger dua arah, kontrak yang menjawab ketakutan, dan tiga jam termahal yang dipangkas tiap sore. V2G bukan teknologi masa depan — ia kontrak win-win yang akhirnya ditandatangani.');
+    setTimeout(()=>showWin('v2g'),2200);});
+  const s2v=seq.steps[2],of2v=s2v.fx;s2v.fx=()=>{of2v();mvg.D.mesh.userData.aid='TIGA';};
+  say('VOLTA di sini 🔄 Sepuluh mobil karyawan = <b>BESS 500 kWh yang menganggur</b> di kolong gedung. Pilot V2G hari ini: ajari mereka menjual listrik saat mahal — tanpa mengingkari satu janji pun ke pemiliknya. Mulai dari charger!');
+  $('#modTitle').textContent='J12·M8 — V2G Pilot';
+  $('#taskHead').textContent='ASET PARKIR JADI PEMBANGKIT';}
+MISSIONS.v2g.build=buildV2G;
+Object.assign(REAL,{
+ v2g:[
+  'Verifikasi garansi baterai pabrikan terhadap penggunaan V2G — beberapa merek punya klausul khusus',
+  'Metering dua arah per charger yang akurat = dasar pembayaran insentif yang adil',
+  'Interkoneksi discharge ke instalasi gedung mengikuti ketentuan paralel (anti-islanding dll.)',
+  'Mulai dari armada perusahaan (jadwal terprediksi) sebelum mobil pribadi — pelajaran lebih murah'],
+});

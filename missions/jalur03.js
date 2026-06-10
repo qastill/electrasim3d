@@ -713,3 +713,105 @@ Object.assign(REAL,{
   'Review setting proteksi WAJIB menyertai setiap rekonfigurasi — topologi baru, arus gangguan baru',
   'Dokumentasikan konfigurasi normal baru ke SCADA, GIS & SOP — tiga sistem harus sepakat'],
 });
+
+/* =====================================================================
+   MISI 8 — PLTS TERSEBAR: SAAT PELANGGAN JADI PEMBANGKIT
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ der:{lvl:'JALUR 03 · DISTRIBUSI · MISI 8',icon:'☀️',title:'PLTS Tersebar: Saat Pelanggan Jadi Pembangkit',strict:false,
+  loc:'📍 Penyulang Cendana · 340 PLTS atap & terus bertambah',
+  story:'Dunia distribusi terbalik pelan-pelan: 340 pelanggan penyulang Cendana kini PUNYA pembangkit di atapnya — dan siang bolong, arus mengalir MUNDUR ke gardu. Keluhan baru bermunculan: tegangan siang terlalu TINGGI (lampu cepat putus!), dan trafo berdengung aneh jam 11-14. Jaringan yang didesain searah kini hidup dua arah; tugasmu membuatnya rukun.',
+  goal:'Penyulang ramah PLTS: tegangan siang kembali normal lewat kombinasi setting inverter, tap trafo & penyeimbangan — tanpa membatasi semangat surya pelanggan.',
+  obj:['Diagnosa: petakan tegangan & arus balik siang hari','Terapkan solusi bertingkat: volt-watt inverter & tap','Validasi profil 24 jam & siapkan aturan sambung baru'],
+  learn:['Arus balik (reverse flow) membalik logika drop tegangan: ujung penyulang yang dulu paling RENDAH tegangannya kini paling TINGGI saat surya memuncak','Inverter modern punya mode volt-watt/volt-var: saat tegangan lokal naik, ia menahan diri atau menyerap reaktif — pelanggan ikut menjaga jaringan tanpa sadar','Tap trafo yang diset era beban-saja kini harus kompromi dua arah: cukup tinggi untuk malam, tak meledak di siang','Hosting capacity adalah anggaran sambungan PLTS per penyulang — dihitung & dipantau, agar pendaftar baru disambut dengan syarat yang tepat, bukan ditolak buta'],
+  next:['Pelajari studi hosting capacity & metode peningkatannya','Dalami smart inverter standard (volt-var, freq-watt, ride-through)','Eksplorasi BESS feeder & trafo OLTC untuk penyulang surya pekat']},
+});
+let mde={};
+function buildDER(){
+  freshScene(0xcfe2f0,0x16242f);
+  cam={theta:.1,phi:1.15,r:10,target:new THREE.Vector3(0,1.8,-.8)};
+  const ground=boxT(24,.1,13,TEX.gravel());ground.position.y=-.05;scene.add(ground);
+  /* deretan rumah ber-PLTS */
+  for(let i=0;i<5;i++){
+    const r=boxT(1.3,1.0,1.1,TEX.plaster());r.position.set(-7+i*2.4,.55,-2.2);scene.add(r);
+    const atap=box(1.5,.4,1.3,0x8a5a40);atap.position.set(-7+i*2.4,1.25,-2.2);scene.add(atap);
+    const pv=box(1.0,.05,.8,0x16263e,{roughness:.25,metalness:.5});
+    pv.position.set(-7+i*2.4,1.55,-2.2);pv.rotation.x=-.2;scene.add(pv);}
+  scene.add(label('340 RUMAH BER-PLTS (5 tampak)',.8).translateY(2.4).translateZ(-2.2));
+  /* trafo + panah arus balik */
+  mde.trafo=boxT(1.1,1.1,.9,TEX.metal(),{metalness:.3});mde.trafo.position.set(4.6,.6,-2.2);scene.add(mde.trafo);
+  actMesh(mde.trafo,'TAP');
+  scene.add(label('TRAFO — berdengung siang',.65,'#ffd23f').translateX(4.6).translateY(1.5).translateZ(-2.2));
+  mde.panah=new THREE.Mesh(new THREE.ConeGeometry(.14,.5,10),
+    new THREE.MeshStandardMaterial({color:0xffd23f,emissive:0xffd23f,emissiveIntensity:.5}));
+  mde.panah.rotation.z=Math.PI/2;mde.panah.position.set(2.6,1.9,-2.2);scene.add(mde.panah);
+  scene.add(label('ARUS BALIK SIANG →GARDU',.6,'#ffd23f').translateX(2.2).translateY(2.3).translateZ(-2.2));
+  /* layar profil tegangan */
+  const frame=boxT(4.0,2.3,.16,TEX.metal(),{metalness:.4});frame.position.set(-2.2,2.6,2.4);frame.rotation.y=Math.PI;scene.add(frame);
+  mde.D=makeDisplay(3.7,2.0,560,320);
+  mde.D.mesh.position.set(-2.2,2.6,2.3);mde.D.mesh.rotation.y=Math.PI;scene.add(mde.D.mesh);
+  actMesh(mde.D.mesh,'PETA');
+  scene.add(label('PROFIL TEGANGAN 24 JAM',.8,'#5fd4ff').translateX(-2.2).translateY(3.95).translateZ(2.3));
+  mde.fix=0;
+  function profil(){
+    const g=mde.D.g,W=560,H=320;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.strokeStyle='#2a3a4c';g.lineWidth=2;
+    g.beginPath();g.moveTo(40,16);g.lineTo(40,H-36);g.lineTo(W-12,H-36);g.stroke();
+    /* batas atas-bawah */
+    g.strokeStyle='#7a2a2a';g.setLineDash([6,5]);
+    [70,210].forEach(y=>{g.beginPath();g.moveTo(40,y);g.lineTo(W-12,y);g.stroke();});
+    g.setLineDash([]);
+    g.fillStyle='#ff8d8d';g.font='600 13px Consolas';g.textAlign='left';
+    g.fillText('231V maks',44,64);g.fillText('198V min',44,226);
+    g.strokeStyle=mde.fix>=2?'#46ff8e':'#ffd23f';g.lineWidth=3;g.beginPath();
+    for(let h=0;h<=24;h++){
+      let v=.5-.12*Math.max(0,Math.sin((h-13)/14*Math.PI)); /* malam agak rendah */
+      const surya=Math.max(0,Math.sin((h-6)/12*Math.PI));
+      v+= (mde.fix>=2? .16 : .34)*surya;       /* siang naik */
+      if(mde.fix>=1)v-=.06*surya;
+      const x=40+h/24*(W-66),y=210-(v)*(210-70);
+      h===0?g.moveTo(x,y):g.lineTo(x,y);}
+    g.stroke();
+    g.font='700 16px Consolas';
+    g.fillStyle=mde.fix>=2?'#46ff8e':'#ff5a5a';
+    g.fillText(mde.fix>=2?'ujung: 199-228V — DALAM BATAS 24 jam ✓':'ujung siang: 236V ✗ (lampu cepat putus)',48,36);
+    mde.D.tex.needsUpdate=true;}
+  profil();
+  /* inverter setting & aturan baru */
+  mde.inv=box(.5,.6,.2,0xe8edf2);mde.inv.position.set(-7,1.0,-.8);scene.add(mde.inv);
+  actMesh(mde.inv,'VOLTWATT');
+  scene.add(label('FIRMWARE INVERTER (OTA massal)',.6,'#5fd4ff').translateX(-6.4).translateY(1.55).translateZ(-.6));
+  mde.rule=box(.5,.66,.04,0xe8e4d8);mde.rule.position.set(2.2,2.0,2.35);mde.rule.rotation.y=Math.PI;scene.add(mde.rule);
+  actMesh(mde.rule,'ATURAN');
+  scene.add(label('ATURAN SAMBUNG BARU',.6,'#5fd4ff').translateX(2.2).translateY(2.55).translateZ(2.3));
+  startSeq([
+   {type:'act',aid:'PETA',done:false,targets:()=>[mde.D.mesh],
+    desc:'Diagnosa: PETAKAN tegangan & aliran 24 jam (klik layar).',
+    why:'Logger di lima titik bercerita terbalik: jam 12, UJUNG penyulang justru 236 V — surya 340 atap mendorong tegangan dari bawah, arus mengalir mundur 180 kW melewati trafo yang tak pernah diajari mundur. Keluhan lampu putus & dengung trafo kini punya tersangka: matahari yang terlalu bersemangat.',
+    fx(){toast('🔍 Siang: ujung 236V + arus balik 180 kW — dunia terbalik.','bad',3200);}},
+   {type:'act',aid:'VOLTWATT',done:false,targets:()=>[mde.inv],
+    desc:'Solusi #1: aktifkan mode VOLT-WATT inverter via update massal (klik inverter).',
+    why:'Firmware 340 inverter diperbarui OTA (kerja sama vendor): bila tegangan lokal >230 V, inverter menahan output bertahap & menyerap sedikit reaktif. Pelanggan kehilangan ±2% produksi setahun — nyaris tak terasa — dan jaringan mendapat 340 penjaga tegangan gratis yang bekerja otomatis tiap siang.',
+    fx(){mde.fix=1;profil();toast('⚙️ Volt-watt aktif di 340 inverter — puncak melunak.','ok',3200);}},
+   {type:'act',aid:'TAP',done:false,targets:()=>[mde.trafo],
+    desc:'Solusi #2: kompromi dua arah — turunkan TAP trafo satu langkah (klik trafo).',
+    why:'Tap lama diset tinggi demi malam hari era beban-saja. Diturunkan satu langkah: siang turun ±5 V menjauhi batas atas, malam masih 209 V di ujung — aman dua arah. Plus beban tiga fasa diseimbangkan ulang (ilmu lamamu): netral adem, dengung mereda. Kompromi yang dihitung mengalahkan ekstrem yang nyaman.',
+    fx(){mde.fix=2;profil();toast('🔧 Tap −1 + rebalancing: 24 jam dalam batas ✓','ok',3200);}},
+   {type:'act',aid:'ATURAN',done:false,targets:()=>[mde.rule],
+    desc:'Lembagakan: hitung hosting capacity & ATURAN sambung baru (klik dokumen).',
+    why:'Simulasi (ilmu loadflow-mu!): penyulang ini masih sanggup +120 kWp DENGAN syarat inverter ber-volt-watt; lebih dari itu menunggu trafo OLTC/BESS feeder. Pendaftar PLTS baru kini disambut daftar syarat yang jelas — bukan penolakan buta, bukan persetujuan nekat. Energi surya dan jaringan akhirnya satu tim.',
+    fx(){toast('📜 Hosting capacity +120 kWp bersyarat — pintu tetap terbuka, jaringan tetap sehat.','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Jaringan dua arah yang rukun!</b> Tegangan dijinakkan oleh 340 inverter yang diajari menahan diri, tap yang berkompromi, dan aturan sambung yang berhitung. Masa depan distribusi bukan melawan atap-atap bersurya — melainkan mengorkestrasinya.');
+    setTimeout(()=>showWin('der'),2200);});
+  say('VOLTA di sini ☀️ Dunia distribusi terbalik: <b>pelangganmu kini pembangkit</b>, arus mengalir mundur, dan ujung penyulang justru kelebihan tegangan. Jangan lawan matahari — orkestrasi dia. Mulai dari pemetaan!');
+  $('#modTitle').textContent='J03·M8 — PLTS Tersebar & Hosting Capacity';
+  $('#taskHead').textContent='ORKESTRASI, BUKAN LARANGAN';}
+MISSIONS.der.build=buildDER;
+Object.assign(REAL,{
+ der:[
+  'Pantau titik tegangan ujung penyulang ber-PLTS pekat secara permanen (bukan sesaat)',
+  'Koordinasikan setting volt-watt/volt-var dengan standar interkoneksi yang berlaku',
+  'Hitung ulang hosting capacity tiap penambahan signifikan — anggaran sambungan itu dinamis',
+  'Sosialisasikan ke pemasang PLTS lokal: syarat smart inverter sejak penawaran, bukan saat ditolak'],
+});

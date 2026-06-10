@@ -628,3 +628,97 @@ Object.assign(REAL,{
   'Material refractory disimpan kering & dipasang oleh aplikator tersertifikasi',
   'Jangan pernah memotong kurva curing demi jadwal — bata meledak menulis ulang seluruh jadwalmu'],
 });
+
+/* =====================================================================
+   MISI 8 — CMMS: PLTSa YANG INGAT SEGALANYA
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ cmms:{lvl:'JALUR 13 · WASTE TO ENERGY · MISI 8',icon:'🗃️',title:'CMMS: PLTSa yang Ingat Segalanya',strict:false,
+  loc:'📍 PLTSa · Proyek digitalisasi pemeliharaan',
+  story:'Pak Harun, teknisi paling senior, pensiun bulan depan — dan bersama beliau pergi pula "database" terlengkap PLTSa: ingatannya. Kapan bearing fan terakhir diganti? "Tanya Pak Harun." Riwayat crane? "Pak Harun hafal." Krisis ini melahirkan proyekmu: CMMS — computerized maintenance management system: memindahkan ingatan organisasi dari kepala manusia ke sistem yang tak bisa pensiun.',
+  goal:'CMMS hidup & dipakai: aset terdaftar hirarkis, PM terjadwal otomatis, work order mengalir dari lapangan, dan analisis pertama membongkar aset paling rakus biaya.',
+  obj:['Bangun register aset & hirarkinya','Migrasi jadwal PM & pengetahuan Pak Harun','Jalankan work order digital & analisis biaya per aset'],
+  learn:['CMMS adalah ingatan organisasi: aset, riwayat, suku cadang, jadwal — yang tak tercatat akan terlupa, dan yang terlupa akan rusak mendadak','Hirarki aset (plant→sistem→equipment→komponen) menentukan kualitas analisis: biaya dicatat di level yang bisa ditindaklanjuti','Wawancara purna-bakti adalah migrasi data paling berharga: trik & gejala khas tiap mesin dari kepala senior masuk ke catatan aset — warisan yang tak menguap','Work order menutup siklus: keluhan→perintah→eksekusi→catatan→analisis — dan dari analisis lahir pertanyaan emas: aset mana yang termahal dirawat & layak diganti?'],
+  next:['Integrasi CMMS dgn sensor IoT: work order otomatis dari kondisi','Pelajari manajemen suku cadang: min-max & kritikalitas','Dalami reliability engineering: MTBF/MTTR dari data CMMS-mu sendiri']},
+});
+let mcc={};
+function buildCMMS(){
+  freshScene(0xa8b8a8,0x101a14);
+  cam={theta:.05,phi:1.16,r:8.5,target:new THREE.Vector3(0,1.7,-.8)};
+  const Z=room(0x55606a,0xc4cdd6,16,11);
+  /* Pak Harun */
+  mcc.harun=new THREE.Group();
+  const badan=cyl(.22,.28,.9,0x6a5a48);badan.position.y=.72;mcc.harun.add(badan);
+  const kepala=new THREE.Mesh(new THREE.SphereGeometry(.15,14,12),
+    new THREE.MeshStandardMaterial({color:0xc8a888}));kepala.position.y=1.38;mcc.harun.add(kepala);
+  const rambut=new THREE.Mesh(new THREE.SphereGeometry(.155,14,10,0,Math.PI*2,0,Math.PI/2),
+    new THREE.MeshStandardMaterial({color:0xd8d8d8}));rambut.position.y=1.42;mcc.harun.add(rambut);
+  mcc.harun.position.set(-4.6,0,.4);scene.add(mcc.harun);
+  actMesh(badan,'WARISAN');
+  scene.add(label('PAK HARUN (pensiun bln depan)',.6).translateX(-4.6).translateY(1.95).translateZ(.4));
+  /* layar CMMS */
+  const frame=boxT(4.4,2.6,.16,TEX.metal(),{metalness:.4});frame.position.set(-.4,2.5,Z+.05);scene.add(frame);
+  frame.add(label('CMMS — SISTEM PEMELIHARAAN',.85).translateY(1.6));
+  mcc.D=makeDisplay(4.1,2.3,580,330);
+  mcc.D.mesh.position.set(-.4,2.5,Z+.15);scene.add(mcc.D.mesh);
+  actMesh(mcc.D.mesh,'ASET');
+  mcc.mode=0;
+  function layar(){
+    const g=mcc.D.g,W=580,H=330;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.font='600 15px Consolas';g.textAlign='left';
+    if(mcc.mode===0){g.fillStyle='#5fd4ff';g.font='700 17px Consolas';
+      g.fillText('REGISTER ASET (kosong)',16,32);
+      g.fillStyle='#5d748c';g.fillText('PLTSa > ??? — semuanya di kepala Pak Harun',16,80);}
+    else if(mcc.mode===1){g.fillStyle='#5fd4ff';g.font='700 17px Consolas';
+      g.fillText('HIRARKI: 412 ASET TERDAFTAR',16,32);
+      g.font='600 14px Consolas';
+      ['PLTSa','├ Insinerator (38 aset)','│ ├ Grate · burner · refractory','├ Boiler & turbin (64)','├ Flue gas & CEMS (41)','└ Crane & umpan (29)…'].forEach((t,i)=>{
+        g.fillStyle=i===0?'#eaf2fb':'#8aa3bd';g.fillText(t,16,70+i*32);});}
+    else{g.fillStyle='#5fd4ff';g.font='700 17px Consolas';
+      g.fillText('BIAYA HAR 12 BLN / ASET (top 3)',16,32);
+      [['ID-FAN B','Rp 184 jt','7x rusak ⚠','#ff5a5a'],
+       ['Crane grab','Rp 92 jt','aus normal','#ffd23f'],
+       ['Conveyor abu','Rp 61 jt','korosi','#ffd23f']].forEach((r,i)=>{
+        const y=80+i*48;g.fillStyle='#8aa3bd';g.fillText(r[0],16,y);
+        g.fillStyle=r[3];g.fillText(r[1],200,y);g.fillText(r[2],360,y);});
+      g.fillStyle='#46ff8e';g.font='700 15px Consolas';
+      g.fillText('ID-FAN B: biaya 2thn rusak-perbaiki > harga baru → GANTI',16,H-20);}
+    mcc.D.tex.needsUpdate=true;}
+  layar();
+  /* tablet teknisi */
+  mcc.tab=box(.3,.42,.05,0x18242f);mcc.tab.position.set(3.2,1.1,.4);scene.add(mcc.tab);
+  actMesh(mcc.tab,'WO');
+  scene.add(label('TABLET TEKNISI — WORK ORDER',.6,'#5fd4ff').translateX(3.2).translateY(1.6).translateZ(.4));
+  startSeq([
+   {type:'act',aid:'ASET',done:false,targets:()=>[mcc.D.mesh],
+    desc:'Bangun REGISTER ASET hirarkis — tulang punggung sistem (klik layar).',
+    why:'Tiga minggu menyisir plant: 412 aset terdaftar dalam hirarki plant→sistem→equipment→komponen, ber-kode & ber-QR di fisiknya. Hirarki bukan kosmetik: kelak biaya tercatat di level yang BISA ditindak — "boiler mahal" tak bisa ditindak; "ID-fan B boros bearing" bisa.',
+    fx(){mcc.mode=1;layar();toast('🗂️ 412 aset ber-hirarki + QR — kerangka berdiri.','ok',3000);}},
+   {type:'act',aid:'WARISAN',done:false,targets:()=>[mcc.harun.children[0]],
+    desc:'Migrasi paling berharga: WAWANCARAI Pak Harun (klik beliau).',
+    why:'Empat sesi bersama kopi: jadwal PM tiap mesin dari ingatannya, trik ("crane grab harus digrease sebelum shift, bukan sesudah — debu abu mengunci nipple"), gejala khas ("ID-fan B kalau mau rusak, dengung naik dua hari sebelumnya"). Semua masuk catatan aset & jadwal PM. Pak Harun tersenyum: "akhirnya saya boleh pensiun dengan tenang."',
+    fx(){toast('🎓 30 thn pengalaman → PM & catatan aset. Warisan aman.','ok',3400);}},
+   {type:'act',aid:'WO',done:false,targets:()=>[mcc.tab],
+    desc:'Hidupkan siklus: WORK ORDER digital dari lapangan (klik tablet).',
+    why:'Operator melihat kebocoran kecil → scan QR aset → foto + keluhan → WO terbit otomatis ke planner → teknisi eksekusi & mencatat suku cadang + jam kerja → riwayat menempel di aset selamanya. Bulan pertama: 86 WO mengalir — dan untuk pertama kalinya, TAK ADA pekerjaan yang hidup hanya di ingatan atau sobekan kertas.',
+    fx(){toast('📲 86 WO bulan pertama — semua tercatat, nol kertas hilang.','ok',3200);}},
+   {type:'act',aid:'ANALISIS',done:false,targets:()=>[mcc.D.mesh],
+    desc:'Panen pertama: ANALISIS biaya per aset (klik layar).',
+    why:'Data 12 bulan (dimigrasi dari arsip + WO baru) menjawab pertanyaan yang dulu mustahil: ID-Fan B menelan Rp 184 jt — tujuh kali rusak, dan biaya dua tahunnya MELEBIHI harga unit baru. Keputusan berbasis data pertama CMMS: ganti, jangan rawat. Pak Harun mengangguk dari kursi pensiunnya: "sudah saya bilang dari dulu" — kini sistemlah yang bilang.',
+    fx(){mcc.mode=2;layar();
+      toast('💡 ID-Fan B: rawat > beli baru — keputusan data pertama!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Ingatan organisasi tak lagi bisa pensiun!</b> 412 aset terdaftar, 30 tahun pengalaman termigrasi, work order mengalir, dan keputusan pertama berbasis data sudah lahir. CMMS: cara terbaik menghormati senior — mengabadikan ilmunya.');
+    setTimeout(()=>showWin('cmms'),2200);});
+  const s0c=seq.steps[0],of0c=s0c.fx;s0c.fx=()=>{of0c();mcc.D.mesh.userData.aid='ANALISIS';};
+  say('VOLTA di sini 🗃️ Krisis terbesar PLTSa bulan depan: <b>Pak Harun pensiun — bersama seluruh "database" di kepalanya</b>. Proyekmu: CMMS, ingatan organisasi yang tak bisa pensiun. Mulai dari register aset!');
+  $('#modTitle').textContent='J13·M8 — CMMS Digital';
+  $('#taskHead').textContent='INGATAN YANG TAK PENSIUN';}
+MISSIONS.cmms.build=buildCMMS;
+Object.assign(REAL,{
+ cmms:[
+  'Mulai dari hirarki & PM aset kritis — CMMS gagal paling sering karena input awal terlalu ambisius',
+  'Buat WO semudah mungkin di lapangan (QR + foto) — sistem yang merepotkan akan dilewati teknisi',
+  'Jadwalkan wawancara pengetahuan SEMUA senior, bukan hanya yang mau pensiun',
+  'Review KPI bulanan (backlog, rasio PM:korektif) — CMMS adalah cermin, manajemen yang harus berkaca'],
+});

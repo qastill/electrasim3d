@@ -614,3 +614,92 @@ Object.assign(REAL,{
   'Adaptasi diuji drill (banjir datang jam 2 pagi: siapa berbuat apa?) — rencana di laci tak menyelamatkan',
   'Tinjau ulang tiap 2-3 tahun: data iklim, aset baru & pelajaran kejadian terkini'],
 });
+
+/* =====================================================================
+   MISI 8 — ESG RATING: SAAT INVESTOR MENILAI RAPORMU
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ esg:{lvl:'JALUR 11 · SUSTAINABILITY & CARBON · MISI 8',icon:'⭐',title:'ESG Rating: Saat Investor Menilai Rapormu',strict:false,
+  loc:'📍 PT Maju Plastik · Kuesioner rating ESG dari investor',
+  story:'Grup investor calon pembeli saham minoritas mengirim paket yang membuat direksi pucat: kuesioner ESG rating 240 pertanyaan — lingkungan, sosial, tata kelola. Kabar baiknya: kerja kerasmu bertahun-tahun (GHG, ISO, K3, rantai pasok) adalah jawabannya. Kabar buruknya: jawaban tanpa BUKTI dinilai nol, dan skor ini menentukan valuasi. Saatnya merangkai semua kepingan jadi satu rapor.',
+  goal:'Kuesioner terjawab dengan bukti tertaut, gap teridentifikasi jujur dengan rencana perbaikan, dan skor rating naik kelas — membuka pintu investasi.',
+  obj:['Petakan 240 pertanyaan ke bukti yang sudah ada','Isi jujur: yang ada dibuktikan, yang belum direncanakan','Kawal proses penilaian & tindak lanjuti hasil'],
+  learn:['ESG rating menilai BUKTI, bukan niat: kebijakan tanpa data implementasi = skor setengah; "sedang disusun" = nol — arsip rapimu selama ini adalah emasnya','E-S-G saling menumpang: GHG & ISO 50001-mu mengisi E, program K3 & CSMS mengisi S, struktur kebijakan & audit mengisi G — kerja teknis bertahun ternyata sudah membangun rapor','Gap yang diakui + rencana ber-tanggal dinilai LEBIH TINGGI dari gap yang ditutupi — penilai profesional mencium jawaban kosmetik','Skor ESG kini masuk rumus uang sungguhan: biaya bunga, valuasi, akses tender — keberlanjutan resmi pindah dari CSR ke neraca'],
+  next:['Pelajari kerangka pelaporan utama (GRI, ISSB) & pemetaannya','Bangun ESG data room permanen — kuesioner berikutnya pasti datang','Dalami double materiality: apa yang penting bagi bisnis & dunia']},
+});
+let mes={};
+function buildESG(){
+  freshScene(0xb8d0c0,0x121d18);
+  cam={theta:0,phi:1.17,r:7.5,target:new THREE.Vector3(0,1.8,-.8)};
+  const Z=room(0x6b5a45,0xd8d2c4,16,11);
+  /* tumpukan kuesioner */
+  mes.kues=box(.6,.3,.8,0xe8e4d8);mes.kues.position.set(-3.6,1.2,-.4);scene.add(mes.kues);
+  actMesh(mes.kues,'PETAKAN');
+  const desk=boxT(2.4,.08,1.2,TEX.wood());desk.position.set(-3.6,1.0,-.4);scene.add(desk);
+  [[-1,-.4],[1,-.4],[-1,.4],[1,.4]].forEach(p=>{
+    const l=boxT(.08,1,.08,TEX.wood());l.position.set(-3.6+p[0],.5,-.4+p[1]);scene.add(l);});
+  scene.add(label('KUESIONER ESG — 240 SOAL',.65,'#ffd23f').translateX(-3.6).translateY(1.7).translateZ(-.4));
+  /* rak arsip kerja lama */
+  mes.rak=box(1.4,1.8,.4,0x8a6a3a);mes.rak.position.set(-.6,1.0,Z+.05);scene.add(mes.rak);
+  ['GHG','ISO','K3','CSMS','M&V'].forEach((t,i)=>{
+    scene.add(label(t,.4,'#ffd9a0').translateX(-1.1+i*.27).translateY(1.5-(i%2)*.5).translateZ(Z+.3));});
+  actMesh(mes.rak,'BUKTI');
+  scene.add(label('ARSIP KERJA BERTAHUN-TAHUN',.65,'#5fd4ff').translateX(-.6).translateY(2.25).translateZ(Z+.1));
+  /* layar skor */
+  const frame=boxT(3.2,2.0,.16,TEX.metal(),{metalness:.4});frame.position.set(2.8,2.4,Z+.05);scene.add(frame);
+  frame.add(label('SCORECARD ESG',.8).translateY(1.25));
+  mes.D=makeDisplay(2.9,1.7,480,290);
+  mes.D.mesh.position.set(2.8,2.4,Z+.15);scene.add(mes.D.mesh);
+  actMesh(mes.D.mesh,'GAP');
+  function skor(mode){
+    const g=mes.D.g,W=480,H=290;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.font='600 15px Consolas';g.textAlign='left';
+    const rows=mode===0?
+      [['E — Lingkungan','?','#5d748c'],['S — Sosial','?','#5d748c'],['G — Tata kelola','?','#5d748c']]:
+      [['E — Lingkungan',mode>=2?'78 ↑':'72','#46ff8e'],['S — Sosial',mode>=2?'74 ↑':'70','#46ff8e'],
+       ['G — Tata kelola',mode>=2?'66 ↑':'58 ⚠','#ffd23f']];
+    g.fillStyle='#5fd4ff';g.font='700 17px Consolas';
+    g.fillText('SKOR (0-100)',16,30);
+    g.font='600 15px Consolas';
+    rows.forEach((r,i)=>{const y=72+i*46;
+      g.fillStyle='#8aa3bd';g.fillText(r[0],16,y);
+      g.fillStyle=r[2];g.fillText(r[1],330,y);});
+    if(mode>=2){g.fillStyle='#46ff8e';g.font='700 16px Consolas';
+      g.fillText('RATING: BB → A− · investor LANJUT',16,H-20);}
+    mes.D.tex.needsUpdate=true;}
+  skor(0);
+  /* lembar rencana gap */
+  mes.plan=box(.5,.66,.04,0xffe8c0);mes.plan.position.set(5.4,2.0,Z+.06);scene.add(mes.plan);
+  actMesh(mes.plan,'RENCANA');
+  scene.add(label('RENCANA PERBAIKAN GAP',.55,'#ffd23f').translateX(5.4).translateY(2.55).translateZ(Z+.1));
+  startSeq([
+   {type:'act',aid:'PETAKAN',done:false,targets:()=>[mes.kues],
+    desc:'PETAKAN 240 pertanyaan ke kepingan yang sudah ada (klik kuesioner).',
+    why:'Dibedah per pilar: pertanyaan E (emisi, energi, air, limbah) — 80% terjawab oleh GHG inventory, ISO 50001, mass balance PLTSa! S (K3, pekerja, komunitas) — CSMS & program heat stress-mu siap pakai. G (kebijakan, audit, anti-korupsi) — sebagian ada… sebagian bolong. Peta selesai: 71% punya jawaban, sisanya jujur diakui.',
+    fx(){toast('🗺️ 240 soal terpeta: 71% terjawab arsip lama — sisanya gap.','ok',3200);}},
+   {type:'act',aid:'BUKTI',done:false,targets:()=>[mes.rak],
+    desc:'Tautkan BUKTI: tiap jawaban menunjuk dokumen (klik rak arsip).',
+    why:'Inilah momen arsip rapi membayar dirinya: laporan GHG terverifikasi, sertifikat ISO, scorecard CSMS, log M&V — tiap klaim ditautkan dokumen ber-tanggal. Penilai ESG profesional bekerja seperti verifikator yang pernah kamu hadapi: klaim tanpa lampiran dianggap angan-angan.',
+    fx(){toast('📎 168 jawaban tertaut bukti — klaim jadi fakta.','ok',3000);}},
+   {type:'act',aid:'GAP',done:false,targets:()=>[mes.D.mesh],
+    desc:'Hadapi cermin: baca skor awal & GAP terbesar (klik scorecard).',
+    why:'Pra-penilaian: E 72, S 70… G hanya 58 — bolongnya di tata kelola: belum ada kebijakan anti-korupsi formal, whistleblowing channel, & keberlanjutan belum dibahas rutin di rapat direksi. Klasik perusahaan teknik: kuat di lapangan, lupa di ruang rapat. Cermin tak menyenangkan — tapi cermin tak berbohong.',
+    fx(){skor(1);toast('🪞 G = 58: kuat di lapangan, bolong di tata kelola.','bad',3200);}},
+   {type:'act',aid:'RENCANA',done:false,targets:()=>[mes.plan],
+    desc:'Jawab gap dengan RENCANA ber-tanggal, lalu kawal penilaian (klik lembar).',
+    why:'Gap G dijawab bukan kosmetik: kebijakan anti-korupsi disahkan direksi (bulan ini), whistleblowing channel pihak ketiga (kuartal ini), agenda ESG tetap di rapat direksi (mulai sekarang) — semua ber-PIC & tanggal. Hasil akhir penilai: E 78, S 74, G 66 → rating BB naik ke A−. Investor lanjut ke tahap berikutnya — dan menyebut "kualitas dokumentasi" sebagai alasannya.',
+    fx(){skor(2);toast('⭐ BB → A− — investor lanjut. Arsip rapi = valuasi!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Rapor ESG kelas A−!</b> Kerja teknis bertahun-tahun dirangkai jadi jawaban berbukti, gap diakui dengan rencana ber-tanggal, dan tata kelola akhirnya menyusul lapangan. Keberlanjutan kini resmi bicara bahasa investor — dan kamu penerjemahnya.');
+    setTimeout(()=>showWin('esg'),2200);});
+  say('VOLTA di sini ⭐ Paket dari investor: <b>kuesioner ESG 240 soal</b> — dan skornya menentukan valuasi. Kabar baik: semua kerja kerasmu adalah jawabannya. Kabar buruk: tanpa bukti tertaut, nilainya nol. Mulai memetakan!');
+  $('#modTitle').textContent='J11·M8 — ESG Rating';
+  $('#taskHead').textContent='BUKTI, BUKAN NIAT';}
+MISSIONS.esg.build=buildESG;
+Object.assign(REAL,{
+ esg:[
+  'Bangun ESG data room permanen dgn pemilik per indikator — kuesioner datang tiap tahun dari arah berbeda',
+  'Jangan menjawab melebihi bukti: overclaim yang ketahuan menghancurkan seluruh kredibilitas rapor',
+  'Pelajari metodologi penilai spesifik (tiap lembaga beda bobot) sebelum mengisi',
+  'Jadikan temuan gap sebagai roadmap tahunan ESG — rating adalah efek samping dari sistem yang sehat'],
+});
