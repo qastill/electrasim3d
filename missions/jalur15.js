@@ -517,6 +517,7 @@ function buildShift(){
   ],()=>{say('🎉 <b>Matahari berhasil diculik ke senja!</b> Siang menabung, senja memanen, dan awan tak lagi bisa mengejutkan jaringan. PLTS + BESS satu pagar: pembangkit surya yang akhirnya bisa janjian dengan jam mahal.');
     setTimeout(()=>showWin('shift'),2200);});
   const s1=seq.steps[1],of1=s1.fx;s1.fx=()=>{of1();msf.E.mesh.userData.aid='SMOOTH';};
+  const s0f=seq.steps[0],of0f=s0f.fx;s0f.fx=()=>{of0f();msf.D.mesh.userData.aid='UJI';};
   say('VOLTA di sini 🌗 Perjodohan baru: <b>PLTS 2 MWp + BESS-mu</b>. Masalah abadi surya: berproduksi saat murah, tidur saat mahal. Solusinya satu kata — shifting. Baca dulu profilnya, lalu ajari baterai jam kerjanya.');
   $('#modTitle').textContent='J15·M5 — Solar Shifting';
   $('#taskHead').textContent='SIMPAN SIANG, PANEN SENJA';}

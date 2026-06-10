@@ -467,6 +467,7 @@ function buildWallbox(){
   /* wallbox */
   mwb.box=box(.5,.7,.22,0xe8edf2,{roughness:.4});mwb.box.position.set(.2,1.6,Z+.05);
   mwb.box.visible=false;scene.add(mwb.box);
+  actMesh(mwb.box,'UJI');
   mwb.boxBtn=box(.5,.7,.22,0xe8edf2,{roughness:.4});mwb.boxBtn.position.set(-1.0,.45,1.4);scene.add(mwb.boxBtn);
   actMesh(mwb.boxBtn,'PASANG');
   scene.add(label('WALLBOX 7,4 kW (dus)',.55,'#ffd23f').translateX(-1.0).translateY(1.0).translateZ(1.4));

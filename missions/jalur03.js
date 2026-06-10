@@ -459,6 +459,7 @@ function buildTrafo(){
   /* arester & FCO slot */
   mtb.arr=cyl(.07,.09,.7,0x8a6a4a);mtb.arr.position.set(-.7,5.9,-2);mtb.arr.visible=false;scene.add(mtb.arr);
   mtb.fco=box(.12,.55,.12,0xc9b08a);mtb.fco.position.set(.7,5.9,-2);mtb.fco.rotation.z=.15;mtb.fco.visible=false;scene.add(mtb.fco);
+  actMesh(mtb.fco,'ON');
   mtb.protBtn=box(.5,.35,.2,0x2a5a8a);mtb.protBtn.position.set(-3.4,1.2,-.6);scene.add(mtb.protBtn);
   actMesh(mtb.protBtn,'PROT');
   scene.add(label('KOTAK ARESTER + FCO',.55,'#5fd4ff').translateX(-3.4).translateY(1.7).translateZ(-.6));
@@ -508,4 +509,106 @@ Object.assign(REAL,{
   'Torsi baut bushing & terminal sesuai spesifikasi; sambungan kendor di 20 kV = titik panas fatal',
   'Setel tap changer berdasarkan tegangan ujung jaringan terukur, bukan posisi default pabrik',
   'Dokumentasikan: nomor seri, hasil uji, setting — kartu gardu adalah riwayat hidup aset 30 tahun'],
+});
+
+/* =====================================================================
+   MISI 6 — KABEL TANAH 20 kV: MENCARI TITIK GANGGUAN
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ kabel:{lvl:'JALUR 03 · DISTRIBUSI · MISI 6',icon:'🕳️',title:'Kabel Tanah 20 kV: Mencari Titik Gangguan',strict:true,
+  loc:'📍 Kawasan kota lama · Penyulang kabel tanah XLPE',
+  story:'Penyulang kota lama memakai kabel tanah — rapi tak terlihat, sampai hari ia terganggu: tak ada dahan untuk dilihat, tak ada FCO menggantung. Gangguan bersembunyi di suatu titik sepanjang 3,2 km di bawah aspal. Menggali semua jelas mustahil — maka teknologi yang menunjuk: TDR melempar pulsa, pulsa memantul dari luka, dan pantulan mengaku di meter ke berapa.',
+  goal:'Titik gangguan kabel ditemukan presisi (pre-location + pinpointing), penggalian hanya satu lubang, jointing baru terpasang & kabel lolos uji sebelum operasi.',
+  obj:['Uji isolasi & pre-location dengan TDR','Pinpoint akustik di atas jalur kabel','Gali satu lubang, jointing, uji & energize'],
+  learn:['TDR (time domain reflectometry) melempar pulsa: pantulan dari titik gangguan kembali dalam waktu yang sebanding jarak — kabel mengaku lukanya sendiri','Pre-location memberi perkiraan ±meter; pinpointing akustik (surge generator + geophone) mendengar "dentum" discharge tepat di atas titiknya','Kabel XLPE paling sering terluka oleh PIHAK KETIGA: galian proyek lain — luka kecil bertahun lalu menua menjadi gangguan hari ini','Jointing kabel 20 kV adalah bedah mikro: kebersihan, geometri lapisan semikon, dan tangan tersertifikasi — joint buruk = gangguan berikutnya menunggu'],
+  next:['Pelajari uji VLF & partial discharge untuk menilai sisa umur kabel','Dalami pemetaan GIS jaringan kabel + patok rute','Eksplorasi DTS (distributed temperature sensing) di kabel penting']},
+});
+let mkb={};
+function buildKabel(){
+  freshScene(0x8a98a8,0x10161e);
+  cam={theta:.1,phi:1.14,r:10,target:new THREE.Vector3(0,1,-.5)};
+  const ground=boxT(26,.1,14,TEX.concrete());ground.position.y=-.05;scene.add(ground);
+  const jalan=box(26,.02,3,0x39424c);jalan.position.set(0,.02,1.5);scene.add(jalan);
+  /* marka rute kabel */
+  for(let x=-10;x<=10;x+=2.5){
+    const m=box(.3,.04,.3,0xd8b020);m.position.set(x,.06,-.8);scene.add(m);}
+  scene.add(label('RUTE KABEL TANAH 3,2 km (patok kuning)',.75).translateY(2.2).translateZ(-.8));
+  /* gardu ujung */
+  const gardu=boxT(1.6,1.8,1.2,TEX.metal(),{metalness:.3});gardu.position.set(-9.5,.95,-.8);scene.add(gardu);
+  scene.add(label('GARDU ASAL',.6).translateX(-9.5).translateY(2.2).translateZ(-.8));
+  /* mobil uji + TDR */
+  const van=box(2.4,1.1,1.1,0xe8edf2);van.position.set(-6.5,.75,2.4);scene.add(van);
+  mkb.tdr=box(.4,.3,.3,0xd8b020);mkb.tdr.position.set(-5.2,.95,2.0);scene.add(mkb.tdr);
+  actMesh(mkb.tdr,'TDR');
+  scene.add(label('UNIT TDR + SURGE GEN',.6,'#5fd4ff').translateX(-5.2).translateY(1.4).translateZ(2.0));
+  /* layar TDR */
+  mkb.D=makeDisplay(2.6,1.4,480,260);
+  mkb.D.mesh.position.set(-2.4,2.4,2.6);mkb.D.mesh.rotation.y=Math.PI;scene.add(mkb.D.mesh);
+  const pole=cyl(.04,.04,1.7,0x666666);pole.position.set(-2.4,1.0,2.6);scene.add(pole);
+  function tdrScr(mode){
+    const g=mkb.D.g,W=480,H=260;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.strokeStyle='#2a3a4c';g.lineWidth=2;
+    g.beginPath();g.moveTo(20,H/2);g.lineTo(W-12,H/2);g.stroke();
+    g.strokeStyle='#46ff8e';g.lineWidth=3;g.beginPath();g.moveTo(20,H/2);
+    for(let x=20;x<W-12;x++){
+      let y=H/2;
+      if(x>40&&x<52)y=H/2-40;            /* pulsa kirim */
+      if(mode>=1&&x>268&&x<284)y=H/2+52; /* pantulan gangguan */
+      g.lineTo(x,y);}
+    g.stroke();
+    g.font='600 15px Consolas';g.textAlign='left';
+    g.fillStyle='#5fd4ff';g.fillText('pulsa →',44,60);
+    if(mode>=1){g.fillStyle='#ff5a5a';g.fillText('← pantulan negatif',270,H-40);
+      g.fillStyle='#ffd23f';g.font='700 17px Consolas';
+      g.fillText('JARAK: 1.840 m ±15 m',150,36);}
+    mkb.D.tex.needsUpdate=true;}
+  tdrScr(0);
+  /* titik gangguan (tersembunyi) + geophone */
+  mkb.spot=box(.5,.06,.5,0x39424c);mkb.spot.position.set(1.8,.07,-.8);scene.add(mkb.spot);
+  actMesh(mkb.spot,'PINPOINT');
+  mkb.geo=cyl(.12,.16,.2,0x2a72c8);mkb.geo.position.set(3.4,.2,1.0);scene.add(mkb.geo);
+  actMesh(mkb.geo,'GEO');
+  scene.add(label('GEOPHONE',.55,'#5fd4ff').translateX(3.4).translateY(.65).translateZ(1.0));
+  /* galian + joint */
+  mkb.joint=cyl(.09,.09,.8,0x2a2a32);mkb.joint.rotation.z=Math.PI/2;
+  mkb.joint.position.set(1.8,.25,-.8);mkb.joint.visible=false;scene.add(mkb.joint);
+  startSeq([
+   {type:'act',aid:'TDR',done:false,targets:()=>[mkb.tdr],
+    desc:'Kabel sudah bebas & dibumikan dua ujung — jalankan TDR (klik unit).',
+    why:'Megger dulu: fasa R bocor ke tanah, dua fasa lain sehat — gangguan satu fasa. TDR melempar pulsa nano-detik ke fasa R: layar menunggu gema. Sebelum semua ini: kabel DIPASTIKAN bebas tegangan dua sisi — kabel tanah pun tunduk pada ritual pembebasan.',
+    fx(){toast('📡 Megger: R-tanah bocor · TDR siap melempar pulsa…','info',2800);}},
+   {type:'act',aid:'BACA',done:false,targets:()=>[mkb.D.mesh],
+    desc:'Baca PANTULAN di layar TDR: di meter berapa lukanya?',
+    why:'Pantulan negatif muncul di 1.840 m ±15 m dari gardu — luka itu mengaku lewat gema. Dikalikan kecepatan rambat kabel XLPE yang sudah dikalibrasi: pre-location selesai. Dari 3.200 m misteri, tersisa 30 m untuk diburu telinga.',
+    fx(){tdrScr(1);toast('🎯 Pre-location: 1.840 m ±15 m dari gardu asal.','ok',3000);}},
+   {type:'act',aid:'GEO',done:false,targets:()=>[mkb.geo],
+    desc:'Pinpointing: surge generator + GEOPHONE di atas rute (klik geophone).',
+    why:'Surge gen mengirim pulsa energi — di titik gangguan, discharge menjeduk seperti detak jantung bawah tanah. Geophone digeser sepatok demi sepatok: dentum paling keras + selisih waktu elektromagnet-akustik terkecil = X marks the spot. Telinga menggantikan ratusan meter galian.',
+    fx(){beep(60,.25,'sine',.2);beep(60,.25,'sine',.2,.9);
+      toast('🔊 DUK… DUK… terkeras di patok 1.838 m — titik dikunci!','ok',3000);}},
+   {type:'act',aid:'PINPOINT',done:false,targets:()=>[mkb.spot],
+    desc:'Gali SATU lubang di titik terkunci (klik titik).',
+    why:'Galian 2×1 m, hati-hati mendekati kabel — dan tersangka ditemukan: bekas luka galian proyek lama, isolasi tertusuk, menua bertahun-tahun sebelum akhirnya tembus. Satu lubang, bukan tiga kilometer: itulah harga teknologi yang dibayar lunas.',
+    fx(){mkb.spot.material.color.setHex(0x6a4a2a);
+      toast('⛏️ Luka ditemukan: bekas galian pihak ketiga — isolasi tembus.','bad',3000);}},
+   {type:'act',aid:'JOINT',done:false,targets:()=>[mkb.spot],
+    desc:'JOINTING: potong bagian luka, sambung dengan joint baru, uji & energize.',
+    why:'Bedah mikro dimulai: potong segmen luka, kupas lapisan dengan geometri presisi, joint resin/heat-shrink oleh jointer tersertifikasi — kebersihan setara ruang operasi. Lalu uji VLF lolos, urug, energize: kota lama menyala lagi, dan rute di GIS diberi catatan merah "rawan galian".',
+    fx(){mkb.joint.visible=true;
+      toast('🔧 Joint terpasang · uji lolos · ENERGIZED — kota menyala!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Gangguan bawah tanah tertangkap presisi!</b> TDR menunjuk meter, geophone menunjuk jengkal, dan satu lubang menggantikan tiga kilometer keraguan. Kabel tanah memang pemalu — tapi ia selalu jujur pada yang tahu cara bertanya.');
+    setTimeout(()=>showWin('kabel'),2200);});
+  actMesh(mkb.D.mesh,'BACA');
+  const s3k=seq.steps[3],of3k=s3k.fx;s3k.fx=()=>{of3k();mkb.spot.userData.aid='JOINT';};
+  say('VOLTA di sini 🕳️ Gangguan kali ini <b>tak terlihat</b>: bersembunyi di sepanjang 3,2 km kabel bawah aspal. Senjatanya fisika: pulsa TDR yang memantul dari luka, dan geophone yang mendengar dentumnya. Mulai dari mobil uji!');
+  $('#modTitle').textContent='J03·M6 — Fault Location Kabel Tanah';
+  $('#taskHead').textContent='PULSA · GEMA · DENTUM · SATU LUBANG';}
+MISSIONS.kabel.build=buildKabel;
+Object.assign(REAL,{
+ kabel:[
+  'Kalibrasi velocity factor TDR dengan panjang kabel yang diketahui — salah VF = salah ratusan meter',
+  'Koordinasi galian dengan utilitas lain (air, telkom, gas) — peta bawah tanah jarang akurat',
+  'Jointer wajib sertifikasi & joint difoto tiap lapisan sebagai dokumentasi mutu',
+  'Update GIS dengan posisi joint & temuan — kabel yang terdokumentasi adalah kabel yang cepat sembuh'],
 });

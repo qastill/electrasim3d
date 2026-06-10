@@ -346,6 +346,7 @@ function buildHybrid(){
   /* inverter hybrid + display */
   mhy.inv=boxT(1.0,1.3,.5,TEX.metal(),{metalness:.35});mhy.inv.position.set(1.8,.7,-2.2);scene.add(mhy.inv);
   mhy.inv.add(label('HYBRID INVERTER 30 kW',.6).translateY(.95));
+  actMesh(mhy.inv,'NYALA');
   mhy.D=makeDisplay(.85,.55,260,160);
   mhy.D.mesh.position.set(1.8,.85,-1.93);scene.add(mhy.D.mesh);
   dispText(mhy.D,['OFFLINE','—'],['#7d8f84','#7d8f84']);
