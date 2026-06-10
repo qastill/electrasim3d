@@ -518,3 +518,110 @@ Object.assign(REAL,{
   'Diverter pneumatik butuh interlock area: pagar + sensor pintu, lengan yang mendorong tidak memilih sasaran',
   'Sediakan mode MANUAL/BYPASS untuk maintenance — line tak boleh tersandera program'],
 });
+
+/* =====================================================================
+   MISI 5 — HMI DESIGN: WAJAH UNTUK MESIN
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ hmi:{lvl:'JALUR 16 · KONTROL & OTOMASI · MISI 5',icon:'🖥️',title:'HMI Design: Wajah untuk Mesin',strict:false,
+  loc:'📍 Gudang distribusi · Line sortir butuh layar operator',
+  story:'Line sortir buatanmu bekerja sempurna — tapi operator barunya mengeluh: "Mesinnya pintar, tapi bisu." Benar: status hanya terbaca lewat laptop engineering. Misi hari ini bukan menambah logika, melainkan memberi line itu WAJAH: layar HMI yang membuat operator paham keadaan dalam tiga detik, dan alarm yang menuntun — bukan menakuti.',
+  goal:'HMI line sortir tersusun sesuai prinsip desain: overview jelas, kontrol aman dua langkah, alarm berprioritas, dan trend untuk investigasi — teruji oleh operator sungguhan.',
+  obj:['Rancang layar overview dengan hirarki visual','Tambah kontrol aman & halaman alarm berprioritas','Lengkapi trend, lalu uji dengan operator'],
+  learn:['HMI terbaik itu membosankan: abu-abu saat normal, warna HANYA untuk abnormal — layar pelangi membuat mata buta terhadap bahaya sungguhan','Aturan 3 detik: operator baru harus paham status line dalam tiga detik — hirarki visual mengalahkan kelengkapan data','Kontrol berbahaya butuh dua langkah (pilih lalu konfirmasi) & umpan balik jelas — sentuhan nyasar tak boleh menghentikan produksi','Alarm berprioritas & ber-instruksi: "CV2 STOP — periksa sensor transfer" menuntun; lampu merah berkedip hanya menakuti'],
+  next:['Pelajari standar desain HMI high-performance (ISA-101)','Dalami alarm management: alarm flood & rasionalisasi','Naik ke SCADA: banyak line, satu control room']},
+});
+let mhm={};
+function buildHMI(){
+  freshScene(0xb0bfcc,0x131c26);
+  cam={theta:0,phi:1.18,r:7,target:new THREE.Vector3(0,1.9,-1)};
+  const floor=boxT(14,.1,9,TEX.concrete());floor.position.y=-.05;scene.add(floor);
+  const wall=boxT(13,4.6,.15,TEX.plaster());wall.position.set(0,2.3,-3);scene.add(wall);
+  /* layar HMI besar yang sedang dirancang */
+  const frame=boxT(4.6,2.8,.18,TEX.metal(),{metalness:.4});frame.position.set(-1.2,2.4,-2.9);scene.add(frame);
+  frame.add(label('PANEL HMI 15" — LINE SORTIR',.9).translateY(1.7));
+  mhm.D=makeDisplay(4.3,2.5,620,360);
+  mhm.D.mesh.position.set(-1.2,2.4,-2.79);scene.add(mhm.D.mesh);
+  actMesh(mhm.D.mesh,'OVERVIEW');
+  mhm.st={ov:false,ctl:false,alm:false,trd:false};
+  function layar(){
+    const g=mhm.D.g,W=620,H=360;
+    g.fillStyle='#d8dde2';g.fillRect(0,0,W,H); /* abu terang khas high-performance */
+    g.font='700 18px Consolas';g.textAlign='left';
+    g.fillStyle='#222a31';g.fillText('LINE SORTIR — OVERVIEW',16,30);
+    if(mhm.st.ov){
+      /* mimic line: belt + status */
+      g.fillStyle='#9aa3ab';g.fillRect(60,90,360,16);
+      g.fillStyle='#222a31';g.fillRect(430,70,60,50);
+      g.font='600 14px Consolas';g.fillStyle='#222a31';
+      g.fillText('CV-1  RUN',70,80);g.fillText('SORTIR: 1.284',430,140);
+      g.fillStyle='#2a7a3a';g.beginPath();g.arc(45,98,9,0,7);g.fill();}
+    if(mhm.st.ctl){g.strokeStyle='#446';g.lineWidth=2;
+      g.strokeRect(60,180,120,44);g.font='600 15px Consolas';
+      g.fillStyle='#222a31';g.fillText('STOP LINE',74,207);
+      g.fillStyle='#667';g.font='600 12px Consolas';
+      g.fillText('(tahan 2 dtk + konfirmasi)',60,240);}
+    if(mhm.st.alm){g.fillStyle='#fff3cd';g.fillRect(310,180,290,60);
+      g.strokeStyle='#b8860b';g.strokeRect(310,180,290,60);
+      g.fillStyle='#7a5a00';g.font='600 13px Consolas';
+      g.fillText('⚠ P2 | sensor transfer kotor',320,202);
+      g.fillText('→ bersihkan lensa, reset di sini',320,224);}
+    if(mhm.st.trd){g.strokeStyle='#2a5a8a';g.lineWidth=2;g.beginPath();
+      for(let x=0;x<280;x+=4){g.lineTo(60+x,320-Math.sin(x*.05)*18-(x>180?14:0));}
+      g.stroke();g.fillStyle='#222a31';g.font='600 13px Consolas';
+      g.fillText('TREND: laju sortir/jam (8 jam)',60,275);}
+    mhm.D.tex.needsUpdate=true;}
+  layar();
+  /* kartu prinsip */
+  mhm.cards=[];
+  [['OVERVIEW','OV',2.2],['KONTROL','CTL',3.3],['ALARM','ALM',2.2],['TREND','TRD',3.3]].forEach((o,i)=>{
+    const y=i<2?2.9:1.9;
+    const c=box(.95,.6,.07,0x2b3a4a);c.position.set(o[2],y,-2.85);scene.add(c);
+    actMesh(c,o[1]);mhm.cards.push(c);
+    scene.add(label(o[0],.5,'#5fd4ff').translateX(o[2]).translateY(y+.45).translateZ(-2.8));});
+  /* operator figur */
+  mhm.op=new THREE.Group();
+  const badan=cyl(.2,.26,.85,0x2a5a8a);badan.position.y=.7;mhm.op.add(badan);
+  const kepala=new THREE.Mesh(new THREE.SphereGeometry(.15,14,12),
+    new THREE.MeshStandardMaterial({color:0xd8b090}));kepala.position.y=1.32;mhm.op.add(kepala);
+  mhm.op.position.set(5.2,0,-1.4);scene.add(mhm.op);
+  actMesh(badan,'OPTEST');
+  scene.add(label('OPERATOR BARU',.6).translateX(5.2).translateY(1.85).translateZ(-1.4));
+  startSeq([
+   {type:'act',aid:'OV',done:false,targets:()=>[mhm.cards[0]],
+    desc:'Rancang halaman OVERVIEW: status line dalam 3 detik (klik kartu).',
+    why:'Latar abu netral, mimic line sederhana, SATU indikator besar status, dan angka produksi yang penting saja. Warna disimpan untuk masalah: layar yang tenang saat normal membuat ketidaknormalan MENJERIT dengan sendirinya. Ini ilmu ISA-101, bukan selera.',
+    fx(){mhm.st.ov=true;layar();
+      toast('🖥️ Overview: tenang, hirarkis, 3 detik paham ✓','ok',2800);}},
+   {type:'act',aid:'CTL',done:false,targets:()=>[mhm.cards[1]],
+    desc:'Tambah KONTROL yang aman dari sentuhan nyasar (klik kartu).',
+    why:'Tombol STOP LINE: tahan 2 detik + dialog konfirmasi — jari yang tersenggol lengan baju tak boleh menghentikan produksi sejam. Tiap aksi memberi umpan balik (tombol berubah, status berganti): operator tak pernah bertanya "tadi kepencet nggak ya?"',
+    fx(){mhm.st.ctl=true;layar();
+      toast('🎛️ Kontrol 2 langkah + umpan balik — anti sentuhan nyasar.','ok',2800);}},
+   {type:'act',aid:'ALM',done:false,targets:()=>[mhm.cards[2]],
+    desc:'Susun halaman ALARM berprioritas + instruksi (klik kartu).',
+    why:'Tiga kasta: P1 merah (berhenti sekarang), P2 kuning (tindak <1 jam), P3 info. Dan tiap alarm membawa INSTRUKSI: "sensor transfer kotor → bersihkan lensa". Alarm yang menuntun melahirkan operator mandiri; alarm yang hanya berkedip melahirkan telepon tengah malam ke engineer.',
+    fx(){mhm.st.alm=true;layar();
+      toast('🚨 Alarm berprioritas + instruksi — menuntun, bukan menakuti.','ok',2800);}},
+   {type:'act',aid:'TRD',done:false,targets:()=>[mhm.cards[3]],
+    desc:'Lengkapi halaman TREND untuk investigasi (klik kartu).',
+    why:'Laju sortir per jam, 8 jam ke belakang: penurunan pelan yang tak terasa per menit jadi kasat mata dalam kurva — sensor mulai kotor, belt mulai selip. Trend adalah mesin waktu kecil yang membuat operator bertanya SEBELUM rusak, bukan setelahnya.',
+    fx(){mhm.st.trd=true;layar();
+      toast('📈 Trend 8 jam — penurunan pelan tak bisa sembunyi lagi.','ok',2800);}},
+   {type:'act',aid:'OPTEST',done:false,targets:()=>[mhm.op.children[0]],
+    desc:'Ujian sebenarnya: minta OPERATOR BARU memakainya (klik operator).',
+    why:'Tiga skenario tanpa bantuan: baca status (2,4 detik ✓), hentikan line dengan aman ✓, respons alarm sensor kotor — ia membaca instruksi, membersihkan lensa, reset sendiri ✓. HMI dinilai bukan oleh yang merancang, tapi oleh yang memakai jam dua pagi nanti.',
+    fx(){toast('🧑‍🔧 Operator lulus 3 skenario TANPA bantuan — HMI diterima!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Mesin bisu kini berwajah!</b> Tenang saat normal, menjerit saat tidak, menuntun saat ditanya. Logika PLC-mu hebat — tapi HMI inilah yang membuat manusia mempercayainya. Otomasi lengkap: otak, otot, dan wajah.');
+    setTimeout(()=>showWin('hmi'),2200);});
+  say('VOLTA di sini 🖥️ Line sortirmu pintar tapi <b>bisu</b> — operator butuh wajahnya. Hari ini kita belajar desain HMI: abu-abu itu emas, warna hanya untuk masalah, dan ujiannya bukan engineer... tapi operator baru. Mulai dari overview!');
+  $('#modTitle').textContent='J16·M5 — HMI Design';
+  $('#taskHead').textContent='TENANG SAAT NORMAL, JELAS SAAT TIDAK';}
+MISSIONS.hmi.build=buildHMI;
+Object.assign(REAL,{
+ hmi:[
+  'Libatkan operator sejak draft pertama — HMI yang dirancang tanpa pemakainya pasti dirombak',
+  'Ikuti pedoman high-performance HMI (ISA-101): hirarki layar, abu-abu dasar, warna untuk abnormal',
+  'Rasionalisasi alarm berkala: alarm yang selalu aktif & di-acknowledge buta adalah kebisingan berbahaya',
+  'Simpan backup project HMI + dokumentasi tag — layar tanpa dokumentasi adalah sandera vendor'],
+});

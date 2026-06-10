@@ -423,3 +423,87 @@ Object.assign(REAL,{
   'Pantau kurva beban trafo nyata bulan pertama — validasi DLM bekerja di dunia nyata',
   'Sosialisasikan ke pelanggan (app/stiker): kecepatan bisa turun di jam ramai — ekspektasi dikelola'],
 });
+
+/* =====================================================================
+   MISI 5 — INSTALASI HOME CHARGING (WALLBOX)
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ wallbox:{lvl:'JALUR 12 · EV & EV CHARGING · MISI 5',icon:'🏠',title:'Instalasi Home Charging (Wallbox)',strict:false,
+  loc:'📍 Rumah Bu Rina · Mobil listrik baru, garasi lama',
+  story:'Bu Rina baru mengambil mobil listrik pertamanya — dan malam pertama, charger bawaan dicolok ke stop kontak biasa: hangat mencurigakan setelah dua jam. Keputusannya tepat: panggil profesional. Tugasmu memasang wallbox 7,4 kW dengan benar: dari cek kapasitas daya rumah, jalur kabel dedicated, sampai proteksi yang memahami DC.',
+  goal:'Wallbox terpasang aman & tersertifikasi: daya rumah dinaikkan sesuai kebutuhan, sirkit dedicated dengan proteksi lengkap, dan pengisian perdana terverifikasi.',
+  obj:['Audit daya rumah & ajukan kenaikan daya','Tarik sirkit dedicated + proteksi RCD yang tepat','Pasang & komisioning wallbox, uji pengisian'],
+  learn:['Stop kontak rumah tidak dirancang untuk arus 10-16 A selama 8 jam nonstop — hangat itu peringatan, kebakaran itu kelanjutannya','Wallbox 7,4 kW butuh daya rumah memadai: audit beban dulu — kenaikan daya & penyesuaian MCB adalah bagian instalasi, bukan opsi','Charger mobil bisa membocorkan arus DC yang membutakan RCD tipe AC biasa — wajib RCD tipe A + DC 6mA (atau tipe B) di sirkit EV','Sirkit DEDICATED dari panel: berbagi jalur dengan beban lain = nominasi kebakaran — kabel dihitung untuk arus kontinu'],
+  next:['Pelajari smart charging rumah: jadwal tarif & integrasi PLTS atap','Dalami standar instalasi EV residensial & sertifikasinya','Tawarkan paket survei+instalasi ke dealer mobil listrik — pasar deras'],},
+});
+let mwb={};
+function buildWallbox(){
+  freshScene(0xa8c0d4,0x141e2a);
+  cam={theta:.1,phi:1.15,r:7.5,target:new THREE.Vector3(0,1.6,-.8)};
+  const floor=boxT(14,.1,10,TEX.concrete());floor.position.y=-.05;scene.add(floor);
+  const wall=boxT(13,4.2,.15,TEX.plaster());wall.position.set(0,2.1,-3);scene.add(wall);
+  const Z=-2.86;
+  /* mobil EV di garasi */
+  const body=box(2.4,.6,1.2,0x3a8a6a,{roughness:.35});body.position.set(2.8,.65,.4);scene.add(body);
+  const cab=box(1.3,.45,1.1,0x3a8a6a,{roughness:.3});cab.position.set(2.7,1.15,.4);scene.add(cab);
+  [[-1,-.5],[1,-.5],[-1,.5],[1,.5]].forEach(w=>{
+    const wh=cyl(.26,.26,.2,0x14181d);wh.rotation.x=Math.PI/2;
+    wh.position.set(2.8+w[0]*.85,.28,.4+w[1]);scene.add(wh);});
+  scene.add(label('MOBIL BU RINA',.65).translateX(2.8).translateY(1.75).translateZ(.4));
+  /* panel rumah */
+  const phb=boxT(.9,1.2,.2,TEX.metal(),{metalness:.35});phb.position.set(-4.6,2.0,Z);scene.add(phb);
+  phb.add(label('PANEL RUMAH',.6).translateY(.85));
+  actMesh(phb,'AUDIT');
+  /* stop kontak gosong */
+  const skk=box(.3,.3,.1,0xcfae90);skk.position.set(.6,1.2,Z+.08);scene.add(skk);
+  const gosong=box(.12,.12,.04,0x2a1c10);gosong.position.set(.6,1.2,Z+.14);scene.add(gosong);
+  scene.add(label('stop kontak biasa (hangat!)',.5,'#ff8d8d').translateX(.6).translateY(1.6).translateZ(Z+.1));
+  /* jalur kabel dedicated */
+  mwb.jalur=cyl(.035,.035,4.4,0xd8d8d8);mwb.jalur.rotation.z=Math.PI/2;
+  mwb.jalur.position.set(-2.2,3.2,Z+.06);mwb.jalur.visible=false;scene.add(mwb.jalur);
+  mwb.rol=box(.4,.35,.3,0x2a72c8);mwb.rol.position.set(-2.6,.9,.8);scene.add(mwb.rol);
+  actMesh(mwb.rol,'SIRKIT');
+  scene.add(label('KABEL 3x6mm² + RCD A/DC6mA',.55,'#5fd4ff').translateX(-2.6).translateY(1.35).translateZ(.8));
+  /* wallbox */
+  mwb.box=box(.5,.7,.22,0xe8edf2,{roughness:.4});mwb.box.position.set(.2,1.6,Z+.05);
+  mwb.box.visible=false;scene.add(mwb.box);
+  mwb.boxBtn=box(.5,.7,.22,0xe8edf2,{roughness:.4});mwb.boxBtn.position.set(-1.0,.45,1.4);scene.add(mwb.boxBtn);
+  actMesh(mwb.boxBtn,'PASANG');
+  scene.add(label('WALLBOX 7,4 kW (dus)',.55,'#ffd23f').translateX(-1.0).translateY(1.0).translateZ(1.4));
+  mwb.lampu=new THREE.Mesh(new THREE.SphereGeometry(.05,12,10),
+    new THREE.MeshStandardMaterial({color:0x224433,emissive:0x000000}));
+  mwb.lampu.position.set(.2,1.95,Z+.18);mwb.lampu.visible=false;scene.add(mwb.lampu);
+  startSeq([
+   {type:'act',aid:'AUDIT',done:false,targets:()=>[phb],
+    desc:'AUDIT daya rumah: cukupkah untuk 7,4 kW tambahan? (klik panel)',
+    why:'Rumah 5.500 VA, beban malam existing ±3.000 W — wallbox 7,4 kW jelas tak muat. Dua jalur: naik daya ke 13.200 VA (dipilih, mobil diisi malam saat beban rendah pun butuh ruang) ATAU wallbox diset 3,7 kW. Matematika dulu, pemasangan kemudian.',
+    fx(){toast('🧮 5.500 VA tak cukup → pengajuan naik daya 13.200 VA disetujui.','ok',3000);}},
+   {type:'act',aid:'SIRKIT',done:false,targets:()=>[mwb.rol],
+    desc:'Tarik SIRKIT DEDICATED dari panel + proteksi khusus EV (klik rol).',
+    why:'Kabel 3×6 mm² langsung dari panel (arus kontinu 32 A butuh napas panjang), MCB 40 A khusus, dan bintang utamanya: RCD tipe A + deteksi DC 6 mA — kebocoran DC dari elektronika mobil membutakan RCD biasa; tipe inilah yang tetap melek.',
+    fx(){mwb.jalur.visible=true;
+      toast('🔌 Sirkit dedicated + RCD A/DC6mA terpasang — jalur VIP mobil.','ok',3000);}},
+   {type:'act',aid:'PASANG',done:false,targets:()=>[mwb.boxBtn],
+    desc:'PASANG wallbox di dinding garasi (klik dus wallbox).',
+    why:'Tinggi 1,2 m (jauh dari genangan & jangkauan anak), kabel charging menjangkau port mobil tanpa melintasi jalur jalan kaki, dudukan ke dinding bata dengan fischer berat. Konfigurasi arus diset 32 A sesuai sirkit — wallbox pintar tapi tetap patuh kabel.',
+    fx(){mwb.box.visible=true;mwb.boxBtn.visible=false;mwb.lampu.visible=true;
+      toast('🔧 Wallbox terpasang rapi — konfigurasi 32 A.','ok',2800);}},
+   {type:'act',aid:'UJI',done:false,targets:()=>[mwb.box],
+    desc:'KOMISIONING: uji proteksi & pengisian perdana (klik wallbox).',
+    why:'Tes RCD trip ✓, pembumian 1,4 Ω ✓, lalu colok: handshake, 7,2 kW mengalir — stop kontak gosong itu resmi pensiun. Bu Rina dapat penjelasan 5 menit: isi malam hari, jangan pakai sambungan rol kabel, dan tombol darurat ada di sini. Instalasi selesai saat pemilik paham.',
+    fx(){mwb.lampu.material.color.setHex(0x2ee87a);mwb.lampu.material.emissive.setHex(0x2ee87a);
+      mwb.lampu.material.emissiveIntensity=1;
+      toast('🔋 7,2 kW mengalir — penuh dalam 6 jam, AMAN selamanya.','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Garasi naik kelas!</b> Daya dihitung, jalur dedicated, RCD yang paham DC, dan pemilik yang teredukasi. Jutaan mobil listrik akan datang — dan tiap garasinya butuh tangan seperti tanganmu.');
+    setTimeout(()=>showWin('wallbox'),2200);});
+  say('VOLTA di sini 🏠 Kasus yang akan kamu temui ribuan kali dekade ini: <b>mobil listrik baru, instalasi rumah lama</b>. Stop kontak biasa sudah memberi peringatan hangat. Tiga kunci: audit daya, sirkit dedicated, RCD yang paham DC. Mulai dari panel!');
+  $('#modTitle').textContent='J12·M5 — Home Charging Wallbox';
+  $('#taskHead').textContent='DAYA · DEDICATED · DC-AWARE';}
+MISSIONS.wallbox.build=buildWallbox;
+Object.assign(REAL,{
+ wallbox:[
+  'Survei beban aktual rumah (bukan hanya daya kontrak) sebelum menjanjikan kapasitas wallbox',
+  'RCD tipe A + DC 6mA (atau tipe B) adalah syarat mutlak sirkit EV — verifikasi datasheet wallbox',
+  'Uji jatuh tegangan ujung kabel saat arus penuh — jalur panjang ke garasi sering diremehkan',
+  'Beri label sirkit EV di panel & edukasi pemilik: dilarang ekstensi/rol kabel untuk charging'],
+});

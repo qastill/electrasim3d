@@ -378,3 +378,98 @@ Object.assign(REAL,{
   'Penalaan damper dilakukan teknisi burner kompeten — CO tinggi berbahaya bagi ruangan',
   'Pasang termometer cerobong permanen: kenaikan suhu = alarm dini kerak, bukan temuan tahunan'],
 });
+
+/* =====================================================================
+   MISI 5 — AUDIT SISTEM CHILLER & PENDINGIN
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ chiller:{lvl:'JALUR 06 · ENERGY AUDITOR · MISI 5',icon:'❄️',title:'Audit Sistem Chiller & Pendingin',strict:false,
+  loc:'📍 Mall Indramayu Plaza · Ruang chiller basement',
+  story:'Klien barumu sebuah mall: 60% tagihan listriknya dimakan sistem pendingin. Di basement, dua chiller raksasa bekerja — dan tak seorang pun tahu apakah mereka bekerja EFISIEN atau sekadar bekerja. Auditor membawa satu angka sakti yang meringkas segalanya: kW/TR — berapa listrik dibayar untuk tiap ton pendinginan.',
+  goal:'Kinerja chiller terukur (kW/TR), tiga pemborosan ditemukan & dikoreksi, dan penghematan terverifikasi tanpa mengorbankan kenyamanan.',
+  obj:['Ukur kinerja: kW/TR aktual vs desain','Periksa approach temperature kondensor & evaporator','Koreksi: setpoint, kondensor kotor, & jadwalkan sequencing'],
+  learn:['kW/TR = listrik per ton pendinginan: 0,6 = sehat, 0,9 = bermasalah — satu angka untuk menilai seluruh mesin','Approach temperature (selisih suhu refrigeran vs air) adalah stetoskop heat-exchanger: approach membesar = permukaan kotor/fouling','Chilled water setpoint dinaikkan 1°C ≈ hemat 2-3% — kenyamanan diukur dari ruangan, bukan dari angka air sedingin mungkin','Dua chiller 50% lebih boros dari satu chiller 90% — sequencing yang benar memilih kombinasi paling efisien'],
+  next:['Pelajari variable primary flow & pompa VSD pada plant pendingin','Dalami cooling tower: wet bulb approach & water treatment','Hitung IPLV/NPLV — efisiensi part-load yang sebenarnya']},
+});
+let mch={};
+function buildChiller(){
+  freshScene(0x9fb6c8,0x0f1820);
+  cam={theta:.1,phi:1.18,r:8.5,target:new THREE.Vector3(0,1.6,-.8)};
+  const Z=room(0x55606a,0xb9c4bd,16,11);
+  /* dua chiller */
+  mch.ch1=boxT(2.6,1.6,1.2,TEX.metal(),{metalness:.35});mch.ch1.position.set(-3.4,.85,-1.8);scene.add(mch.ch1);
+  scene.add(label('CHILLER-1 · 300 TR',.7).translateX(-3.4).translateY(1.95).translateZ(-1.8));
+  mch.ch2=boxT(2.6,1.6,1.2,TEX.metal(),{metalness:.35});mch.ch2.position.set(.4,.85,-1.8);scene.add(mch.ch2);
+  actMesh(mch.ch2,'APPROACH');
+  scene.add(label('CHILLER-2 · 300 TR',.7).translateX(.4).translateY(1.95).translateZ(-1.8));
+  /* pipa header */
+  const pipa1=cyl(.14,.14,9,0x2a6a9a);pipa1.rotation.z=Math.PI/2;pipa1.position.set(-1.5,2.4,-2.3);scene.add(pipa1);
+  const pipa2=cyl(.14,.14,9,0x9a4a2a);pipa2.rotation.z=Math.PI/2;pipa2.position.set(-1.5,2.7,-2.3);scene.add(pipa2);
+  /* panel meter chiller */
+  mch.D=makeDisplay(2.2,1.3,440,260);
+  mch.D.mesh.position.set(4.2,2.2,-2.6);scene.add(mch.D.mesh);
+  actMesh(mch.D.mesh,'KWTR');
+  scene.add(label('PANEL KINERJA PLANT',.7,'#5fd4ff').translateX(4.2).translateY(3.0).translateZ(-2.6));
+  function panel(mode){
+    const g=mch.D.g,W=440,H=260;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.font='700 18px Consolas';g.textAlign='left';
+    if(mode===0){g.fillStyle='#ff5a5a';
+      g.fillText('CH-1: 142 kW / 158 TR = 0,90 kW/TR',16,48);
+      g.fillText('CH-2: 138 kW / 149 TR = 0,93 kW/TR',16,84);
+      g.fillStyle='#8aa3bd';g.font='600 15px Consolas';
+      g.fillText('desain: 0,62 kW/TR — boros 45%!',16,120);
+      g.fillText('CHWS 5,5°C · dua unit @50% beban',16,150);}
+    else{g.fillStyle='#46ff8e';
+      g.fillText('CH-1: 168 kW / 262 TR = 0,64 kW/TR',16,48);
+      g.fillStyle='#8aa3bd';g.font='600 15px Consolas';
+      g.fillText('CH-2: STANDBY (sequencing)',16,84);
+      g.fillText('CHWS 7,0°C · kondensor bersih',16,114);
+      g.fillStyle='#46ff8e';g.font='700 17px Consolas';
+      g.fillText('hemat ±Rp 38 jt/bulan ✓',16,160);}
+    mch.D.tex.needsUpdate=true;}
+  panel(0);
+  /* setpoint controller */
+  mch.set=box(.5,.4,.16,0x2b3a4a);mch.set.position.set(-5.8,1.8,-2.4);scene.add(mch.set);
+  actMesh(mch.set,'SETP');
+  scene.add(label('CHW SETPOINT',.55,'#5fd4ff').translateX(-5.8).translateY(2.3).translateZ(-2.4));
+  /* sikat kondensor */
+  mch.sikat=cyl(.04,.04,1.4,0x2a72c8);mch.sikat.rotation.z=.6;
+  mch.sikat.position.set(2.6,1.0,.4);scene.add(mch.sikat);
+  actMesh(mch.sikat,'BERSIH');
+  scene.add(label('TUBE CLEANING KIT',.55,'#5fd4ff').translateX(2.9).translateY(1.5).translateZ(.4));
+  startSeq([
+   {type:'act',aid:'KWTR',done:false,targets:()=>[mch.D.mesh],
+    desc:'Baca angka sakti: kW/TR kedua chiller (klik panel).',
+    why:'CH-1: 0,90 · CH-2: 0,93 — desainnya 0,62. Mall membayar 45% lebih untuk tiap ton dingin. Dan satu kejanggalan mencolok: DUA chiller masing-masing jalan 50% — seperti dua sopir menyetir satu mobil.',
+    fx(){toast('📏 0,90-0,93 kW/TR (desain 0,62) — boros 45%!','bad',3000);}},
+   {type:'act',aid:'APPROACH',done:false,targets:()=>[mch.ch2],
+    desc:'Stetoskop heat exchanger: cek APPROACH kondensor (klik CH-2).',
+    why:'Approach kondensor terukur 6,8°C — komisioning dulu 1,5°C. Diagnosa: tube kondensor berkerak (air cooling tower tanpa treatment baik). Kompresor terpaksa memompa ke tekanan lebih tinggi — kerja ekstra yang dibayar tagihan tiap jam.',
+    fx(){toast('🩺 Approach 6,8°C (normal 1,5) — kondensor BERKERAK.','bad',2800);}},
+   {type:'act',aid:'BERSIH',done:false,targets:()=>[mch.sikat],
+    desc:'Koreksi #1: TUBE CLEANING kondensor (klik kit).',
+    why:'Brushing + chemical cleaning terjadwal malam (mall tutup). Pagi harinya approach kembali 1,9°C — tekanan kondensasi turun, kompresor bernafas lega. Satu malam menyikat = poin efisiensi yang kembali setiap jam operasional.',
+    fx(){toast('🧹 Approach 6,8 → 1,9°C — kompresor lega.','ok',2800);}},
+   {type:'act',aid:'SETP',done:false,targets:()=>[mch.set],
+    desc:'Koreksi #2: naikkan CHILLED WATER SETPOINT 5,5 → 7°C.',
+    why:'Air 5,5°C itu warisan setting "biar pasti dingin" — padahal ruangan mall nyaman dengan air 7°C. Tiap derajat lebih hangat ≈ 2-3% hemat kompresor. Kenyamanan diverifikasi sensor ruangan: tetap 23-24°C. Tak ada pengunjung yang tahu; hanya tagihan yang berubah.',
+    fx(){toast('🌡️ Setpoint 7°C — ruangan tetap nyaman, kompresor hemat 4%.','ok',2800);}},
+   {type:'act',aid:'SEQ',done:false,targets:()=>[mch.D.mesh],
+    desc:'Koreksi #3: terapkan SEQUENCING — satu chiller penuh, satu standby.',
+    why:'Beban aktual 260 TR cukup dilayani SATU chiller di 87% (zona efisiensi terbaiknya) daripada dua unit terengah di 50%. CH-2 jadi standby bergilir mingguan. Hasil akhir terbaca di panel: 0,64 kW/TR — dan Rp 38 juta sebulan pulang ke kas mall.',
+    fx(){panel(1);toast('🔁 Sequencing aktif: 0,64 kW/TR — hemat Rp 38 jt/bln!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Plant pendingin kembali ke khitahnya!</b> Kondensor bersih, setpoint masuk akal, satu chiller bekerja di zona terbaiknya. kW/TR 0,90 → 0,64 — dan tak satu pun pengunjung merasa lebih gerah.');
+    setTimeout(()=>showWin('chiller'),2200);});
+  const s0=seq.steps[0],of0=s0.fx;s0.fx=()=>{of0();mch.D.mesh.userData.aid='SEQ';};
+  say('VOLTA di sini ❄️ Klien baru: mall yang 60% tagihannya dimakan pendingin. Satu angka akan membuka semuanya: <b>kW/TR</b> — listrik per ton dingin. Turun ke basement, kita timbang chiller-nya.');
+  $('#modTitle').textContent='J06·M5 — Audit Chiller';
+  $('#taskHead').textContent='kW/TR: SATU ANGKA SEJUTA MAKNA';}
+MISSIONS.chiller.build=buildChiller;
+Object.assign(REAL,{
+ chiller:[
+  'Pengukuran TR butuh flow meter & sensor suhu terkalibrasi di chilled water — jangan percaya display unit saja',
+  'Bandingkan dengan kurva kinerja pabrikan pada kondisi ECWT yang sama — apel dengan apel',
+  'Program water treatment cooling tower adalah pengawal approach — audit kimianya juga',
+  'Pasang sub-meter listrik per chiller permanen: kW/TR harian jadi KPI operator, bukan temuan auditor'],
+});

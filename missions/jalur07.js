@@ -409,3 +409,96 @@ Object.assign(REAL,{
   'Koordinasi pemulihan dipimpin pusat pengatur: jalur energize & urutan beban sudah tertulis di skema',
   'Baterai DC station diuji kapasitasnya — kontrol & proteksi hidup dari DC saat semuanya mati'],
 });
+
+/* =====================================================================
+   MISI 5 — UNIT TRIP: RESPON & INVESTIGASI
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ unittrip:{lvl:'JALUR 07 · PEMBANGKITAN · MISI 5',icon:'🚨',title:'Unit Trip: Respon & Investigasi',strict:true,
+  loc:'📍 PLTU unit 2 · 14:47, alarm membanjir',
+  story:'Tanpa peringatan: BUMM — breaker generator terbuka sendiri, turbin trip, dan layar alarm menjadi pohon natal. Unit 2 lepas 62 MW dari sistem dalam sekejap. Dua tugas menantimu dengan urutan yang tak boleh terbalik: AMANKAN dulu unitnya, INVESTIGASI kemudian. Operator panik memencet; operator terlatih membaca.',
+  goal:'Unit aman pasca-trip (auxiliary terjaga, turning gear masuk), akar penyebab ditemukan dari first-out alarm, dan unit kembali start dengan izin.',
+  obj:['Verifikasi kondisi aman pasca-trip: auxiliary & turbin','Baca first-out alarm: mana penyebab, mana akibat','Temukan akar, perbaiki, dan restart dengan izin'],
+  learn:['Pasca-trip prioritasnya MENGAMANKAN: pelumas jalan?, turbin coast down normal?, boiler aman? — investigasi menunggu, kerusakan lanjutan tidak','First-out alarm adalah saksi kunci: dari 47 alarm yang membanjir, sistem mencatat siapa yang berteriak PERTAMA — sisanya hanyalah efek domino','Trip oleh proteksi adalah proteksi yang BEKERJA: jangan pernah di-bypass agar bisa start — temukan kenapa ia bekerja','Restart pasca-trip butuh izin & checklist: akar dipahami, proteksi di-reset benar, dispatcher mengetahui'],
+  next:['Pelajari trip logic diagram unit: pohon penyebab trip turbin-generator','Dalami analisis data historian (DCS) untuk investigasi presisi','Susun SOP komunikasi darurat unit trip ke dispatcher & manajemen']},
+});
+let mut={};
+function buildUnitTrip(){
+  freshScene(0x2a1d1d,0x0c0a0a);
+  cam={theta:0,phi:1.16,r:8.5,target:new THREE.Vector3(0,1.9,-1)};
+  const floor=boxT(18,.1,11,TEX.concrete());floor.position.y=-.05;scene.add(floor);
+  const wall=boxT(16,4.6,.2,TEX.metal(),{metalness:.2});wall.position.set(0,2.3,-3.4);scene.add(wall);
+  /* layar alarm membanjir */
+  const frame=boxT(4.6,2.6,.16,TEX.metal(),{metalness:.4});frame.position.set(-2.2,2.5,-3.3);scene.add(frame);
+  frame.add(label('ALARM SUMMARY — 47 AKTIF',.85,'#ff8d8d').translateY(1.6));
+  mut.D=makeDisplay(4.3,2.3,580,330);
+  mut.D.mesh.position.set(-2.2,2.5,-3.2);scene.add(mut.D.mesh);
+  actMesh(mut.D.mesh,'FIRSTOUT');
+  function alarmScr(mode){
+    const g=mut.D.g,W=580,H=330;
+    g.fillStyle='#180c0c';g.fillRect(0,0,W,H);
+    g.font='600 15px Consolas';g.textAlign='left';
+    const rows=mode===0?
+     [['14:47:02.114','GEN BREAKER OPEN','#ff5a5a'],['14:47:02.108','TURBINE TRIP','#ff5a5a'],
+      ['14:47:02.095','LOW VACUUM TRIP','#ff5a5a'],['14:47:01.870','VACUUM LOW ALARM','#ffd23f'],
+      ['14:46:58.220','CW PUMP-A TRIP ◄ FIRST OUT','#ff8d3a'],['14:47:02.300','FW FLOW LOW','#ffd23f'],
+      ['14:47:02.410','DRUM LEVEL HIGH','#ffd23f'],['...42 alarm lain (akibat)','','#7d8f84']]:
+     [['AKAR: CW PUMP-A TRIP 14:46:58','','#ff8d3a'],['→ vakum kondensor merosot 4 detik','','#ffd23f'],
+      ['→ LOW VACUUM TRIP turbin (proteksi benar)','','#ffd23f'],['→ generator ikut lepas (sequence normal)','','#8aa3bd'],
+      ['CW-B gagal AUTO-START: selector di MANUAL','','#ff5a5a'],['(ditinggal posisi salah usai pemeliharaan)','','#ff5a5a']];
+    rows.forEach((r,i)=>{g.fillStyle=r[2];g.fillText(r[0],14,34+i*36);
+      if(r[1])g.fillText(r[1],300,34+i*36);});
+    mut.D.tex.needsUpdate=true;}
+  alarmScr(0);
+  /* panel auxiliary */
+  mut.aux=makeDisplay(1.7,1.0,380,220);
+  mut.aux.mesh.position.set(2.0,2.4,-3.25);scene.add(mut.aux.mesh);
+  dispText(mut.aux,['AUX STATUS','cek sekarang!'],['#ffd23f','#7d8f84']);
+  actMesh(mut.aux.mesh,'AMANKAN');
+  scene.add(label('PANEL AUXILIARY',.65,'#5fd4ff').translateX(2.0).translateY(3.15).translateZ(-3.2));
+  /* selector CW pump */
+  mut.sel=box(.4,.4,.18,0x2b3a4a);mut.sel.position.set(4.6,2.0,-3.25);scene.add(mut.sel);
+  actMesh(mut.sel,'FIX');
+  scene.add(label('SELECTOR CW PUMP-B',.55,'#5fd4ff').translateX(4.6).translateY(2.5).translateZ(-3.2));
+  /* tombol start + logsheet */
+  mut.btn=cyl(.1,.1,.09,0x2ec06a);mut.btn.rotation.x=Math.PI/2;
+  mut.btn.position.set(4.6,1.2,-3.22);scene.add(mut.btn);
+  actMesh(mut.btn,'RESTART');
+  scene.add(label('RESTART SEQ',.5,'#7af0a8').translateX(4.6).translateY(.9).translateZ(-3.2));
+  startSeq([
+   {type:'act',aid:'AMANKAN',done:false,targets:()=>[mut.aux.mesh],
+    desc:'JANGAN sentuh alarm dulu — AMANKAN unit: cek auxiliary (klik panel aux).',
+    why:'Refleks pertama yang benar: pelumas turbin JALAN (bearing selamat), turning gear standby menunggu coast down, boiler masuk tekanan aman, pemakaian sendiri pindah ke suplai cadangan. Unit yang trip itu kecelakaan; unit trip yang rusak karena diabaikan itu kelalaian.',
+    fx(){dispText(mut.aux,['LUBE ✓ TG ✓ PS ✓','unit AMAN terkendali'],['#46ff8e','#46ff8e']);
+      toast('🛡️ Auxiliary terjaga — unit aman, sekarang boleh berpikir.','ok',3000);}},
+   {type:'act',aid:'FIRSTOUT',done:false,targets:()=>[mut.D.mesh],
+    desc:'Kini investigasi: cari FIRST-OUT di banjir alarm (klik layar).',
+    why:'47 alarm, tapi cap waktu tak berbohong: paling awal 14:46:58 — CW PUMP-A TRIP, empat detik SEBELUM turbin lepas. Pompa pendingin kondensor mati → vakum runtuh → proteksi low vacuum membanting turbin. 46 alarm lainnya hanyalah gema. Saksi kunci ditemukan.',
+    fx(){toast('🔍 FIRST-OUT: CW Pump-A trip — 4 detik sebelum turbin!','bad',3000);}},
+   {type:'act',aid:'AKAR',done:false,targets:()=>[mut.D.mesh],
+    desc:'Satu lapis lagi: kenapa pompa CADANGAN tidak menyelamatkan?',
+    why:'CW-B seharusnya auto-start menggantikan — tapi diam. Penelusuran: selector-nya tertinggal di posisi MANUAL sejak pemeliharaan minggu lalu. Akar sejati bukan pompa A yang trip (overload sesaat, bisa terjadi) — tapi CADANGAN yang dilumpuhkan oleh satu selector terlupakan.',
+    fx(){alarmScr(1);
+      toast('🎯 AKAR: selector CW-B di MANUAL — cadangan tak bisa menolong.','bad',3200);}},
+   {type:'act',aid:'FIX',done:false,targets:()=>[mut.sel],
+    desc:'Perbaiki: kembalikan SELECTOR ke AUTO + tutup celah prosedurnya.',
+    why:'Selector diputar ke AUTO, CW-B diuji start — sehat. Tapi perbaikan sejati di prosedur: checklist pasca-pemeliharaan kini wajib memverifikasi SEMUA selector kembali AUTO, ditandatangani dua orang. Satu klik hari ini, satu aturan untuk selamanya.',
+    fx(){toast('🔧 Selector AUTO ✓ uji start ✓ + checklist baru terbit.','ok',3000);}},
+   {type:'act',aid:'RESTART',done:false,targets:()=>[mut.btn],
+    desc:'Akar tuntas: minta izin & RESTART unit (klik tombol).',
+    why:'Laporan ke dispatcher: akar ditemukan & dikoreksi, proteksi TIDAK di-bypass, unit siap. Izin turun — start-up sequence yang kamu kuasai dari misi-misi lalu berjalan: 6 jam kemudian unit 2 kembali memikul 62 MW. Trip yang dipahami akarnya tak akan mengetuk dua kali.',
+    fx(){toast('🌅 Unit 2 SINKRON kembali — trip ditutup dengan pelajaran.','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Trip ditangani seperti profesional!</b> Amankan dulu, baca first-out, gali sampai selector yang terlupa, perbaiki prosedurnya — baru restart. 47 alarm hanya bising; kamu menemukan satu yang bernyanyi duluan.');
+    setTimeout(()=>showWin('unittrip'),2200);});
+  const s1=seq.steps[1],of1=s1.fx;s1.fx=()=>{of1();mut.D.mesh.userData.aid='AKAR';};
+  say('VOLTA di sini, dan sirine masih meraung 🚨 <b>Unit trip — 47 alarm membanjir!</b> Hukum pertama: amankan unit SEBELUM menganalisis. Hukum kedua: dari semua alarm, hanya FIRST-OUT yang bercerita jujur. Bergerak!');
+  $('#modTitle').textContent='J07·M5 — Unit Trip & Investigasi';
+  $('#taskHead').textContent='AMANKAN · FIRST-OUT · AKAR';}
+MISSIONS.unittrip.build=buildUnitTrip;
+Object.assign(REAL,{
+ unittrip:[
+  'Data historian (DCS) di-freeze & diekspor segera — bukti detik-detik kejadian jangan tertimpa',
+  'Investigasi formal melibatkan operator shift, har & engineer — bukan mencari kambing hitam tapi celah sistem',
+  'Proteksi yang bekerja TIDAK pernah di-bypass demi kejar start — itu garis merah industri pembangkitan',
+  'Tindak lanjut prosedural (checklist, label selector) diverifikasi audit berikutnya — kertas harus jadi budaya'],
+});

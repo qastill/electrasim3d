@@ -428,3 +428,86 @@ Object.assign(REAL,{
   'PIR koridor diuji jalan sungguhan di malam hari: pola jangkauan nyata beda dengan brosur',
   'Untuk 3+ titik kendali, sisipkan saklar silang di antara dua saklar tukar'],
 });
+
+/* =====================================================================
+   MISI 5 — PENANGKAL PETIR & PEMBUMIAN GEDUNG
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ petir:{lvl:'JALUR 01 · INSTALASI BANGUNAN · MISI 5',icon:'🌩️',title:'Penangkal Petir & Pembumian Gedung',strict:false,
+  loc:'📍 Ruko 3 lantai · Indramayu, sebelum musim hujan',
+  story:'Ruko tiga lantai milik H. Somad berdiri paling tinggi di blok-nya — dan dua minggu lalu, petir menyambar antena tetangga dua rumah dari situ. Beliau akhirnya sadar: bangunan tertinggi adalah sukarelawan sambaran. Tugasmu memasang sistem proteksi petir eksternal lengkap: dari ujung tombak di atap sampai elektroda di kedalaman tanah.',
+  goal:'Sistem proteksi petir terpasang utuh: air terminal menaungi seluruh atap, konduktor turun mulus, dan tahanan pembumian terukur di bawah 5 ohm.',
+  obj:['Pasang air terminal & verifikasi zona proteksi','Tarik down conductor dengan rute benar + klem ukur','Tanam elektroda, ukur tahanan, dan bonding ekuipotensial'],
+  learn:['Petir memilih jalur termudah ke bumi — proteksi petir tidak menolak sambaran, ia MENYEDIAKAN jalur aman agar arus tak lewat struktur','Zona proteksi air terminal dihitung (sudut proteksi/bola gelinding) — pasang asal tinggi tidak menjamin pojok atap ternaungi','Down conductor menuntut rute selurus mungkin: setiap tikungan tajam adalah titik samping (side flash) karena arus petir benci belokan','Tahanan pembumian < 5 ohm dan bonding ke pembumian listrik — beda potensial antar sistem saat sambaran = percikan di dalam rumah'],
+  next:['Pelajari metode bola gelinding (rolling sphere) untuk gedung kompleks','Dalami SPD (surge protective device) — proteksi petir internal','Ukur pembumian musiman: tanah kering mengubah angka']},
+});
+let mlp={};
+function buildPetir(){
+  freshScene(0x8aa0c0,0x141c28);
+  cam={theta:.15,phi:1.05,r:11,target:new THREE.Vector3(0,3,-1)};
+  const ground=boxT(22,.1,14,TEX.gravel());ground.position.y=-.05;scene.add(ground);
+  /* ruko 3 lantai */
+  const gedung=boxT(4.5,6,3.5,TEX.plaster());gedung.position.set(-1,3,-2);scene.add(gedung);
+  [1.2,3.2,5.2].forEach(y=>{[-2.2,-1,0.2].forEach(x=>{
+    const j=box(.7,.9,.06,0x224,{roughness:.2,metalness:.4});j.position.set(x-.1,y,-0.22);scene.add(j);});});
+  scene.add(label('RUKO 3 LANTAI · H. SOMAD',.9).translateX(-1).translateY(7.1).translateZ(-2));
+  /* air terminal */
+  mlp.spit=cyl(.025,.05,1.0,0xd8b020,10,{metalness:.7});
+  mlp.spit.position.set(-1,6.55,-2);scene.add(mlp.spit);
+  actMesh(mlp.spit,'AT');
+  scene.add(label('AIR TERMINAL',.6,'#5fd4ff').translateX(-1).translateY(7.6).translateZ(-1.6));
+  /* down conductor (muncul setelah dipasang) */
+  mlp.dc=cyl(.03,.03,6,0x8a6a3a);mlp.dc.position.set(1.28,3,-1.4);
+  mlp.dc.visible=false;scene.add(mlp.dc);
+  mlp.dcBtn=box(.3,.4,.1,0x8a6a3a);mlp.dcBtn.position.set(2.4,1.4,-1.0);scene.add(mlp.dcBtn);
+  actMesh(mlp.dcBtn,'DC');
+  scene.add(label('ROL KONDUKTOR BC 50mm²',.55,'#5fd4ff').translateX(2.6).translateY(1.9).translateZ(-1.0));
+  /* bak kontrol + elektroda */
+  mlp.bak=boxT(.5,.3,.5,TEX.concrete());mlp.bak.position.set(1.3,.15,-.4);scene.add(mlp.bak);
+  actMesh(mlp.bak,'ROD');
+  scene.add(label('BAK KONTROL + ELEKTRODA',.55,'#5fd4ff').translateX(1.6).translateY(.7).translateZ(0));
+  /* earth tester */
+  const tbl=boxT(.9,.07,.6,TEX.wood());tbl.position.set(4.2,.95,.6);scene.add(tbl);
+  const tleg=boxT(.08,.95,.08,TEX.wood());tleg.position.set(4.2,.47,.6);scene.add(tleg);
+  mlp.et=box(.32,.2,.24,0xd8b020);mlp.et.position.set(4.2,1.08,.6);scene.add(mlp.et);
+  actMesh(mlp.et,'UKUR');
+  scene.add(label('EARTH TESTER 3 TITIK',.55,'#5fd4ff').translateX(4.2).translateY(1.4).translateZ(.6));
+  /* bonding bar */
+  mlp.bond=box(.4,.12,.08,0x86c79a);mlp.bond.position.set(-3.6,.6,-.2);scene.add(mlp.bond);
+  actMesh(mlp.bond,'BOND');
+  scene.add(label('BAR EKUIPOTENSIAL',.55,'#8df0b8').translateX(-3.8).translateY(1.0).translateZ(.1));
+  startSeq([
+   {type:'act',aid:'AT',done:false,targets:()=>[mlp.spit],
+    desc:'Pasang AIR TERMINAL & cek zona proteksinya (klik splitzen).',
+    why:'Splitzen tembaga 1 m di titik tertinggi. Tapi tinggi saja belum cukup: dengan sudut proteksi ±45°, payung imajinernya harus menaungi SEMUA pojok atap — pojok timur ternyata di tepi zona, jadi posisi digeser 60 cm. Geometri dulu, baut kemudian.',
+    fx(){toast('🌩️ Air terminal terpasang — 4 pojok atap ternaungi ✓','ok',2800);}},
+   {type:'act',aid:'DC',done:false,targets:()=>[mlp.dcBtn],
+    desc:'Tarik DOWN CONDUCTOR dari atap ke tanah (klik rol konduktor).',
+    why:'BC 50 mm² menuruni dinding selurus mungkin — arus petir puluhan kilo-ampere membenci belokan: tikungan tajam memaksa arus melompat ke struktur (side flash). Rute menjauhi pintu & jendela, diklem tiap meter, plus klem ukur di bawah untuk pengujian tahunan.',
+    fx(){mlp.dc.visible=true;mlp.dcBtn.visible=false;
+      toast('📏 Konduktor turun lurus, jauh dari bukaan, klem ukur siap.','ok',2800);}},
+   {type:'act',aid:'ROD',done:false,targets:()=>[mlp.bak],
+    desc:'Tanam ELEKTRODA pembumian di bak kontrol (klik bak).',
+    why:'Ground rod tembaga 5/8" ditanam tegak sedalam mungkin — lapisan tanah dalam lebih lembap & stabil sepanjang musim. Bak kontrol membuat sambungan bisa diperiksa selamanya: pembumian yang dikubur tanpa akses = pembumian yang dilupakan.',
+    fx(){toast('⏚ Elektroda tertanam 6 m — sambungan di bak kontrol.','ok',2600);}},
+   {type:'act',aid:'UKUR',done:false,targets:()=>[mlp.et],
+    desc:'UKUR tahanan pembumian metode 3 titik (klik earth tester).',
+    why:'Spike bantu ditanam 20 m & 40 m, arus uji dialirkan: terukur 3,2 ohm — di bawah 5 ✓. Angka ini diukur saat tanah TIDAK basah hujan: nilai musim kering adalah nilai jujurnya. Kalau di atas 5: tambah rod paralel berjarak ≥ panjang rod.',
+    fx(){toast('📏 Tahanan pembumian: 3,2 Ω (< 5 Ω) ✓','ok',2800);}},
+   {type:'act',aid:'BOND',done:false,targets:()=>[mlp.bond],
+    desc:'Terakhir & sering dilupakan: BONDING ekuipotensial (klik bar hijau).',
+    why:'Pembumian petir disatukan dengan pembumian listrik di bar ekuipotensial. Tanpa bonding, saat sambaran terjadi dua sistem berbeda potensial ribuan volt — dan percikan meloncat lewat instalasi DALAM rumah. Satu bar kecil ini mencegah petir masuk lewat pintu belakang.',
+    fx(){toast('🔗 Bonding tuntas — sistem proteksi petir UTUH. Musim hujan, silakan datang!','ok',3200);sfx.big();}},
+  ],()=>{say('🎉 <b>Ruko terlindungi!</b> Tombak menangkap, konduktor mengantar, bumi menelan — dan bonding memastikan tak ada percikan nyasar di dalam. Petir boleh memilih ruko ini; ia hanya akan lewat di jalur yang kamu siapkan.');
+    setTimeout(()=>showWin('petir'),2200);});
+  say('VOLTA di sini 🌩️ Bangunan tertinggi di blok = sukarelawan sambaran. Filosofinya menarik: <b>kita tidak melawan petir — kita menyediakan jalan tol baginya</b>. Dari ujung tombak sampai 6 meter di bawah tanah. Mulai dari atap!');
+  $('#modTitle').textContent='J01·M5 — Penangkal Petir & Pembumian';
+  $('#taskHead').textContent='TANGKAP · ANTAR · TELAN · IKAT';}
+MISSIONS.petir.build=buildPetir;
+Object.assign(REAL,{
+ petir:[
+  'Desain mengikuti standar proteksi petir (zona proteksi dihitung, bukan dikira) sesuai kelas bangunan',
+  'Sambungan konduktor memakai klem/las exothermic — puntiran kawat akan lepas oleh gaya magnetik arus petir',
+  'Pengujian tahanan dilakukan tahunan & setelah ada sambaran — dicatat di kartu inspeksi bak kontrol',
+  'Lengkapi dengan SPD bertingkat di panel — proteksi eksternal tanpa internal hanya setengah perlindungan'],
+});

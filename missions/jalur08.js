@@ -377,3 +377,99 @@ Object.assign(REAL,{
   'Monitoring gas KONTINU selama bekerja (bukan hanya sebelum masuk) untuk pekerjaan > 30 menit',
   'Isolasi energi ke ruang (kabel, pipa) dengan LOTO sebelum masuk — ruang terbatas + energi = ganda bahayanya'],
 });
+
+/* =====================================================================
+   MISI 5 — INVESTIGASI INSIDEN & ROOT CAUSE ANALYSIS
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ rca:{lvl:'JALUR 08 · K3 LISTRIK · MISI 5',icon:'🔎',title:'Investigasi Insiden: Root Cause Analysis',strict:false,
+  loc:'📍 Workshop industri · H+1 near-miss panel terbakar',
+  story:'Kemarin sore: percikan api di panel distribusi workshop — teknisi sempat menjauh dua detik sebelum busur kecil menyambar. Tak ada korban, panel rusak ringan. Setengah pabrik bilang "untung", lalu ingin lanjut bekerja. Kamu bilang: near-miss adalah fatality yang datang latihan. Hari ini kamu memimpin investigasinya — mencari akar, bukan kambing hitam.',
+  goal:'Akar masalah ditemukan lewat 5-Why yang jujur (bukan berhenti di "human error"), dan tindakan perbaikan sistemik terbit & terjadwal.',
+  obj:['Amankan TKP & kumpulkan bukti fisik','Wawancara saksi tanpa menghakimi','Bangun 5-Why sampai akar sistemik & terbitkan tindakan'],
+  learn:['Near-miss adalah hadiah: data fatality tanpa air mata — pabrik yang menyia-nyiakannya sedang menabung tragedi','Bukti fisik dikumpulkan SEBELUM cerita: foto, posisi, label, suhu — ingatan manusia menulis ulang dirinya tiap kali diceritakan','5-Why berhenti di "human error" = investigasi gagal: manusia keliru itu gejala; sistem yang membiarkan keliru itu akar','Tindakan perbaikan berkasta: eliminasi/engineering di atas, administratif & APD di bawah — poster keselamatan bukan jawaban untuk terminal kendor'],
+  next:['Pelajari metode fishbone & fault tree untuk insiden kompleks','Bangun sistem pelaporan near-miss tanpa-sanksi (just culture)','Dalami hierarchy of control dalam menyusun tindakan']},
+});
+let mra={};
+function buildRCA(){
+  freshScene(0xb8c6d4,0x141d28);
+  cam={theta:.05,phi:1.18,r:7.5,target:new THREE.Vector3(0,1.6,-.8)};
+  const Z=room(0x5a5f66,0xccd4cf);
+  /* panel terbakar + garis kuning */
+  mra.panel=boxT(1.4,2.0,.35,TEX.metal(),{metalness:.3});mra.panel.position.set(-3.2,1.1,Z-.05);scene.add(mra.panel);
+  const gosong=box(.5,.6,.05,0x1a1410);gosong.position.set(-3.4,1.3,Z+.14);scene.add(gosong);
+  actMesh(mra.panel,'TKP');
+  scene.add(label('PANEL — TKP (digaris)',.65,'#ffd23f').translateX(-3.2).translateY(2.4).translateZ(Z+.1));
+  const garis=boxT(2.4,.04,1.6,TEX.hazard());garis.position.set(-3.2,.05,-1.6);scene.add(garis);
+  /* kamera bukti */
+  mra.cam=box(.26,.18,.16,0x18242f);mra.cam.position.set(-1.2,1.0,.4);scene.add(mra.cam);
+  actMesh(mra.cam,'BUKTI');
+  const tbl=boxT(1.0,.07,.6,TEX.wood());tbl.position.set(-1.2,.9,.4);scene.add(tbl);
+  const tleg=boxT(.08,.9,.08,TEX.wood());tleg.position.set(-1.2,.45,.4);scene.add(tleg);
+  scene.add(label('KAMERA + LABEL BUKTI',.55,'#5fd4ff').translateX(-1.2).translateY(1.35).translateZ(.4));
+  /* kursi wawancara */
+  mra.kursi=box(.5,.5,.5,0x6b4f33);mra.kursi.position.set(1.2,.3,.8);scene.add(mra.kursi);
+  actMesh(mra.kursi,'SAKSI');
+  scene.add(label('RUANG WAWANCARA',.55,'#5fd4ff').translateX(1.2).translateY(.95).translateZ(.8));
+  /* papan 5-why */
+  const frame=boxT(3.6,2.2,.16,TEX.metal(),{metalness:.4});frame.position.set(2.6,2.4,Z+.05);scene.add(frame);
+  frame.add(label('PAPAN 5-WHY',.8).translateY(1.35));
+  mra.D=makeDisplay(3.3,1.9,520,310);
+  mra.D.mesh.position.set(2.6,2.4,Z+.15);scene.add(mra.D.mesh);
+  actMesh(mra.D.mesh,'WHY');
+  function papan(n){
+    const g=mra.D.g,W=520,H=310;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.font='600 15px Consolas';g.textAlign='left';
+    const why=[['1. Kenapa busur api?','→ terminal feeder kendor & panas','#eaf2fb'],
+      ['2. Kenapa kendor?','→ tak pernah re-torque sejak pasang','#eaf2fb'],
+      ['3. Kenapa tak pernah?','→ tidak ada di jadwal pemeliharaan','#ffd23f'],
+      ['4. Kenapa tak ada?','→ checklist panel tak memuat torsi','#ffd23f'],
+      ['5. Kenapa tak memuat?','→ standar pemeliharaan tak pernah direview sejak 2019','#ff8d3a']];
+    g.fillStyle='#5fd4ff';g.font='700 17px Consolas';
+    g.fillText('NEAR-MISS: busur api panel WS-2',14,30);
+    for(let i=0;i<n&&i<5;i++){
+      g.fillStyle='#8aa3bd';g.font='600 15px Consolas';g.fillText(why[i][0],14,70+i*46);
+      g.fillStyle=why[i][2];g.fillText(why[i][1],190,70+i*46);}
+    if(n>=5){g.fillStyle='#46ff8e';g.font='700 16px Consolas';
+      g.fillText('AKAR SISTEMIK: standar har usang — bukan "teknisi ceroboh"',14,H-16);}
+    mra.D.tex.needsUpdate=true;}
+  papan(0);
+  /* papan tindakan */
+  mra.act=box(.6,.7,.05,0xe8e4d8);mra.act.position.set(5.6,2.2,Z+.06);scene.add(mra.act);
+  actMesh(mra.act,'AKSI');
+  scene.add(label('TINDAKAN PERBAIKAN',.55,'#5fd4ff').translateX(5.6).translateY(2.75).translateZ(Z+.1));
+  startSeq([
+   {type:'act',aid:'TKP',done:false,targets:()=>[mra.panel],
+    desc:'Amankan TKP: panel digaris, jangan ada yang "merapikan" (klik panel).',
+    why:'Musuh pertama investigasi adalah niat baik: orang ingin membersihkan, memperbaiki, melanjutkan kerja. TKP dibekukan — posisi breaker, jejak jelaga, bau isolasi: semuanya adalah kalimat dalam cerita yang belum dibaca.',
+    fx(){toast('🚧 TKP terkunci — tak ada yang berubah sebelum didokumentasi.','ok',2800);}},
+   {type:'act',aid:'BUKTI',done:false,targets:()=>[mra.cam],
+    desc:'Kumpulkan BUKTI FISIK: foto, label, ukur (klik kamera).',
+    why:'Foto menyeluruh→detail, terminal gosong dilabel & difoto makro: tampak jelas baut feeder hanya menggigit setengah ulir, isolasi sekitarnya menua kecoklatan — kepanasan BERBULAN-bulan, bukan kemarin sore. Bukti sudah bercerita sebelum satu saksi pun bicara.',
+    fx(){toast('📸 24 foto + 3 bukti dilabel: baut setengah ulir, isolasi menua.','ok',2800);}},
+   {type:'act',aid:'SAKSI',done:false,targets:()=>[mra.kursi],
+    desc:'WAWANCARA teknisi & saksi — tanpa nada menghakimi (klik kursi).',
+    why:'Kalimat pembuka menentukan segalanya: "Kami mencari celah sistem, bukan kesalahanmu." Teknisi pun bercerita jujur: panel itu memang tak pernah masuk jadwal torsi; ia hanya membuka tutup saat menambah beban feeder bulan lalu. Saksi yang merasa aman = data yang jujur.',
+    fx(){toast('🗣️ Kesaksian jujur terkumpul — cocok dengan bukti fisik.','ok',2800);}},
+   {type:'act',aid:'WHY',done:false,targets:()=>[mra.D.mesh],
+    desc:'Bangun rantai 5-WHY — dan JANGAN berhenti di manusia (klik papan).',
+    why:'Why 1-2 masih teknis (terminal kendor, tak di-re-torque). Godaan berhenti di why-3 dengan stempel "kelalaian teknisi" — tapi terus gali: jadwal tak memuatnya, checklist tak mencantumkan torsi, dan standar pemeliharaan tak pernah direview sejak 2019. Akar sejati: SISTEM yang menua, bukan tangan yang lalai.',
+    fx(){papan(5);toast('🎯 Akar: standar har usang sejak 2019 — sistemik, bukan personal.','ok',3200);}},
+   {type:'act',aid:'AKSI',done:false,targets:()=>[mra.act],
+    desc:'Terbitkan TINDAKAN berkasta hierarchy of control (klik papan aksi).',
+    why:'Dari kasta tertinggi: (1) engineering — re-torque seluruh panel + thermovision tahunan masuk jadwal; (2) administratif — review standar har per 2 tahun, checklist memuat nilai torsi; (3) pelaporan near-miss tanpa sanksi diresmikan. Teknisi kemarin? Diberi apresiasi karena melapor. Begitulah budaya keselamatan dibangun.',
+    fx(){toast('📋 5 tindakan terbit & terjadwal — near-miss jadi guru, bukan aib.','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Investigasi kelas dunia!</b> TKP beku, bukti bicara, saksi jujur, 5-Why menembus sampai standar yang usang. Near-miss kemarin baru saja menyelamatkan seseorang lima tahun dari sekarang — dan dia tak akan pernah tahu.');
+    setTimeout(()=>showWin('rca'),2200);});
+  say('VOLTA di sini 🔎 Kemarin pabrik ini beruntung; hari ini kita pastikan tak butuh keberuntungan lagi. Satu aturan investigasi: <b>cari akar sistemik, bukan kambing hitam</b> — dan jangan pernah berhenti di "human error". Mulai dari TKP.');
+  $('#modTitle').textContent='J08·M5 — Investigasi & RCA';
+  $('#taskHead').textContent='AKAR, BUKAN KAMBING HITAM';}
+MISSIONS.rca.build=buildRCA;
+Object.assign(REAL,{
+ rca:[
+  'Investigasi dimulai < 24 jam — TKP & ingatan saksi terdegradasi per jam',
+  'Pisahkan wawancara tiap saksi & hindari pertanyaan menggiring — kesaksian saling mencemari itu nyata',
+  'Tindakan perbaikan diberi penanggung jawab + tenggat + verifikasi efektivitas (bukan sekadar "sudah dibuat")',
+  'Bagikan pembelajaran lintas departemen tanpa menyebut nama — pelajaran menyebar, aib tidak'],
+});

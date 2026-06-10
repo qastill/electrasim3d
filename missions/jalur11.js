@@ -343,3 +343,99 @@ Object.assign(REAL,{
   'Vintage & metodologi menentukan likuiditas — konsultasikan permintaan pasar sebelum listing',
   'Pisahkan jelas unit untuk dijual vs klaim sendiri di registri — tumpang tindih klaim = reputasi hancur'],
 });
+
+/* =====================================================================
+   MISI 5 — CBAM: JEJAK KARBON PRODUK UNTUK EKSPOR
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ cbam:{lvl:'JALUR 11 · SUSTAINABILITY & CARBON · MISI 5',icon:'🛃',title:'CBAM: Jejak Karbon Produk Ekspor',strict:false,
+  loc:'📍 PT Logam Jaya · Eksportir baja ringan ke Eropa',
+  story:'Klien baru datang panik: pembeli Eropa menagih data CBAM — pajak karbon perbatasan UE. Tanpa angka emisi PER TON PRODUK yang sahih, baja ringan mereka kena tarif default yang mahalnya menyakitkan. Beda dengan inventarisasi pabrik (per perusahaan), kali ini hitunganmu harus menempel ke PRODUK: berapa kg CO₂e yang ikut terkirim dalam tiap ton baja?',
+  goal:'Intensitas emisi produk terhitung sesuai metodologi CBAM, lebih rendah dari nilai default, dan laporan siap diserahkan ke importir Eropa.',
+  obj:['Tetapkan batasan proses & data produksi','Hitung emisi langsung & tak langsung per ton produk','Bandingkan dengan default & susun laporan CBAM'],
+  learn:['CBAM menghitung intensitas: tCO₂e per ton PRODUK — emisi pabrik dibagi output, dengan batasan proses yang ditetapkan aturan','Emisi langsung (bahan bakar proses) & tak langsung (listrik) dihitung terpisah — keduanya diminta pelaporan CBAM','Data aktual yang terdokumentasi hampir selalu MENANG melawan nilai default — default sengaja dibuat konservatif (tinggi)','Dekarbonisasi kini langsung = daya saing harga: tiap ton CO₂e yang dipangkas memangkas tarif produkmu di perbatasan'],
+  next:['Ikuti perkembangan periode definitif CBAM & sektor cakupannya','Pelajari PCF (product carbon footprint) ISO 14067 untuk produk lain','Tawarkan jasa pendampingan CBAM — pasar baru profesi karbon']},
+});
+let mcb={};
+function buildCBAM(){
+  freshScene(0xb8d0c0,0x121d18);
+  cam={theta:.05,phi:1.18,r:8,target:new THREE.Vector3(0,1.7,-.8)};
+  const Z=room(0x6b5a45,0xd8d2c4,16,11);
+  /* line produksi baja ringan */
+  const furnace=boxT(1.6,1.4,1.1,TEX.metal(),{metalness:.3});furnace.position.set(-4.6,.75,-1.8);scene.add(furnace);
+  actMesh(furnace,'BATAS');
+  scene.add(label('FURNACE GAS',.65).translateX(-4.6).translateY(1.8).translateZ(-1.8));
+  const roll=boxT(2.2,.9,.9,TEX.metal(),{metalness:.4});roll.position.set(-1.8,.5,-1.8);scene.add(roll);
+  scene.add(label('ROLLING MILL',.65).translateX(-1.8).translateY(1.25).translateZ(-1.8));
+  const coil=cyl(.5,.5,.6,0x8a96a2,20,{metalness:.6});coil.rotation.x=Math.PI/2;
+  coil.position.set(.8,.5,-1.8);scene.add(coil);
+  scene.add(label('PRODUK: BAJA RINGAN',.65,'#ffd23f').translateX(.8).translateY(1.3).translateZ(-1.8));
+  /* papan perhitungan */
+  const frame=boxT(4.0,2.4,.16,TEX.metal(),{metalness:.4});frame.position.set(3.4,2.4,Z+.05);scene.add(frame);
+  frame.add(label('LEMBAR KERJA CBAM',.85).translateY(1.5));
+  mcb.D=makeDisplay(3.7,2.1,560,320);
+  mcb.D.mesh.position.set(3.4,2.4,Z+.15);scene.add(mcb.D.mesh);
+  actMesh(mcb.D.mesh,'HITUNG');
+  function lembar(mode){
+    const g=mcb.D.g,W=560,H=320;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.font='600 16px Consolas';g.textAlign='left';
+    g.fillStyle='#5fd4ff';g.font='700 18px Consolas';
+    g.fillText('PRODUKSI 2027: 12.000 ton baja ringan',16,34);
+    if(mode>=1){g.font='600 16px Consolas';g.fillStyle='#eaf2fb';
+      g.fillText('LANGSUNG : gas furnace 9.840 tCO2e',16,82);
+      g.fillText('T.LANGSUNG: listrik 6,2GWh x FE = 4.770 tCO2e',16,114);}
+    if(mode>=2){g.fillStyle='#ffd23f';g.font='700 19px Consolas';
+      g.fillText('INTENSITAS = 14.610 / 12.000',16,170);
+      g.fillText('           = 1,22 tCO2e/ton',16,204);}
+    if(mode>=3){g.fillStyle='#46ff8e';g.font='700 17px Consolas';
+      g.fillText('DEFAULT UE: 1,80 → aktualmu 32% LEBIH RENDAH',16,254);
+      g.fillStyle='#8aa3bd';g.font='600 14px Consolas';
+      g.fillText('selisih tarif: signifikan utk 12.000 ton/tahun',16,286);}
+    mcb.D.tex.needsUpdate=true;}
+  lembar(0);
+  /* dokumen data + laporan */
+  mcb.data=box(.55,.1,.75,0xf0ead8);mcb.data.position.set(-1.0,1.06,.6);scene.add(mcb.data);
+  actMesh(mcb.data,'DATA');
+  const desk=boxT(1.8,.08,1.1,TEX.wood());desk.position.set(-1.0,1.0,.6);scene.add(desk);
+  [[-.8,-.4],[.8,-.4],[-.8,.4],[.8,.4]].forEach(p=>{
+    const l=boxT(.08,1,.08,TEX.wood());l.position.set(-1.0+p[0],.5,.6+p[1]);scene.add(l);});
+  scene.add(label('DATA PRODUKSI & ENERGI',.6,'#5fd4ff').translateX(-1.0).translateY(1.5).translateZ(.6));
+  mcb.rep=box(.5,.66,.04,0xe8d8a0);mcb.rep.position.set(5.8,1.1,Z+.06);scene.add(mcb.rep);
+  actMesh(mcb.rep,'LAPOR');
+  scene.add(label('LAPORAN CBAM',.55,'#ffd23f').translateX(5.8).translateY(1.65).translateZ(Z+.1));
+  startSeq([
+   {type:'act',aid:'BATAS',done:false,targets:()=>[furnace],
+    desc:'Tetapkan BATASAN proses sesuai aturan CBAM (klik furnace).',
+    why:'CBAM menentukan proses mana yang masuk hitungan untuk tiap kategori produk: di sini furnace + rolling masuk, kantor & kantin tidak. Batasan yang salah = seluruh hitungan gugur saat diverifikasi importir. Peta dulu, angka kemudian.',
+    fx(){toast('🗺️ Batasan ditetapkan: furnace + rolling mill (sesuai kategori).','ok',2800);}},
+   {type:'act',aid:'DATA',done:false,targets:()=>[mcb.data],
+    desc:'Kumpulkan DATA setahun: produksi, gas, listrik (klik dokumen).',
+    why:'12.000 ton produk · faktur gas furnace 12 bulan · rekening listrik 6,2 GWh — semua dari dokumen primer yang bisa diaudit. CBAM menuntut jejak yang sama kerasnya dengan verifikasi GHG yang pernah kamu lalui: pengalamanmu terpakai penuh.',
+    fx(){toast('📚 Data primer 12 bulan lengkap & teraudit.','ok',2600);}},
+   {type:'act',aid:'HITUNG',done:false,targets:()=>[mcb.D.mesh],
+    desc:'HITUNG: emisi langsung + tak langsung (klik lembar kerja).',
+    why:'Langsung: pembakaran gas furnace = 9.840 tCO₂e. Tak langsung: listrik 6,2 GWh × faktor grid = 4.770 tCO₂e. Dua jalur dihitung terpisah persis format pelaporan CBAM — penggabungan yang serampangan adalah penolakan yang tertunda.',
+    fx(){lembar(1);toast('🧮 Langsung 9.840 + tak langsung 4.770 tCO₂e.','ok',2800);}},
+   {type:'act',aid:'INTENS',done:false,targets:()=>[mcb.D.mesh],
+    desc:'Bagi ke produk: berapa INTENSITAS per ton?',
+    why:'14.610 tCO₂e ÷ 12.000 ton = 1,22 tCO₂e/ton baja ringan. Inilah angka yang menempel di tiap kontainer menuju Rotterdam — paspor karbon produk. Dan pembanding resminya: nilai default UE 1,80.',
+    fx(){lembar(2);toast('⚖️ Intensitas: 1,22 tCO₂e/ton produk.','ok',2800);}},
+   {type:'act',aid:'LAPOR',done:false,targets:()=>[mcb.rep],
+    desc:'Susun LAPORAN CBAM & serahkan ke importir (klik laporan).',
+    why:'Aktual 1,22 vs default 1,80: dokumentasimu menghemat 32% beban tarif klien — jutaan rupiah PER KONTAINER. Dan satu insight bonus untuk mereka: pasang PLTS, intensitas turun lagi, tarif ikut turun. Dekarbonisasi kini tertulis di kolom harga.',
+    fx(){lembar(3);toast('🛃 Laporan CBAM siap — klien hemat 32% tarif perbatasan!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Paspor karbon produk terbit!</b> Batasan benar, data primer, dua jalur emisi, intensitas 1,22 — jauh di bawah default. Di era CBAM, akuntan karbon adalah bagian dari tim ekspor.');
+    setTimeout(()=>showWin('cbam'),2200);});
+  const s2=seq.steps[2],of2=s2.fx;s2.fx=()=>{of2();mcb.D.mesh.userData.aid='INTENS';};
+  say('VOLTA di sini 🛃 Klien panik: Eropa menagih <b>CBAM</b> — pajak karbon perbatasan. Kali ini hitunganmu menempel ke PRODUK: tCO₂e per ton baja. Kalahkan nilai default, selamatkan daya saing mereka. Mulai dari batasan proses!');
+  $('#modTitle').textContent='J11·M5 — CBAM & Jejak Karbon Produk';
+  $('#taskHead').textContent='PER TON PRODUK, BUKAN PER PABRIK';}
+MISSIONS.cbam.build=buildCBAM;
+Object.assign(REAL,{
+ cbam:[
+  'Ikuti regulasi CBAM terbaru: cakupan sektor, periode pelaporan & metodologi masih berkembang',
+  'Importir UE adalah pihak pelapor — eksportir menyuplai data; bangun template komunikasi yang konsisten',
+  'Sistem pencatatan energi per line produksi memudahkan alokasi — investasi metering terbayar di tarif',
+  'Simulasikan dampak dekarbonisasi (PLTS, efisiensi) langsung ke tarif CBAM — bahasa baru untuk ROI hijau'],
+});
