@@ -584,3 +584,94 @@ Object.assign(REAL,{
   'Siapkan forecasting produksi day-ahead untuk dispatcher — kewajiban operasional harian',
   'SCADA plant & PPC diberi redundansi + UPS: kehilangan kontrol = pembangkit liar di mata sistem'],
 });
+
+/* =====================================================================
+   MISI 7 — AGRIVOLTAIK: PANEN GANDA SATU LAHAN
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ agri:{lvl:'JALUR 10 · PV & SOLAR · MISI 7',icon:'🌾',title:'Agrivoltaik: Panen Ganda Satu Lahan',strict:false,
+  loc:'📍 Lahan pertanian Losarang · Pilot agrivoltaik 2 MWp',
+  story:'Konflik klasik energi surya: PLTS butuh lahan, petani butuh lahan — dan biasanya yang kalah adalah sawah. Pilot project-mu menantang dikotomi itu: AGRIVOLTAIK, panel surya yang ditinggikan & dijarangkan agar cahaya tetap turun ke tanaman di bawahnya. Listrik di atas, cabai & kangkung di bawah, dan petani sebagai mitra — bukan korban pembebasan lahan.',
+  goal:'Pilot agrivoltaik beroperasi dua panen: desain tinggi-jarak panel tepat untuk tanaman, instalasi tak merusak lahan, dan musim pertama membuktikan listrik + hasil tani berjalan bersama.',
+  obj:['Desain geometri: tinggi & jarak antar baris untuk cahaya tanaman','Instalasi berpondasi minimal-gangguan + jalur traktor','Tanam, panen listrik & validasi hasil tani musim pertama'],
+  learn:['Agrivoltaik bermain dengan cahaya: panel dijarangkan (GCR lebih rendah) & ditinggikan 3-4 m — tanaman menerima 60-80% cahaya, cukup bagi banyak komoditas','Tak semua tanaman cocok: sayuran daun & cabai toleran naungan parsial justru bisa LEBIH baik (kurang heat stress); padi & jagung penuh matahari kurang ideal','Pondasi & layout menghormati pertanian: jalur traktor antar baris, tiang di pematang, kabel udara/kedalaman aman bajak','Model kemitraan menentukan keberlanjutan: sewa lahan + petani tetap menggarap + bagi hasil listrik = tiga pendapatan di lahan yang sama'],
+  next:['Pelajari riset kombinasi tanaman-GCR untuk iklim tropis','Dalami panel semi-transparan & tracker untuk agrivoltaik','Eksplorasi pendanaan: skema KUR tani + IPP kecil']},
+});
+let mag={};
+function buildAgri(){
+  freshScene(0xcfe8d0,0x14241a);
+  cam={theta:.1,phi:1.1,r:10,target:new THREE.Vector3(0,1.8,-1)};
+  /* lahan hijau */
+  const lahan=box(26,.08,15,0x3a6a2a,{roughness:.95});lahan.position.y=0;scene.add(lahan);
+  /* bedengan tanaman */
+  for(let r=0;r<4;r++){const bed=box(10,.18,.8,0x4a3a22,{roughness:.95});
+    bed.position.set(-1,.12,-3.5+r*1.9);scene.add(bed);}
+  /* panel tinggi berjarak */
+  mag.panels=[];
+  for(let c=0;c<3;c++){
+    const tiang1=cyl(.07,.07,3.4,0x8a8a8a);tiang1.position.set(-4+c*4,1.7,-3.2);scene.add(tiang1);
+    const tiang2=tiang1.clone();tiang2.position.z=.6;scene.add(tiang2);
+    const pv=box(2.6,.06,1.4,0x16263e,{roughness:.25,metalness:.5});
+    pv.position.set(-4+c*4,3.4,-1.3);pv.rotation.x=-.18;scene.add(pv);mag.panels.push(pv);}
+  actMesh(mag.panels[1],'DESAIN');
+  scene.add(label('PANEL +3,5 m · BARIS JARANG',.8).translateY(4.4).translateZ(-1.3));
+  /* traktor mini */
+  const trak=box(1.0,.5,.7,0xd83a3a);trak.position.set(3.4,.45,.6);scene.add(trak);
+  [[-.35,-.4],[.35,-.4],[-.35,.4],[.35,.4]].forEach(w=>{
+    const wh=cyl(.2,.2,.14,0x14181d);wh.rotation.x=Math.PI/2;
+    wh.position.set(3.4+w[0],.24,.6+w[1]);scene.add(wh);});
+  scene.add(label('JALUR TRAKTOR',.55).translateX(3.4).translateY(1.1).translateZ(.6));
+  /* petani mitra */
+  mag.tani=new THREE.Group();
+  const badan=cyl(.2,.26,.85,0x2a6a3a);badan.position.y=.7;mag.tani.add(badan);
+  const kepala=new THREE.Mesh(new THREE.SphereGeometry(.14,14,12),
+    new THREE.MeshStandardMaterial({color:0xc89878}));kepala.position.y=1.3;mag.tani.add(kepala);
+  const caping=new THREE.Mesh(new THREE.ConeGeometry(.26,.14,14),
+    new THREE.MeshStandardMaterial({color:0xc8a868}));caping.position.y=1.45;mag.tani.add(caping);
+  mag.tani.position.set(-3.4,0,1.2);scene.add(mag.tani);
+  actMesh(badan,'MITRA');
+  scene.add(label('PAK TANI (mitra)',.6).translateX(-3.4).translateY(1.85).translateZ(1.2));
+  /* tanaman cabai (tumbuh nanti) */
+  mag.cabai=[];
+  for(let i=0;i<6;i++){const c=new THREE.Mesh(new THREE.ConeGeometry(.12,.4,8),
+    new THREE.MeshStandardMaterial({color:0x2e7a2e,roughness:.9}));
+    c.position.set(-3.5+i*1.1,.35,-2.55);c.visible=false;scene.add(c);mag.cabai.push(c);}
+  /* display produksi ganda */
+  mag.D=makeDisplay(1.9,1.1,400,230);
+  mag.D.mesh.position.set(5.4,2.2,-2.6);scene.add(mag.D.mesh);
+  dispText(mag.D,['PANEN GANDA','menunggu musim…'],['#5fd4ff','#7d8f84']);
+  actMesh(mag.D.mesh,'PANEN');
+  const pole=cyl(.04,.04,1.6,0x666666);pole.position.set(5.4,.8,-2.6);scene.add(pole);
+  startSeq([
+   {type:'act',aid:'DESAIN',done:false,targets:()=>[mag.panels[1]],
+    desc:'Validasi DESAIN: tinggi & jarak baris vs kebutuhan cahaya (klik panel).',
+    why:'Geometri adalah kontraknya: tinggi 3,5 m (traktor & orang lewat nyaman), GCR diturunkan — simulasi bayangan menunjukkan tanah menerima ±70% cahaya tahunan, merata karena bayangan BERGERAK sepanjang hari. Cabai & kangkung menyukai angka itu; kapasitas listrik memang turun per hektar — tapi lahannya kini berbuah dua.',
+    fx(){toast('📐 +3,5 m · 70% cahaya ke tanah — kontrak dua panen sah.','ok',3200);}},
+   {type:'act',aid:'MITRA',done:false,targets:()=>[mag.tani.children[0]],
+    desc:'Teken KEMITRAAN dengan petani penggarap (klik Pak Tani).',
+    why:'Bukan pembebasan, tapi perjodohan: sewa lahan dibayar + petani TETAP menggarap di bawah panel + bonus bagi hasil listrik kecil. Pak Tani awalnya curiga ("nanti sawahku gelap?") — simulasi cahaya & kunjungan ke pilot lain menjawabnya. Proyek energi yang berkelanjutan selalu punya tetangga yang tersenyum.',
+    fx(){toast('🤝 Kemitraan: sewa + garap + bagi hasil — Pak Tani tersenyum.','ok',3200);}},
+   {type:'act',aid:'TANAM',done:false,targets:()=>[mag.tani.children[0]],
+    desc:'Instalasi selesai minim-gangguan — kini MUSIM TANAM dimulai.',
+    why:'Tiang dipancang di pematang (bukan tengah bedengan), kabel digantung di ketinggian aman, dan tanah tak diaspal sejengkal pun. Cabai ditanam di bawah panel, kangkung di baris terbuka — eksperimen dua zona cahaya yang akan dijawab musim ini.',
+    fx(){mag.cabai.forEach(c=>c.visible=true);
+      toast('🌱 Tanam perdana: cabai di naungan, kangkung di terbuka.','ok',3000);}},
+   {type:'act',aid:'PANEN',done:false,targets:()=>[mag.D.mesh],
+    desc:'Musim pertama usai: baca hasil PANEN GANDA (klik display).',
+    why:'Listrik: 2 MWp × profil tropis = sesuai proyeksi ✓. Tani: kangkung normal, cabai justru +8% (naungan parsial mengurangi stress panas & penguapan — kejutan yang juga ditemukan riset dunia). Satu lahan, dua panen, tiga pendapatan: dikotomi sawah-vs-surya hari ini resmi dibantah.',
+    fx(){dispText(mag.D,['LISTRIK ✓ proyeksi','CABAI +8% 🌶'],['#46ff8e','#46ff8e']);
+      toast('🌾 Panen ganda TERBUKTI — cabai malah +8%. Pilot sukses!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Lahan yang menolak memilih!</b> Panel meninggi memberi jalan cahaya, petani jadi mitra bukan korban, dan cabai di bawah panel justru lebih subur. Agrivoltaik: masa depan di negeri yang tanahnya sempit dan mataharinya murah hati.');
+    setTimeout(()=>showWin('agri'),2200);});
+  const s1a=seq.steps[1],of1a=s1a.fx;s1a.fx=()=>{of1a();mag.tani.children[0].userData.aid='TANAM';};
+  say('VOLTA di sini 🌾 Konflik klasik: PLTS butuh lahan, petani butuh lahan. Pilot hari ini membantahnya: <b>agrivoltaik — listrik di atas, cabai di bawah</b>. Kuncinya geometri cahaya & kemitraan yang adil. Mulai dari desain!');
+  $('#modTitle').textContent='J10·M7 — Agrivoltaik';
+  $('#taskHead').textContent='SATU LAHAN, DUA PANEN';}
+MISSIONS.agri.build=buildAgri;
+Object.assign(REAL,{
+ agri:[
+  'Uji komoditas bertahap musim demi musim — respons tanaman lokal terhadap naungan harus dibuktikan, bukan diasumsikan',
+  'Perhatikan regulasi alih fungsi lahan pertanian — desain agrivoltaik justru argumen mempertahankan fungsi tani',
+  'Struktur lebih tinggi = beban angin lebih besar: hitung pondasi & sertifikasi strukturnya',
+  'Libatkan dinas pertanian & kelompok tani sejak desain — adopsi sosial menentukan umur proyek'],
+});

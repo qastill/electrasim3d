@@ -609,3 +609,101 @@ Object.assign(REAL,{
   'Catat suhu, beban & kejadian saat sampling — gas dipengaruhi kondisi operasi',
   'C2H2 terdeteksi berapa pun = eskalasi serius: konsultasi spesialis & rencana uji lanjutan segera'],
 });
+
+/* =====================================================================
+   MISI 7 — PDKB: PEKERJAAN DALAM KEADAAN BERTEGANGAN
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ pdkb:{lvl:'JALUR 04 · TRANSMISI · MISI 7',icon:'🧤',title:'PDKB: Menyentuh 150 kV yang Hidup',strict:true,
+  loc:'📍 Tower 57 · Ganti isolator TANPA padam',
+  story:'Temuan thermovision-mu (isolator retak tower 57) harus dieksekusi — tapi penghantar ini memasok kawasan industri yang menolak padam barang semenit. Jawabannya profesi paling elit di transmisi: PDKB — pekerjaan dalam keadaan bertegangan. Mengganti isolator pada penghantar 150.000 volt YANG HIDUP, dengan ilmu jarak, alat isolasi, dan disiplin yang tak memberi diskon.',
+  goal:'String isolator terganti tanpa pemadaman: izin & briefing tuntas, jarak aman terjaga sepanjang pekerjaan, beban string dipindah ke strain stick dengan benar.',
+  obj:['Briefing & izin khusus PDKB + cek cuaca','Persiapan alat isolasi & verifikasi jarak minimum','Pindahkan beban string, ganti isolator, kembalikan'],
+  learn:['PDKB metode jarak: pekerja TIDAK menyentuh konduktor — semua lewat hot stick fiberglass yang diuji tahanan isolasinya berkala','Jarak minimum approach adalah hukum fisika udara: 150 kV menuntut jarak aman yang TIDAK PERNAH dilanggar walau sedetik — udara adalah isolatormu yang terakhir','Strain stick memikul tarikan mekanis string (ribuan kg) saat isolator dilepas — beban listrik tetap mengalir, beban mekanis yang dipindah','Cuaca adalah anggota tim: kelembapan tinggi/gerimis menurunkan isolasi udara & alat — PDKB dibatalkan tanpa debat saat langit tak bersahabat'],
+  next:['Pelajari metode PDKB sentuh (bare hand) dengan bonding ke konduktor','Dalami pengujian berkala alat PDKB (stick, tali, pakaian konduktif)','Eksplorasi robot & drone untuk pekerjaan bertegangan masa depan']},
+});
+let mpk={};
+function buildPDKB(){
+  freshScene(0x9fc0dc,0x12202e);
+  cam={theta:.15,phi:1.05,r:11,target:new THREE.Vector3(0,4.5,-1)};
+  const ground=boxT(24,.1,15,TEX.gravel());ground.position.y=-.05;scene.add(ground);
+  /* tower + konduktor hidup */
+  [[-1.1,-1.1],[1.1,-1.1],[-1.1,1.1],[1.1,1.1]].forEach(o=>{
+    const kaki=boxT(.16,8.5,.16,TEX.metal(),{metalness:.5});
+    kaki.position.set(o[0],4.25,-2+o[1]);kaki.rotation.z=o[0]*-.035;scene.add(kaki);});
+  const cross=boxT(5.4,.18,.18,TEX.metal(),{metalness:.5});cross.position.set(0,7.6,-2);scene.add(cross);
+  const kawat=cyl(.022,.022,22,0x3c4754);kawat.rotation.z=Math.PI/2;kawat.position.set(0,6.3,-2);scene.add(kawat);
+  scene.add(label('150 kV — HIDUP & BERBEBAN',.85,'#ff8d8d').translateY(8.6).translateZ(-2));
+  /* string isolator retak */
+  mpk.iso=new THREE.Group();
+  for(let i=0;i<5;i++){const d=cyl(.15,.15,.05,i===2?0x8a6a5a:0x9aa7b4,16);d.position.y=-i*.14;mpk.iso.add(d);}
+  mpk.iso.position.set(-2.2,7.4,-2);scene.add(mpk.iso);
+  scene.add(label('STRING RETAK (target)',.6,'#ffd23f').translateX(-2.2).translateY(8.0).translateZ(-2));
+  /* meja briefing + cuaca */
+  mpk.brief=box(.6,.75,.05,0xe8e4d8);mpk.brief.position.set(-6.2,1.5,1.4);scene.add(mpk.brief);
+  actMesh(mpk.brief,'BRIEF');
+  const bt=cyl(.04,.04,1.4,0x666666);bt.position.set(-6.2,.7,1.4);scene.add(bt);
+  scene.add(label('BRIEFING + IZIN PDKB',.6,'#5fd4ff').translateX(-6.2).translateY(2.05).translateZ(1.4));
+  /* rak alat: hot stick + strain stick */
+  const rak=boxT(2.2,.12,.8,TEX.wood());rak.position.set(-3.4,.7,1.6);scene.add(rak);
+  mpk.stick=cyl(.035,.035,2.6,0xd8a020);mpk.stick.rotation.z=.45;
+  mpk.stick.position.set(-3.8,1.1,1.6);scene.add(mpk.stick);
+  actMesh(mpk.stick,'ALAT');
+  scene.add(label('HOT STICK + STRAIN STICK',.6,'#5fd4ff').translateX(-3.4).translateY(1.7).translateZ(1.6));
+  /* strain stick terpasang (muncul) */
+  mpk.strain=cyl(.04,.04,1.1,0xd8a020);mpk.strain.position.set(-2.2,7.0,-1.6);
+  mpk.strain.rotation.x=.25;mpk.strain.visible=false;scene.add(mpk.strain);
+  /* pekerja di tower */
+  mpk.linesman=new THREE.Group();
+  const badan=cyl(.18,.22,.7,0xd87a20);badan.position.y=.5;mpk.linesman.add(badan);
+  const kepala=new THREE.Mesh(new THREE.SphereGeometry(.13,12,10),
+    new THREE.MeshStandardMaterial({color:0xd8b090}));kepala.position.y=1.0;mpk.linesman.add(kepala);
+  const helm=new THREE.Mesh(new THREE.SphereGeometry(.15,12,8,0,Math.PI*2,0,Math.PI/2),
+    new THREE.MeshStandardMaterial({color:0xffd23f}));helm.position.y=1.05;mpk.linesman.add(helm);
+  mpk.linesman.position.set(-1.1,5.8,-2);mpk.linesman.visible=false;scene.add(mpk.linesman);
+  actMesh(badan,'GANTI');
+  /* isolator baru */
+  mpk.baru=new THREE.Group();
+  for(let i=0;i<5;i++){const d=cyl(.15,.15,.05,0xb8c8d8,16);d.position.y=-i*.14;mpk.baru.add(d);}
+  mpk.baru.position.set(-5.0,.9,.4);scene.add(mpk.baru);
+  scene.add(label('STRING BARU',.55,'#8df0b8').translateX(-5.0).translateY(1.4).translateZ(.4));
+  startSeq([
+   {type:'act',aid:'BRIEF',done:false,targets:()=>[mpk.brief],
+    desc:'BRIEFING PDKB: izin khusus, peran tiap orang, & vonis cuaca (klik dokumen).',
+    why:'Izin PDKB berbeda kelasnya: dispatcher mencatat (relay reclose DIMATIKAN — bila trip saat tim bekerja, jaringan tak boleh coba menyala sendiri!), tiap orang tahu perannya, dan stasiun cuaca memvonis: cerah, kelembapan 62%, angin 8 km/jam — DI BAWAH batas semua. Hari ini langit mengizinkan.',
+    fx(){toast('📋 Izin ✓ reclose OFF ✓ cuaca LAYAK — PDKB jalan.','ok',3200);}},
+   {type:'act',aid:'ALAT',done:false,targets:()=>[mpk.stick],
+    desc:'Siapkan & UJI alat isolasi hari itu juga (klik hot stick).',
+    why:'Setiap stick dilap bersih (debu+embun = jalur arus!), diuji tahanan isolasinya PAGI INI — bukan mengandalkan stiker uji bulan lalu. Tali serat, strain stick, semua diperlakukan sama: di PDKB, alat adalah perpanjangan nyawa, dan nyawa tak menerima alat kemarin.',
+    fx(){toast('🧪 Semua stick lap+uji hari ini: >100 GΩ ✓','ok',2800);}},
+   {type:'act',aid:'NAIK',done:false,targets:()=>[mpk.iso.children[1]],
+    desc:'Tim naik posisi kerja — verifikasi JARAK MINIMUM (klik string).',
+    why:'Linesman memanjat ke cross-arm — ilmu 100% tie-off dari J08 dipakai penuh — dan berhenti di posisi yang dihitung: tubuh & alat konduktif TIDAK PERNAH masuk radius jarak minimum dari konduktor hidup. Pengawas di bawah memegang satu wewenang absolut: meneriakkan STOP.',
+    fx(){mpk.linesman.visible=true;
+      toast('🧗 Posisi kerja aman — jarak minimum terjaga, pengawas siaga.','ok',3000);}},
+   {type:'act',aid:'STRAIN',done:false,targets:()=>[mpk.iso.children[1]],
+    desc:'Pasang STRAIN STICK: pindahkan beban mekanis string (klik string).',
+    why:'String isolator memikul tarikan konduktor ribuan kilogram — sebelum dilepas, strain stick fiberglass mengambil alih tarikan itu lewat hot stick. Kini isolator retak menggantung tanpa beban: listrik tetap mengalir di konduktor, mekanika sudah pindah ke stick. Dua dunia dipisahkan dengan rapi.',
+    fx(){mpk.strain.visible=true;
+      toast('🔗 Strain stick memikul beban — string bebas tarikan.','ok',3000);}},
+   {type:'act',aid:'GANTI',done:false,targets:()=>[mpk.linesman.children[0]],
+    desc:'Momen puncak: GANTI string dengan hot stick — 150 kV tetap mengalir.',
+    why:'Lewat ujung stick 3 meter: pin dilepas, string retak diturunkan tali, string baru naik & terpasang, strain stick dilepas perlahan — beban kembali ke pundak isolator baru. Kawasan industri di ujung sana tak tahu apa-apa: pabrik berjalan, dan di atas sini sejarah kecil baru saja dikerjakan tanpa satu volt pun berhenti.',
+    fx(){mpk.iso.children[2].material.color.setHex(0xb8c8d8);mpk.strain.visible=false;
+      toast('🏆 String terganti — NOL detik padam. Selamat datang di kasta PDKB!','ok',3600);sfx.big();}},
+  ],()=>{say('🎉 <b>Menyentuh yang hidup tanpa tersentuh!</b> Izin & cuaca dihormati, alat diuji hari itu, jarak tak pernah dilanggar, beban dipindah dengan ilmu. PDKB: pekerjaan yang membuat pemadaman menjadi pilihan, bukan keharusan.');
+    setTimeout(()=>showWin('pdkb'),2200);});
+  actMesh(mpk.iso.children[1],'NAIK');
+  const s3p=seq.steps[3];
+  const of2p=seq.steps[2].fx;seq.steps[2].fx=()=>{of2p();mpk.iso.children[1].userData.aid='STRAIN';};
+  say('VOLTA di sini, dan hari ini kita masuk kasta elit 🧤 <b>PDKB: mengganti isolator pada 150 kV yang HIDUP</b>. Tiga sekutu: jarak, alat teruji, dan cuaca. Satu musuh: rasa terburu-buru. Mulai dari briefing!');
+  $('#modTitle').textContent='J04·M7 — PDKB 150 kV';
+  $('#taskHead').textContent='JARAK ADALAH NYAWA';}
+MISSIONS.pdkb.build=buildPDKB;
+Object.assign(REAL,{
+ pdkb:[
+  'PDKB hanya oleh tim tersertifikasi khusus dengan SOP & supervisi ketat — bukan keterampilan otodidak',
+  'Alat diuji elektrik berkala di lab DAN diperiksa-lap sebelum tiap pekerjaan',
+  'Reclose/penutup balik dinonaktifkan & dikonfirmasi dispatcher sebelum tim mendekat',
+  'Batas cuaca (kelembapan, angin, petir) tertulis di SOP — pembatalan bukan kegagalan, itu kedewasaan'],
+});

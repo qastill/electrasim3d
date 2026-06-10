@@ -590,3 +590,108 @@ Object.assign(REAL,{
   'Uji interoperabilitas dengan beberapa model EV — handshake CCS punya dialek antar pabrikan',
   'Sediakan SOP penanganan kabel & gun: drop test, inspeksi pin berkala — konektor adalah titik aus utama'],
 });
+
+/* =====================================================================
+   MISI 7 — DEPO BUS LISTRIK: ORKESTRASI CHARGING MALAM
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ depo:{lvl:'JALUR 12 · EV & EV CHARGING · MISI 7',icon:'🚌',title:'Depo Bus Listrik: Orkestrasi Charging Malam',strict:false,
+  loc:'📍 Depo TransKota · 30 bus listrik, 12 charger, 1 malam',
+  story:'Kota meluncurkan 30 bus listrik — dan depo ini rumahnya. Tiap malam, tantangan matematika yang sama: 30 bus pulang dengan sisa baterai berbeda, 12 charger, daya terbatas, dan SEMUA harus penuh sebelum jadwal pagi yang berbeda-beda. Charging asal colok = tagihan WBP membengkak & bus pagi tak siap. Orkestrasi adalah segalanya.',
+  goal:'Sistem manajemen depo beroperasi: charging terjadwal dari prioritas keberangkatan & SoC, beban malam rata di bawah batas daya, dan 30/30 bus siap pagi.',
+  obj:['Data masuk: SoC tiap bus & jadwal keberangkatannya','Susun strategi: prioritas & smart charging semalam','Jalankan & validasi: 30 bus siap, biaya optimal'],
+  learn:['Masalah depo = penjadwalan dengan kendala: total energi yang dibutuhkan vs daya tersedia × jam tersedia — matematika dulu, kabel kemudian','Prioritas bukan siapa pulang duluan: bus berangkat 04:30 dengan SoC 20% adalah antrian pertama, bus berangkat 07:00 boleh menunggu giliran tengah malam','Meratakan beban (valley filling) menghindari puncak baru: 12 charger menyala serentak jam 22:00 menciptakan WBP-nya sendiri','Preconditioning terjadwal (panaskan/dinginkan kabin saat masih dicolok) menghemat baterai di jalan — energi dari grid lebih murah dari energi baterai'],
+  next:['Pelajari integrasi jadwal depo dengan sistem operasional armada','Dalami opportunity charging (pantograf di ujung rute) vs depot charging','Eksplorasi V2G depo: 30 bus = BESS 3 MWh yang parkir tiap malam']},
+});
+let mdp={};
+function buildDepo(){
+  freshScene(0x1d2a3a,0x0a121c);
+  cam={theta:.1,phi:1.15,r:10,target:new THREE.Vector3(0,1.6,-.8)};
+  const ground=boxT(26,.1,14,TEX.concrete());ground.position.y=-.05;scene.add(ground);
+  /* deretan bus */
+  mdp.bus=[];
+  for(let i=0;i<4;i++){
+    const b=box(3.0,1.1,1.0,[0x2a8a6a,0x2a8a6a,0xd8a020,0xd83a3a][i],{roughness:.4});
+    b.position.set(-6+i*3.4,.85,-2.4);scene.add(b);mdp.bus.push(b);
+    scene.add(label(['B-12 · 65% · 06:30','B-07 · 48% · 05:45','B-21 · 31% · 05:00','B-03 · 18% · 04:30'][i],.5)
+      .translateX(-6+i*3.4).translateY(1.8).translateZ(-2.4));}
+  scene.add(label('30 BUS PULANG (4 contoh)',.8).translateY(2.6).translateZ(-2.4));
+  actMesh(mdp.bus[3],'PRIORITAS');
+  /* layar manajemen depo */
+  const frame=boxT(4.6,2.6,.16,TEX.metal(),{metalness:.4});frame.position.set(0,2.5,2.6);frame.rotation.y=Math.PI;scene.add(frame);
+  mdp.D=makeDisplay(4.3,2.3,580,330);
+  mdp.D.mesh.position.set(0,2.5,2.5);mdp.D.mesh.rotation.y=Math.PI;scene.add(mdp.D.mesh);
+  actMesh(mdp.D.mesh,'DATA');
+  scene.add(label('DEPOT MANAGEMENT SYSTEM',.85,'#5fd4ff').translateY(4.0).translateZ(2.5));
+  mdp.mode=0;
+  function layar(){
+    const g=mdp.D.g,W=580,H=330;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.font='700 17px Consolas';g.textAlign='left';
+    if(mdp.mode===0){g.fillStyle='#5fd4ff';
+      g.fillText('MALAM INI: 30 bus · butuh 4.860 kWh',16,34);
+      g.fillStyle='#8aa3bd';g.font='600 15px Consolas';
+      g.fillText('daya tersedia: 800 kW · jam: 21:00-04:00',16,66);
+      g.fillText('teori: 5.600 kWh tersedia — CUKUP, asal rapi',16,98);
+      g.fillStyle='#ff8d3a';g.fillText('asal colok: puncak 1.380 kW = JEBOL',16,140);}
+    else{ /* kurva beban rapi */
+      g.strokeStyle='#2a3a4c';g.lineWidth=2;
+      g.beginPath();g.moveTo(40,20);g.lineTo(40,H-40);g.lineTo(W-12,H-40);g.stroke();
+      g.strokeStyle='#7a2a2a';g.setLineDash([6,5]);
+      g.beginPath();g.moveTo(40,80);g.lineTo(W-12,80);g.stroke();g.setLineDash([]);
+      g.fillStyle='#ff8d8d';g.font='600 14px Consolas';g.fillText('batas 800 kW',46,72);
+      g.strokeStyle='#46ff8e';g.lineWidth=3;g.beginPath();
+      for(let h=0;h<=7;h+=.25){
+        const v=mdp.mode===2?.93:.6+Math.abs(Math.sin(h*2))*.55;
+        const x=40+h/7*(W-70),y=H-40-Math.min(1.05,v)*(H-80)*.9;
+        h===0?g.moveTo(x,y):g.lineTo(x,y);}
+      g.stroke();
+      g.fillStyle=mdp.mode===2?'#46ff8e':'#ffd23f';g.font='700 16px Consolas';
+      g.fillText(mdp.mode===2?'rata 745 kW — di bawah batas semalaman ✓':'masih bergerigi — ratakan!',46,36);}
+    mdp.D.tex.needsUpdate=true;}
+  layar();
+  /* charger row */
+  for(let i=0;i<4;i++){const c=boxT(.5,1.3,.4,TEX.metal(),{metalness:.35});
+    c.position.set(-6+i*3.4,.7,-.9);scene.add(c);}
+  scene.add(label('12 CHARGER 150 kW (4 tampak)',.6,'#5fd4ff').translateY(.2).translateZ(-.3));
+  /* tombol jalankan & laporan pagi */
+  mdp.run=box(.6,.34,.14,0x2a5a8a);mdp.run.position.set(3.2,1.5,2.55);mdp.run.rotation.y=Math.PI;scene.add(mdp.run);
+  actMesh(mdp.run,'JALAN');
+  scene.add(label('JALANKAN JADWAL',.55,'#9cc4ff').translateX(3.2).translateY(1.95).translateZ(2.5));
+  startSeq([
+   {type:'act',aid:'DATA',done:false,targets:()=>[mdp.D.mesh],
+    desc:'Baca DATA malam ini: kebutuhan vs ketersediaan (klik layar).',
+    why:'30 bus pulang membawa PR 4.860 kWh; depo punya 800 kW × 7 jam = 5.600 kWh — CUKUP, tapi tanpa margin untuk kebodohan: simulasi "asal colok semua jam 21:00" menembus 1.380 kW. Matematika malam ini bukan soal cukup energi — soal cukup DISIPLIN.',
+    fx(){toast('🧮 Butuh 4.860 / tersedia 5.600 kWh — cukup ASAL rapi.','info',3000);}},
+   {type:'act',aid:'PRIORITAS',done:false,targets:()=>[mdp.bus[3]],
+    desc:'Tetapkan PRIORITAS: siapa minum duluan? (klik bus merah)',
+    why:'Skor antrian = jam berangkat dikurangi jam selesai-charging yang dibutuhkan: B-03 (18%, berangkat 04:30) memimpin antrian walau bukan yang pertama pulang; B-12 (65%, berangkat 06:30) dengan santai antre paling akhir. Yang genting dilayani, yang longgar menunggu — keadilan ala depo.',
+    fx(){toast('🥇 Antrian by deadline: B-03 duluan, B-12 sabar.','ok',3000);}},
+   {type:'act',aid:'RATAKAN',done:false,targets:()=>[mdp.D.mesh],
+    desc:'Susun SMART CHARGING: ratakan beban semalam (klik layar).',
+    why:'DLM ilmu lokasi B dipakai skala depo: daya dibagi dinamis, sesi digeser mengisi lembah, dan preconditioning kabin dijadwalkan 30 menit sebelum tiap keberangkatan — kabin dingin dari listrik grid, bukan dari baterai di jalan. Kurva mulai melandai... tapi masih bergerigi di pergantian gelombang.',
+    fx(){mdp.mode=1;layar();toast('📊 Gelombang tersusun — sedikit lagi rata.','ok',2800);}},
+   {type:'act',aid:'JALAN',done:false,targets:()=>[mdp.run],
+    desc:'Finalisasi & JALANKAN jadwal malam (klik tombol).',
+    why:'Optimasi terakhir menumpulkan gerigi: rata 745 kW stabil semalaman — di bawah batas, tanpa puncak baru, dan tiap bus mencapai 100% TEPAT sebelum slot preconditioning-nya. Algoritma tidur, charger bekerja, dan kota belum tahu betapa rapinya malam ini.',
+    fx(){mdp.mode=2;layar();
+      toast('🌙 Jadwal berjalan: 745 kW rata · semua deadline terkunci.','ok',3000);}},
+   {type:'act',aid:'PAGI',done:false,targets:()=>[mdp.D.mesh],
+    desc:'04:30 — laporan PAGI: semua siap? (klik layar)',
+    why:'B-03 keluar gerbang 04:30 dengan 100% & kabin sejuk... disusul 29 saudaranya sesuai jadwal masing-masing. Biaya energi semalam: 11% lebih murah dari minggu lalu (puncak terhindar), dan KPI paling penting kota: NOL bus terlambat karena baterai. Orkestrasi yang sukses memang tak terlihat penumpang.',
+    fx(){toast('🌅 30/30 bus siap · biaya −11% · nol keterlambatan!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Simfoni 30 bus semalam suntuk!</b> Deadline jadi dirigen, daya dibagi adil, lembah terisi rata — dan pagi menjemput armada yang penuh semua. Elektrifikasi transportasi dimenangkan di depo, saat kota tertidur.');
+    setTimeout(()=>showWin('depo'),2200);});
+  const s0d=seq.steps[0],of0d=s0d.fx;s0d.fx=()=>{of0d();mdp.D.mesh.userData.aid='RATAKAN';};
+  const s3d=seq.steps[3],of3d=s3d.fx;s3d.fx=()=>{of3d();mdp.D.mesh.userData.aid='PAGI';};
+  say('VOLTA di sini 🚌 Tantangan matematika tiap malam: <b>30 bus, 12 charger, daya terbatas, deadline berbeda-beda</b>. Asal colok = jebol & telat. Orkestrasi = semua penuh & hemat. Mulai dari data!');
+  $('#modTitle').textContent='J12·M7 — Depo Bus Listrik';
+  $('#taskHead').textContent='DEADLINE ADALAH DIRIGEN';}
+MISSIONS.depo.build=buildDepo;
+Object.assign(REAL,{
+ depo:[
+  'Integrasikan data SoC real armada (telematika) ke sistem depo — input manual pasti bolong',
+  'Sediakan margin daya & charger cadangan: satu charger rusak tak boleh menggagalkan pagi',
+  'Latih skenario gangguan: PLN padam jam 01:00 — bus mana yang dikorbankan, siapa memutuskan?',
+  'Evaluasi mingguan: bus dgn konsumsi/km menyimpang = kandidat pemeriksaan (ban, AC, gaya mengemudi)'],
+});

@@ -508,3 +508,98 @@ Object.assign(REAL,{
   'Catat semua komitmen dua arah dengan PIC & tanggal, kirim notulen hari yang sama',
   'Ukur kesehatan akun dari QBR ke QBR (isu turun? peluang naik?) — tren akun = tren bisnismu'],
 });
+
+/* =====================================================================
+   MISI 7 — MEMBANGUN JARINGAN DISTRIBUTOR
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ mitra:{lvl:'JALUR 09 · SALES & TECHNICAL MARKETING · MISI 7',icon:'🌐',title:'Membangun Jaringan Distributor',strict:false,
+  loc:'📍 Kantor regional · Ekspansi: 3 kota tanpa kehadiran',
+  story:'Penjualan langsungmu mentok di geografi: Cirebon, Tegal, Pekalongan penuh pabrik — tapi tak ada kakimu di sana. Merekrut sales di tiap kota? Mahal & lambat. Jalan para juara: DISTRIBUTOR — bermitra dengan pemain lokal yang sudah punya gudang, relasi, dan reputasi. Tapi salah pilih mitra lebih buruk dari tak punya: merek-mu ikut tergadai.',
+  goal:'Jaringan distributor regional berdiri sehat: mitra terpilih lewat uji kelayakan, dibekali (bukan dilepas), wilayah & aturan main jelas, dan penjualan perdana tervalidasi.',
+  obj:['Seleksi kandidat distributor dengan kriteria sehat','Onboarding: training produk & dukungan teknis','Tata wilayah, target & aturan main, lalu validasi'],
+  learn:['Distributor menjual banyak merek: pertanyaannya bukan "mau jual produkku?" tapi "produkku dapat PRIORITAS apa di rakmu?"','Kriteria mitra sehat: kesehatan finansial, tim teknis (produk listrik butuh penjelasan!), reputasi pasar — bukan sekadar siapa berani stok besar','Distributor yang dibekali (training, demo unit, dukungan engineer) menjual 3-5x dari yang sekadar dikirimi katalog — channel is built, not signed','Aturan wilayah & harga harus tertulis sejak awal: perang harga antar distributormu sendiri adalah cara tercepat menghancurkan margin semua pihak'],
+  next:['Susun program distributor bertingkat (authorized/premier)','Pelajari manajemen konflik channel vs penjualan langsung','Bangun forum tahunan distributor — komunitas, bukan sekadar rantai pasok']},
+});
+let mmt={};
+function buildMitra(){
+  freshScene(0xc6d2dc,0x18222c);
+  cam={theta:0,phi:1.16,r:8,target:new THREE.Vector3(0,1.8,-.8)};
+  const Z=room(0x6b5a45,0xd8d2c4,16,11);
+  /* peta wilayah */
+  const frame=boxT(3.6,2.2,.16,TEX.metal(),{metalness:.4});frame.position.set(-3.0,2.4,Z+.05);scene.add(frame);
+  frame.add(label('PETA EKSPANSI REGIONAL',.8).translateY(1.35));
+  mmt.D=makeDisplay(3.3,1.9,500,290);
+  mmt.D.mesh.position.set(-3.0,2.4,Z+.15);scene.add(mmt.D.mesh);
+  actMesh(mmt.D.mesh,'SELEKSI');
+  function peta(mode){
+    const g=mmt.D.g,W=500,H=290;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.strokeStyle='#2a3a4c';g.lineWidth=8;
+    g.beginPath();g.moveTo(0,200);g.bezierCurveTo(150,180,350,210,W,190);g.stroke();
+    const kota=[['CIREBON',110,160],['TEGAL',260,150],['PEKALONGAN',400,165]];
+    kota.forEach((k,i)=>{
+      g.fillStyle=mode>=1?'#46ff8e':'#8aa3bd';
+      g.beginPath();g.arc(k[1],k[2],12,0,7);g.fill();
+      g.font='600 14px Consolas';g.textAlign='center';g.fillText(k[0],k[1],k[2]-20);});
+    g.textAlign='left';g.font='700 16px Consolas';
+    g.fillStyle=mode>=1?'#46ff8e':'#ffd23f';
+    g.fillText(mode>=1?'3 wilayah eksklusif — batas & target jelas':'3 kota penuh pabrik, nol kehadiran',20,40);
+    mmt.D.tex.needsUpdate=true;}
+  peta(0);
+  /* 3 kandidat di kursi */
+  mmt.kand=[];
+  [[-.4,'CV-A'],[1.0,'PT-B'],[2.4,'UD-C']].forEach((o,i)=>{
+    const grp=new THREE.Group();
+    const badan=cyl(.2,.26,.85,[0x8a5a2a,0x2a5a8a,0x5a8a2a][i]);badan.position.y=.7;grp.add(badan);
+    const kepala=new THREE.Mesh(new THREE.SphereGeometry(.14,14,12),
+      new THREE.MeshStandardMaterial({color:0xd8b090}));kepala.position.y=1.32;grp.add(kepala);
+    grp.position.set(o[0],0,.6);scene.add(grp);mmt.kand.push(grp);
+    scene.add(label(o[1],.5).translateX(o[0]).translateY(1.75).translateZ(.6));});
+  actMesh(mmt.kand[1].children[0],'PILIH');
+  /* ruang training */
+  mmt.tr=makeDisplay(1.7,1.0,380,220);
+  mmt.tr.mesh.position.set(1.6,2.4,Z+.1);scene.add(mmt.tr.mesh);
+  dispText(mmt.tr,['TRAINING CENTER','menunggu mitra…'],['#5fd4ff','#7d8f84']);
+  actMesh(mmt.tr.mesh,'BEKAL');
+  scene.add(label('ONBOARDING MITRA',.65,'#5fd4ff').translateX(1.6).translateY(3.15).translateZ(Z+.1));
+  /* kontrak + PO perdana */
+  mmt.po=box(.5,.66,.04,0xe8d8a0);mmt.po.position.set(4.6,2.2,Z+.06);scene.add(mmt.po);
+  actMesh(mmt.po,'VALID');
+  scene.add(label('PO PERDANA',.6,'#ffd23f').translateX(4.6).translateY(2.75).translateZ(Z+.1));
+  startSeq([
+   {type:'act',aid:'SELEKSI',done:false,targets:()=>[mmt.D.mesh],
+    desc:'Petakan pasar & buka SELEKSI kandidat (klik peta).',
+    why:'Tiga kota, ±400 pabrik potensial, nol kehadiran. Iklan kemitraan dibuka — sembilan pelamar disaring jadi tiga finalis. Kriteria di atas meja sejak awal: finansial sehat, PUNYA TIM TEKNIS, reputasi bersih. Stok besar tanpa kemampuan menjelaskan produk hanyalah gudang penuh debu.',
+    fx(){toast('🗺️ 9 pelamar → 3 finalis lolos kriteria dasar.','ok',2800);}},
+   {type:'act',aid:'PILIH',done:false,targets:()=>[mmt.kand[1].children[0]],
+    desc:'Wawancara final: PILIH mitra yang tepat (klik kandidat tengah).',
+    why:'CV-A: stok terbesar, tapi nol teknisi — produk akan dijual seperti sembako. UD-C: teknis bagus, finansial rapuh. PT-B: gudang sedang, DUA engineer listrik, reputasi 15 tahun, dan satu jawaban yang menentukan: "kami menolak merek kompetitor X karena tak diberi dukungan teknis." Mitra yang menuntut dukungan = mitra yang berniat serius menjual.',
+    fx(){toast('🤝 PT-B terpilih: tim teknis + reputasi + niat serius.','ok',3200);}},
+   {type:'act',aid:'BEKAL',done:false,targets:()=>[mmt.tr.mesh],
+    desc:'ONBOARDING: training produk, demo unit, jalur dukungan (klik training).',
+    why:'Dua minggu intensif: training produk & sizing untuk engineer mereka, demo unit kapasitor + alat ukur dipinjamkan, jalur eskalasi teknis langsung ke engineermu, materi pemasaran lokal. Distributor yang dibekali menjual produkmu seperti miliknya — karena kini ia BISA menjelaskannya.',
+    fx(){dispText(mmt.tr,['2 ENGINEER LULUS','demo unit + hotline ✓'],['#46ff8e','#eaf2fb']);
+      toast('🎓 PT-B dibekali penuh — bukan dilepas dengan katalog.','ok',3000);}},
+   {type:'act',aid:'WILAYAH',done:false,targets:()=>[mmt.D.mesh],
+    desc:'Tata ATURAN MAIN: wilayah, harga, target (klik peta lagi).',
+    why:'Hitam di atas putih: tiga kota eksklusif PT-B selama target tercapai, harga lantai disepakati (perang diskon = dilarang), proyek besar >Rp 500 jt digarap BERSAMA engineermu, target tahun pertama realistis. Kemitraan yang awet ditulis saat mesra — bukan dinegosiasi saat bertengkar.',
+    fx(){peta(1);toast('📜 Wilayah eksklusif + harga lantai + target — tertulis semua.','ok',3000);}},
+   {type:'act',aid:'VALID',done:false,targets:()=>[mmt.po],
+    desc:'Validasi model: kawal PENJUALAN PERDANA mereka (klik PO).',
+    why:'Bulan kedua: engineer PT-B mengendus pabrik tekstil Tegal kena denda kVArh — ilmu dari training-mu! Mereka survey, engineermu membantu sizing via call, PO kapasitor bank pertama ditandatangani. Penjualan yang terjadi TANPA kamu hadir di kota itu: itulah bukti jaringan bekerja.',
+    fx(){toast('💼 PO perdana dari Tegal — terjual tanpa kehadiranmu. Jaringan HIDUP!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Kakimu kini ada di tiga kota — tanpa satu karyawan baru!</b> Mitra disaring ketat, dibekali sungguh-sungguh, diikat aturan yang adil. Channel yang sehat menjual saat kamu tidur — dan menjaga nama baikmu saat kamu jauh.');
+    setTimeout(()=>showWin('mitra'),2200);});
+  const s0m=seq.steps[0],of0m=s0m.fx;s0m.fx=()=>{of0m();mmt.D.mesh.userData.aid='WILAYAH';};
+  say('VOLTA di sini 🌐 Penjualanmu mentok di geografi — saatnya <b>membangun jaringan distributor</b>. Ingat hukumnya: mitra yang salah menggadaikan merekmu; mitra yang dibekali menjualkan seperti miliknya. Mulai dari peta!');
+  $('#modTitle').textContent='J09·M7 — Jaringan Distributor';
+  $('#taskHead').textContent='CHANNEL DIBANGUN, BUKAN DITEKEN';}
+MISSIONS.mitra.build=buildMitra;
+Object.assign(REAL,{
+ mitra:[
+  'Due diligence finansial kandidat (laporan keuangan, referensi bank) — piutang macet membunuh kemitraan',
+  'Kontrak memuat exit clause yang adil: kinerja di bawah target N kuartal = wilayah dievaluasi',
+  'Lindungi harga pasar dengan kebijakan harga lantai tertulis & sanksi pelanggarannya',
+  'Kunjungi mitra terjadwal & ukur sell-out (bukan hanya sell-in) — stok menumpuk bukan penjualan'],
+});

@@ -616,3 +616,84 @@ Object.assign(REAL,{
   'Dokumentasikan skenario & berikan ke penghuni — otomasi yang tak dipahami akan dimatikan',
   'Pilih perangkat dengan kontrol LOKAL (bukan cloud-only) — layanan cloud bisa tutup, rumah tetap harus jalan'],
 });
+
+/* =====================================================================
+   MISI 7 — AUDIT INSTALASI LAMA & KELAYAKAN
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ slo:{lvl:'JALUR 01 · INSTALASI BANGUNAN · MISI 7',icon:'🏚️',title:'Audit Instalasi Lama & Kelayakan',strict:false,
+  loc:'📍 Rumah warisan 1985 · Calon pembeli minta pemeriksaan',
+  story:'Rumah tua 1985 akan berpindah tangan — dan calon pembelinya cerdas: sebelum bayar, ia membayar JASAMU memeriksa instalasinya. Empat dekade adalah waktu yang panjang bagi kabel: isolasi menua, sambungan ditambah-tambah penghuni, dan standar zaman itu bukan standar hari ini. Tugasmu: temukan bahaya tersembunyi & terbitkan laporan kelayakan yang jujur.',
+  goal:'Instalasi teraudit menyeluruh: temuan terklasifikasi bahayanya, diuji dengan alat ukur, dan laporan kelayakan ber-prioritas perbaikan terbit.',
+  obj:['Inspeksi visual panel & jalur instalasi','Uji isolasi & pembumian dengan alat ukur','Klasifikasi temuan & terbitkan laporan prioritas'],
+  learn:['Instalasi menua tidak gagal mendadak — ia menurun pelan: isolasi karet era 80an menggetas, sambungan tambahan menumpuk tanpa tee-dus','Inspeksi visual menemukan 70% masalah: sekring diganjal kawat, sambungan puntir terbuka, kabel tanpa conduit — mata terlatih dulu, alat kemudian','Megger menjawab yang tak terlihat: isolasi 0,1 MΩ artinya kabel sudah bocor ke mana-mana — angka minimal 0,5 MΩ bukan sekadar formalitas','Laporan kelayakan memilah: BAHAYA (perbaiki sebelum dihuni), SEGERA (3 bulan), DISARANKAN — pembeli butuh prioritas, bukan daftar panjang yang menakutkan'],
+  next:['Pelajari prosedur SLO & lembaga inspeksi resmi','Dalami estimasi biaya rewiring untuk negosiasi harga rumah','Tawarkan jasa inspeksi pra-jual-beli — pasar yang belum tergarap']},
+});
+let mlo={};
+function buildSLO(){
+  freshScene(0xa89878,0x141009);
+  cam={theta:.05,phi:1.16,r:7,target:new THREE.Vector3(0,1.7,-.8)};
+  const floor=boxT(13,.1,9,TEX.wood());floor.position.y=-.05;scene.add(floor);
+  const wall=boxT(12,4.4,.15,TEX.plaster());wall.position.set(0,2.2,-3);scene.add(wall);
+  const Z=-2.86;
+  /* panel tua dengan sekring diganjal */
+  mlo.panel=box(.8,1.0,.2,0x6a5a48);mlo.panel.position.set(-4.2,2.0,Z);scene.add(mlo.panel);
+  actMesh(mlo.panel,'VISUAL');
+  scene.add(label('PANEL 1985 — sekring keramik',.65,'#ffd23f').translateX(-4.2).translateY(2.8).translateZ(Z+.1));
+  /* sambungan puntir terbuka di plafon */
+  mlo.puntir=new THREE.Mesh(new THREE.SphereGeometry(.08,10,8),
+    new THREE.MeshStandardMaterial({color:0x2a2a2a}));
+  mlo.puntir.position.set(-1.4,3.9,Z+.2);scene.add(mlo.puntir);
+  const kbl1=cyl(.02,.02,1.6,0x4a4038);kbl1.rotation.z=Math.PI/2;kbl1.position.set(-2.2,3.9,Z+.2);scene.add(kbl1);
+  scene.add(label('sambungan puntir terbuka!',.55,'#ff8d8d').translateX(-1.4).translateY(4.3).translateZ(Z+.1));
+  /* stop kontak gosong */
+  mlo.skk=box(.3,.3,.1,0xcfae90);mlo.skk.position.set(1.2,1.2,Z+.06);scene.add(mlo.skk);
+  const gsg=box(.1,.14,.04,0x241a10);gsg.position.set(1.2,1.2,Z+.12);scene.add(gsg);
+  /* megger + earth tester di meja */
+  const tbl=boxT(1.6,.07,.7,TEX.wood());tbl.position.set(3.2,.95,.2);scene.add(tbl);
+  const tleg=boxT(.08,.95,.08,TEX.wood());tleg.position.set(3.2,.47,.2);scene.add(tleg);
+  mlo.meg=box(.32,.2,.24,0xcc8830);mlo.meg.position.set(2.8,1.08,.2);scene.add(mlo.meg);
+  actMesh(mlo.meg,'MEGGER');
+  scene.add(label('MEGGER',.5,'#5fd4ff').translateX(2.8).translateY(1.4).translateZ(.2));
+  mlo.et=box(.32,.2,.24,0xd8b020);mlo.et.position.set(3.6,1.08,.2);scene.add(mlo.et);
+  actMesh(mlo.et,'EARTH');
+  scene.add(label('EARTH TESTER',.5,'#5fd4ff').translateX(3.7).translateY(1.4).translateZ(.2));
+  /* papan laporan */
+  mlo.rep=box(.6,.75,.05,0xe8e4d8);mlo.rep.position.set(5.2,1.9,Z+.06);scene.add(mlo.rep);
+  actMesh(mlo.rep,'LAPOR');
+  scene.add(label('LAPORAN KELAYAKAN',.6,'#5fd4ff').translateX(5.2).translateY(2.5).translateZ(Z+.1));
+  startSeq([
+   {type:'act',aid:'VISUAL',done:false,targets:()=>[mlo.panel],
+    desc:'Mulai INSPEKSI VISUAL: buka panel tua itu (klik panel).',
+    why:'Empat dekade bercerita sekaligus: sekring keramik diganjal kawat tembaga (proteksi DIMATIKAN diam-diam!), tak ada pembumian sama sekali, dan jalur tambahan era 2000-an dipuntir langsung tanpa kotak sambung. Tiga generasi penghuni, tiga lapis improvisasi.',
+    fx(){toast('👁️ Sekring diganjal kawat + tanpa pembumian + sambungan liar.','bad',3200);}},
+   {type:'act',aid:'JEJAK',done:false,targets:()=>[mlo.puntir],
+    desc:'Telusuri jalur: periksa sambungan PLAFON & stop kontak (klik sambungan).',
+    why:'Sambungan puntir terbuka di plafon — tanpa lasdop, tanpa tee-dus, isolasinya tape yang sudah mengelupas; di bawahnya stop kontak menghitam bekas panas. Inilah pasangan maut instalasi tua: sambungan lelah + beban modern (AC, water heater) yang tak pernah dibayangkan tahun 1985.',
+    fx(){toast('🔍 Puntiran terbuka + stop kontak gosong — pasangan maut.','bad',3000);}},
+   {type:'act',aid:'MEGGER',done:false,targets:()=>[mlo.meg],
+    desc:'Yang tak terlihat mata: UJI ISOLASI semua grup (klik megger).',
+    why:'Grup depan: 0,8 MΩ (lolos tipis). Grup belakang: 0,09 MΩ — JAUH di bawah 0,5 minimal: isolasi karetnya sudah menggetas, bocor halus ke mana-mana. Kabel ini tampak baik dari luar; megger membongkar usianya yang sebenarnya.',
+    fx(){toast('📏 Grup belakang 0,09 MΩ (<0,5) — isolasi tamat usia.','bad',3000);}},
+   {type:'act',aid:'EARTH',done:false,targets:()=>[mlo.et],
+    desc:'Lengkapi data: ukur PEMBUMIAN... yang ternyata tak ada (klik earth tester).',
+    why:'Dicari ke seluruh rumah: tak ada elektroda, tak ada kawat kuning-hijau satu pun — standar era itu memang longgar. Artinya 40 tahun rumah ini hidup tanpa jalur pembuangan arus bocor: setiap kebocoran selama ini memilih jalur lain... termasuk mungkin penghuninya.',
+    fx(){toast('⏚ Pembumian: TIDAK ADA — wajib dibangun dari nol.','bad',2800);}},
+   {type:'act',aid:'LAPOR',done:false,targets:()=>[mlo.rep],
+    desc:'Terbitkan LAPORAN ber-prioritas untuk calon pembeli (klik laporan).',
+    why:'Jujur dan terstruktur: BAHAYA (ganti panel+MCB+RCD, rewiring grup belakang, bangun pembumian — Rp 28 jt, sebelum dihuni) · SEGERA (tee-dus semua sambungan) · DISARANKAN (tambah grup). Calon pembeli tidak batal — ia memakai laporanmu menegosiasi harga Rp 40 juta lebih rendah. Informasi adalah daya tawar.',
+    fx(){toast('📋 Laporan terbit — pembeli nego turun Rp 40 jt. Jasa terbayar!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Audit kelayakan tuntas!</b> Mata menemukan improvisasi tiga generasi, megger membongkar usia kabel, dan laporan ber-prioritas memberi pembeli kekuatan nego. Instalatir senior tak hanya memasang — ia menilai.');
+    setTimeout(()=>showWin('slo'),2200);});
+  actMesh(mlo.puntir,'JEJAK');
+  say('VOLTA di sini 🏚️ Misi level senior: <b>mengaudit instalasi 40 tahun</b>. Rumah tua tak gagal mendadak — ia menurun diam-diam. Mata dulu, alat kemudian, laporan yang jujur sebagai penutup. Buka panelnya!');
+  $('#modTitle').textContent='J01·M7 — Audit Instalasi Lama';
+  $('#taskHead').textContent='MATA · ALAT · LAPORAN JUJUR';}
+MISSIONS.slo.build=buildSLO;
+Object.assign(REAL,{
+ slo:[
+  'Matikan sumber sebelum membuka panel tua — kondisinya tak terprediksi, perlakukan sebagai bertegangan',
+  'Dokumentasikan tiap temuan dengan foto ber-lokasi — laporan tanpa bukti hanyalah opini',
+  'Gunakan format klasifikasi bahaya yang konsisten (C1/C2/C3 ala EICR) agar prioritas jelas',
+  'Jangan menambal instalasi yang isolasinya tamat — rewiring lebih murah dari kebakaran'],
+});
