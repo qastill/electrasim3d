@@ -13,6 +13,7 @@
 })();
 </script>
 <meta charset="UTF-8">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>ElectraSim VR 3D — 16 Jalur Ketenagalistrikan</title>
 <style>
@@ -77,6 +78,33 @@
   .tcBar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--yellow));transition:width .5s}
   .tcProg .pct{font-family:var(--mono);font-size:10px;color:var(--dim);flex:none;letter-spacing:.06em}
   .tcMissions{display:flex;flex-direction:column;gap:7px}
+  .tcMore{display:none;flex-direction:column;gap:7px}
+  .tcMissions.open .tcMore{display:flex}
+  .lihatBtn{cursor:pointer;background:none;border:1px dashed var(--line);color:var(--dim);
+    font-family:var(--mono);font-size:10.5px;padding:7px;letter-spacing:.08em;border-radius:3px}
+  .lihatBtn:hover{color:var(--cyan);border-color:var(--cyan)}
+  /* pencarian */
+  #cariWrap{width:min(520px,92vw);position:relative}
+  #cariBox{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--ink);
+    padding:11px 14px 11px 38px;font-size:13.5px;border-radius:8px;outline:none}
+  #cariBox:focus{border-color:var(--cyan)}
+  #cariWrap::before{content:"🔍";position:absolute;left:12px;top:10px;font-size:14px;opacity:.6}
+  /* panduan cara bermain */
+  #howto{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;
+    background:#0b1420ee;padding:18px}
+  .howCard{background:var(--panel);border:1px solid var(--cyan);max-width:520px;width:100%;
+    padding:26px 28px;border-radius:12px;backdrop-filter:blur(12px)}
+  .howCard h2{font-size:20px;margin-bottom:14px}
+  .howStep{display:flex;gap:13px;margin-bottom:13px;align-items:flex-start}
+  .howStep .n{flex:none;width:30px;height:30px;border-radius:50%;background:var(--cyan);color:#0b1420;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-family:var(--mono)}
+  .howStep p{font-size:13.5px;line-height:1.55;color:var(--ink)}
+  .howStep p b{color:var(--yellow)}
+  .howKey{margin:12px 0;padding:10px 12px;background:#0d1a29;border:1px solid var(--line);
+    border-radius:7px;font-family:var(--mono);font-size:11.5px;color:var(--dim);line-height:1.8}
+  #btnHelp{pointer-events:auto;cursor:pointer;color:var(--cyan);font-family:var(--mono);
+    font-size:13px;border:none;background:var(--panel);padding:9px 13px}
+  #btnHelp:hover{background:#16263a}
   .mBtn{display:flex;align-items:center;width:100%;cursor:pointer;
     background:#0d1a29;border:1px solid var(--line);color:var(--ink);padding:9px 11px;
     font-size:12.5px;text-align:left;gap:10px;border-radius:3px;transition:border-color .15s, background .15s}
@@ -235,6 +263,7 @@
   </div>
   <p class="sub">Simulator 3D berbasis misi untuk <b>16 jalur spesialisasi</b> ketenagalistrikan, dipandu <b>VOLTA</b> — AI instructor yang menjelaskan langkah & alasannya, dan bisa ditanya kapan saja. Selesaikan misi, kumpulkan bintang, kuasai kompetensi.</p>
   <div class="statsRow" id="statsRow"></div>
+  <div id="cariWrap"><input id="cariBox" placeholder="Cari jalur atau misi… (mis. PLC, trafo, solar)"></div>
   <div class="grid16" id="trackGrid"></div>
   <div class="hintTxt">🖱️ drag = lihat sekeliling · scroll/pinch = zoom · klik kanan/shift-drag = geser · ikuti penanda kuning ▼</div>
 </div></div>
@@ -266,6 +295,7 @@
     <div class="tb stat">SKOR <b id="score">0</b></div>
     <div class="tb stat">❌ <b id="miss">0</b></div>
     <div class="tb stat">⏱ <b id="timer">00:00</b></div>
+    <button id="btnHelp" title="Cara bermain">❔</button>
   </div>
   <div id="progWrap"><div id="prog"></div></div>
   <div id="stepBadge">LANGKAH 1/9</div>
@@ -307,7 +337,22 @@
 </div>
 <div id="errBar"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- ================= CARA BERMAIN ================= -->
+<div id="howto">
+  <div class="howCard">
+    <h2>👋 Selamat datang di ElectraSim!</h2>
+    <div class="howStep"><div class="n">1</div>
+      <p><b>Pilih jalur & misi</b> — mulai dari M1 tiap jalur, lalu naik bertahap. Tiap misi adalah simulasi pekerjaan nyata.</p></div>
+    <div class="howStep"><div class="n">2</div>
+      <p><b>Ikuti penanda kuning ▼</b> — klik objek 3D yang ditunjuk. VOLTA (asisten di bawah layar) menjelaskan tiap langkah & alasannya.</p></div>
+    <div class="howStep"><div class="n">3</div>
+      <p><b>Bingung?</b> Tekan 💡 HINT, ❓ KENAPA, atau ketik pertanyaan ke VOLTA kapan saja.</p></div>
+    <div class="howKey">🖱️ drag = putar kamera · scroll = zoom · klik kanan = geser<br>🔊 = suara VOLTA on/off · ▾ = sembunyikan panel</div>
+    <button class="btnY" id="howOk" style="width:100%">MENGERTI, MULAI! ▶</button>
+  </div>
+</div>
+
+<script id="threejs" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
 <script>
 /* =====================================================================
    ElectraSim VR 3D v4 — 16 jalur · 32 misi (2 per jalur) · AI tutor VOLTA
@@ -320,7 +365,7 @@ const $=q=>document.querySelector(q);
 let renderer,scene,camera,raycaster,clock;
 let clickables=[], wiresGroup, fxGroup, sparks=[], markers=[];
 let curModule=null, score=0, mistakes=0, t0=0, timerOn=false, moduleTick=null;
-let cam={theta:0, phi:1.25, r:7, target:new THREE.Vector3(0,1.8,0)};
+let cam={theta:0, phi:1.25, r:7, target:null}; /* target dibuat saat GL siap */
 const COL={fasa:0xd83a3a, netral:0x2f6fd8, ground:0x3ddc84, dark:0x222e3d,
            metal:0x8d9aa8, yellow:0xffd23f, cream:0xdfe6ee};
 
@@ -394,11 +439,14 @@ function renderMenu(){
     `<div class="statChip"><span class="n">${doneMis}</span><span class="l">Misi<br>Selesai</span></div>`+
     `<div class="statChip"><span class="n">${totStars}<span style="font-size:12px;color:var(--dim)">/${totMis*3}</span></span><span class="l">Bintang<br>Terkumpul</span></div>`+
     `<div class="statChip"><span class="n">16</span><span class="l">Jalur<br>Spesialisasi</span></div>`;
+  const TAMPIL=4; /* misi yang tampil sebelum "lihat semua" */
   TRACKS.forEach((t,idx)=>{
     const d=document.createElement('div');
     const done=t.missions.filter(m=>(bestStars[m.k]||0)>0).length;
     const allDone=t.missions.length&&done===t.missions.length;
     d.className='tcard '+(t.missions.length?'active':'locked')+(allDone?' complete':'');
+    /* indeks pencarian: nama jalur + semua judul misi */
+    d.dataset.cari=(t.name+' '+t.desc+' '+t.missions.map(m=>m.t).join(' ')).toLowerCase();
     let inner=`<div class="tcPhoto"><img src="foto/${idx+1}.webp" loading="lazy" alt="${t.name}">`+
       `<span class="lvl">${t.code}</span><h2>${t.name}</h2></div>`+
       `<div class="tcBody"><div class="tcDesc">${t.desc}</div>`;
@@ -406,13 +454,18 @@ function renderMenu(){
       const pct=Math.round(done/t.missions.length*100);
       inner+=`<div class="tcProg"><div class="tcBar"><i style="width:${pct}%"></i></div>`+
         `<span class="pct">${done}/${t.missions.length}</span></div>`;
-      inner+=`<div class="tcMissions">`;
-      t.missions.forEach((m,i)=>{
+      const btn=(m,i)=>{
         const isDone=(bestStars[m.k]||0)>0;
-        inner+=`<button class="mBtn${isDone?' done':''}" data-m="${m.k}">`+
+        return `<button class="mBtn${isDone?' done':''}" data-m="${m.k}">`+
           `<span class="mNum">M${i+1}</span>`+
           `<span class="mTitle">${m.t}</span>`+
-          `${starsOf(m.k)}</button>`;});
+          `${starsOf(m.k)}</button>`;};
+      inner+=`<div class="tcMissions">`;
+      t.missions.slice(0,TAMPIL).forEach((m,i)=>{inner+=btn(m,i);});
+      if(t.missions.length>TAMPIL){
+        inner+=`<div class="tcMore">`;
+        t.missions.slice(TAMPIL).forEach((m,i)=>{inner+=btn(m,i+TAMPIL);});
+        inner+=`</div><button class="lihatBtn">▾ lihat semua ${t.missions.length} misi</button>`;}
       inner+=`</div>`;
     }else{
       inner+=`<div class="lockTag">🔒 TAHAP BERIKUTNYA</div>`;
@@ -421,7 +474,28 @@ function renderMenu(){
     d.innerHTML=inner; g.appendChild(d);
   });
   g.querySelectorAll('.mBtn').forEach(b=>b.onclick=()=>openBrief(b.dataset.m));
+  g.querySelectorAll('.lihatBtn').forEach(b=>b.onclick=()=>{
+    const box=b.parentElement; box.classList.toggle('open');
+    b.textContent=box.classList.contains('open')?'▴ sembunyikan':b.textContent.replace('▴ sembunyikan','▾ lihat semua');
+    if(!box.classList.contains('open'))b.textContent='▾ lihat semua '+(box.querySelectorAll('.mBtn').length)+' misi';});
 }
+/* pencarian jalur & misi */
+(function(){
+  const c=$('#cariBox'); if(!c)return;
+  c.addEventListener('input',()=>{
+    const q=c.value.toLowerCase().trim();
+    document.querySelectorAll('#trackGrid .tcard').forEach(d=>{
+      d.style.display=(!q||(d.dataset.cari||'').includes(q))?'':'none';});});
+})();
+/* panduan cara bermain: tampil sekali untuk pengunjung baru */
+(function(){
+  let seen=false; try{seen=window.localStorage.getItem('esim_howto')==='1';}catch(e){}
+  const h=$('#howto'); if(!h)return;
+  if(!seen)h.style.display='flex';
+  $('#howOk').onclick=()=>{h.style.display='none';
+    try{window.localStorage.setItem('esim_howto','1');}catch(e){}};
+  const hb=$('#btnHelp'); if(hb)hb.onclick=()=>{h.style.display='flex';};
+})();
 
 /* ---------- briefing ---------- */
 let briefKey=null;
@@ -660,22 +734,67 @@ try{ttsOn=window.localStorage.getItem('esim_tts')!=='0';}catch(e){}
 function pickVoice(){
   try{
     const vs=window.speechSynthesis.getVoices();
-    ttsVoice=vs.find(v=>/id[-_]ID/i.test(v.lang))||vs.find(v=>/^id/i.test(v.lang))||null;
+    /* prioritas: voice neural Google id-ID > id-ID lain > bahasa id apa pun */
+    ttsVoice=vs.find(v=>/id[-_]ID/i.test(v.lang)&&/google/i.test(v.name))||
+             vs.find(v=>/id[-_]ID/i.test(v.lang)&&/natural|neural|online/i.test(v.name))||
+             vs.find(v=>/id[-_]ID/i.test(v.lang))||
+             vs.find(v=>/^id/i.test(v.lang))||null;
   }catch(e){}}
 if(typeof window!=='undefined'&&'speechSynthesis' in window){
   pickVoice(); window.speechSynthesis.onvoiceschanged=pickVoice;}
+/* ubah teks tulisan menjadi kalimat lisan yang wajar */
+function humanize(t){
+  return t
+    .replace(/[\u{1F000}-\u{1FAFF}\u{2190}-\u{27BF}✓✗×▼▲◄►●○◊■▪★☆…⚡⏚†‡]/gu,' ')
+    .replace(/\bSOP\b/g,'eS oh peh').replace(/\bAPD\b/g,'ah peh deh')
+    .replace(/(\d)\s*kVArh\b/g,'$1 kilo var jam').replace(/(\d)\s*kVAr?\b/gi,'$1 kilo var')
+    .replace(/(\d)\s*kWh\b/g,'$1 kilowatt jam').replace(/(\d)\s*MWh\b/g,'$1 megawatt jam')
+    .replace(/(\d)\s*kWp?\b/g,'$1 kilowatt').replace(/(\d)\s*MWp?\b/g,'$1 megawatt')
+    .replace(/(\d)\s*kV\b/g,'$1 kilo volt').replace(/(\d)\s*VA?\b/g,'$1 volt')
+    .replace(/(\d)\s*Hz\b/g,'$1 hertz').replace(/(\d)\s*A\b/g,'$1 amper')
+    .replace(/°\s*C/g,' derajat').replace(/%/g,' persen')
+    .replace(/±/g,'sekitar ').replace(/≥/g,'minimal ').replace(/≤/g,'maksimal ')
+    .replace(/→/g,', lalu ').replace(/·/g,', ').replace(/—/g,', ')
+    .replace(/(\d),(\d)/g,'$1 koma $2')
+    .replace(/\(([^()]{1,30})\)/g,', $1,')   /* kurung pendek diucapkan */
+    .replace(/\([^()]*\)/g,'')               /* kurung panjang dibuang */
+    .replace(/["“”]/g,'').replace(/&/g,' dan ')
+    .replace(/\bkWh\b/g,'kilowatt jam').replace(/\bkV\b/g,'kilo volt')
+    .replace(/\bkW\b/g,'kilowatt').replace(/\bMW\b/g,'megawatt')
+    /* rapikan tanda baca sisa agar jeda terdengar wajar */
+    .replace(/\s*,\s*,+/g,', ').replace(/\s+,/g,',')
+    .replace(/,\s*([.!?])/g,'$1').replace(/([.!?])\s*,/g,'$1 ')
+    .replace(/\s+/g,' ').trim();}
+/* susun naskah lisan ringkas dari teks panel (jangan membacakan esai) */
+function naskah(plain){
+  let t=plain;
+  const m=t.match(/^LANGKAH (\d+)\/\d+\s*[—-]?\s*([\s\S]*)$/);
+  if(m){
+    let body=m[2];
+    const wIdx=body.indexOf('Kenapa & dampaknya:');
+    let desc=wIdx>=0?body.slice(0,wIdx):body;
+    let why=wIdx>=0?body.slice(wIdx+19):'';
+    /* ambil hanya kalimat pertama dari penjelasan */
+    why=(why.split(/(?<=[.!?])\s/)[0]||'').trim();
+    t='Langkah '+m[1]+'. '+desc.trim()+(why?' '+why:'');}
+  t=humanize(t);
+  if(t.length>240){ /* potong di akhir kalimat terdekat */
+    const cut=t.slice(0,240);
+    t=cut.slice(0,Math.max(cut.lastIndexOf('.'),cut.lastIndexOf(','))+1)||cut;}
+  return t;}
 function speak(text){
   if(!ttsOn||typeof window==='undefined'||!('speechSynthesis' in window))return;
   try{
     window.speechSynthesis.cancel();
-    /* buang emoji & simbol agar tidak ikut dibaca */
-    const clean=text.replace(/[\u{1F000}-\u{1FAFF}\u{2190}-\u{27BF}✓×▼·—…⚡⏚]/gu,' ')
-      .replace(/\s+/g,' ').trim();
+    const clean=naskah(text);
     if(!clean)return;
-    const u=new SpeechSynthesisUtterance(clean);
-    if(ttsVoice)u.voice=ttsVoice;
-    u.lang='id-ID'; u.rate=1.05; u.pitch=1.0; u.volume=.95;
-    window.speechSynthesis.speak(u);
+    /* pecah per kalimat: jeda antar utterance terasa seperti napas */
+    const parts=clean.split(/(?<=[.!?])\s+/).filter(p=>p.trim().length>1);
+    parts.forEach((p,i)=>{
+      const u=new SpeechSynthesisUtterance(p.trim());
+      if(ttsVoice)u.voice=ttsVoice;
+      u.lang='id-ID'; u.rate=1.0; u.pitch=i===0?1.04:1.0; u.volume=.95;
+      window.speechSynthesis.speak(u);});
   }catch(e){}}
 function stopSpeak(){try{window.speechSynthesis.cancel();}catch(e){}}
 function updVoiceBtn(){const b=$('#btnVoice');if(b)b.textContent=ttsOn?'🔊':'🔇';}
@@ -900,8 +1019,20 @@ function animate(){
     $('#timer').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
   if(scene){updateCamera();renderer.render(scene,camera);}}
 
+let glReady=false;
 function startModule(k){
   if(!MISSIONS[k]||!MISSIONS[k].build)return;
+  /* WebGL dibuat hanya saat dibutuhkan — menu tetap ringan & cepat */
+  if(!glReady){
+    if(typeof THREE==='undefined'){
+      const s=document.getElementById('threejs');
+      const b=document.getElementById('errBar');
+      if(b){b.style.display='block';b.textContent='⏳ Menyiapkan mesin 3D…';}
+      if(s)s.addEventListener('load',()=>{if(b)b.style.display='none';startModule(k);},{once:true});
+      else if(b)b.textContent='⚠️ Library 3D gagal dimuat — periksa koneksi lalu muat ulang.';
+      return;}
+    cam.target=new THREE.Vector3(0,1.8,0);
+    initGL(); glReady=true;}
   curModule=k;score=0;mistakes=0;selTerm=null;seq=null;
   $('#score').textContent='0';$('#miss').textContent='0';
   t0=Date.now();timerOn=true;$('#timer').textContent='00:00';
@@ -911,14 +1042,8 @@ function startModule(k){
   MISSIONS[k].build();}
 
 renderMenu();
-if(typeof THREE==='undefined'){
-  document.body.insertAdjacentHTML('beforeend',
-    '<div style="position:fixed;inset:0;z-index:99;background:#0b1420;color:#ffd23f;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-family:monospace">⚠️ Library 3D (Three.js) gagal dimuat.<br>Periksa koneksi internet lalu muat ulang.</div>');
-}else{
-  initGL();
-  /* prefetch semua modul misi saat idle agar briefing terbuka instan */
-  setTimeout(()=>{TRACKS.forEach(t=>loadFile(t.file).catch(()=>{}));},2500);
-}
+/* prefetch modul misi saat idle agar briefing terbuka instan */
+setTimeout(()=>{TRACKS.forEach(t=>loadFile(t.file).catch(()=>{}));},2500);
 </script>
 </body>
 </html>
