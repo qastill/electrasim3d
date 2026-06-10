@@ -734,3 +734,94 @@ Object.assign(REAL,{
   'Battery starter genset di-monitoring & diganti terjadwal — penyebab gagal start nomor satu',
   'Dokumentasikan setting AMF (tunda, ambang tegangan) & latih operator membaca alarm-nya'],
 });
+
+/* =====================================================================
+   MISI 8 — IIoT & OEE: PABRIK YANG BERBICARA DATA
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ iot:{lvl:'JALUR 02 · INDUSTRI & MANUFAKTUR · MISI 8',icon:'📡',title:'IIoT & OEE: Pabrik yang Berbicara Data',strict:false,
+  loc:'📍 Pabrik tekstil · Proyek digitalisasi line produksi',
+  story:'Rapat produksi selalu sama: "line 2 sering berhenti" — "berapa lama?" — "yaa... sering, Pak." Tak ada angka, hanya perasaan. Proyek barumu mengubah itu: sensor IIoT di tiap mesin, data mengalir real-time, dan satu metrik yang menyatukan semuanya: OEE — overall equipment effectiveness. Pabrik yang tak terukur tak bisa diperbaiki; mulai hari ini, ia bicara data.',
+  goal:'Line 2 termonitor real-time: sensor terpasang & tervalidasi, data mengalir ke dashboard OEE, dan temuan pertama (pencuri kapasitas tersembunyi) terbongkar angka.',
+  obj:['Pasang sensor status, counter & arus per mesin','Validasi data: sensor vs kenyataan lantai produksi','Baca OEE & bongkar pencuri kapasitas terbesar'],
+  learn:['OEE = availability × performance × quality: tiga pencuri kapasitas (berhenti, lambat, cacat) dalam satu angka jujur','Sensor paling sederhana sering paling berharga: status run/stop dari arus motor + counter produk — tak perlu menunggu proyek AI untuk mulai terukur','Data WAJIB divalidasi lapangan: counter yang menghitung dobel membuat seluruh dashboard jadi fiksi yang rapi','Micro-stoppage adalah pencuri paling licin: berhenti 2-3 menit puluhan kali sehari tak pernah masuk laporan manual — sensor menangkap semuanya'],
+  next:['Pelajari protokol IIoT (MQTT, OPC-UA) & arsitektur edge-cloud','Hubungkan OEE dengan andon & eskalasi otomatis','Naik ke predictive: data arus yang sama bisa memprediksi gangguan'],},
+});
+let mit={};
+function buildIoT(){
+  freshScene(0xb0bfcc,0x131c26);
+  cam={theta:.05,phi:1.16,r:8.5,target:new THREE.Vector3(0,1.7,-.8)};
+  const Z=room(0x55606a,0xb9bfc6,16,11);
+  /* 3 mesin line 2 */
+  mit.mesin=[];
+  [[-4.2,'TENUN-A'],[-1.2,'TENUN-B'],[1.8,'FINISHING']].forEach((o,i)=>{
+    const m=boxT(1.8,1.4,1.1,TEX.metal(),{metalness:.3});m.position.set(o[0],.75,-1.8);scene.add(m);
+    mit.mesin.push(m);
+    scene.add(label(o[1],.6).translateX(o[0]).translateY(1.8).translateZ(-1.8));});
+  actMesh(mit.mesin[1],'SENSOR');
+  /* sensor kit */
+  const tbl=boxT(1.2,.07,.7,TEX.wood());tbl.position.set(4.2,.95,.4);scene.add(tbl);
+  const tleg=boxT(.08,.95,.08,TEX.wood());tleg.position.set(4.2,.47,.4);scene.add(tleg);
+  mit.kit=box(.4,.25,.3,0x2a72c8);mit.kit.position.set(4.2,1.12,.4);scene.add(mit.kit);
+  scene.add(label('KIT: CT + COUNTER + GATEWAY',.55,'#5fd4ff').translateX(4.2).translateY(1.5).translateZ(.4));
+  /* dashboard OEE */
+  const frame=boxT(3.8,2.2,.16,TEX.metal(),{metalness:.4});frame.position.set(4.4,2.6,Z+.05);scene.add(frame);
+  frame.add(label('DASHBOARD OEE — LINE 2',.8).translateY(1.35));
+  mit.D=makeDisplay(3.5,1.9,540,300);
+  mit.D.mesh.position.set(4.4,2.6,Z+.15);scene.add(mit.D.mesh);
+  actMesh(mit.D.mesh,'OEE');
+  function dash(mode){
+    const g=mit.D.g,W=540,H=300;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.font='600 15px Consolas';g.textAlign='left';
+    if(mode===0){g.fillStyle='#5d748c';g.font='700 17px Consolas';
+      g.fillText('menunggu data sensor…',24,H/2);}
+    else{
+      g.fillStyle='#5fd4ff';g.font='700 18px Consolas';
+      g.fillText('OEE LINE 2 (minggu ini)',18,30);
+      const bars=[['Availability','71%','#ff8d3a'],['Performance','84%','#ffd23f'],['Quality','97%','#46ff8e']];
+      bars.forEach((b,i)=>{const y=68+i*44;
+        g.fillStyle='#8aa3bd';g.font='600 15px Consolas';g.fillText(b[0],18,y);
+        g.fillStyle=b[2];g.fillRect(150,y-15,parseInt(b[1])*2.6,22);
+        g.fillText(b[1],160+parseInt(b[1])*2.6,y);});
+      g.fillStyle='#ff5a5a';g.font='800 30px Consolas';
+      g.fillText('OEE 58%',18,H-60);
+      g.fillStyle='#8aa3bd';g.font='600 14px Consolas';
+      g.fillText(mode>=2?'pencuri #1: micro-stop TENUN-B (212x ≈ 9 jam/mgg!)':'dunia kelas: 85% — banyak ruang',18,H-28);}
+    mit.D.tex.needsUpdate=true;}
+  dash(0);
+  /* tablet validasi */
+  mit.tab=box(.3,.42,.05,0x18242f);mit.tab.position.set(-2.8,1.1,.6);scene.add(mit.tab);
+  actMesh(mit.tab,'VALID');
+  scene.add(label('TABLET VALIDASI',.55,'#5fd4ff').translateX(-2.8).translateY(1.55).translateZ(.6));
+  startSeq([
+   {type:'act',aid:'SENSOR',done:false,targets:()=>[mit.mesin[1]],
+    desc:'Pasang SENSOR di tiap mesin: status, counter, arus (klik mesin).',
+    why:'Tanpa membedah PLC mesin tua: CT clamp di motor utama (run/stop & beban dari pola arus), sensor proximity menghitung produk lewat, gateway mengirim via MQTT tiap 5 detik. Retrofit yang sopan — mesin 15 tahun pun bisa diajari bicara tanpa operasi besar.',
+    fx(){toast('📡 3 mesin tersensor: status + counter + arus → gateway.','ok',3000);}},
+   {type:'act',aid:'VALID',done:false,targets:()=>[mit.tab],
+    desc:'VALIDASI: cocokkan data sensor vs kenyataan 2 jam (klik tablet).',
+    why:'Dua jam berdiri di lantai mencocokkan: counter FINISHING menghitung dobel saat kain bergetar — bracket digeser, beres. Status TENUN-A telat 40 detik — threshold arus ditala. Ritual membosankan yang menentukan segalanya: dashboard dari data kotor lebih berbahaya dari tak ada dashboard.',
+    fx(){toast('✅ 2 koreksi (dobel & telat) — data kini = kenyataan.','ok',3000);}},
+   {type:'act',aid:'OEE',done:false,targets:()=>[mit.D.mesh],
+    desc:'Seminggu mengalir: baca OEE pertama line 2 (klik dashboard).',
+    why:'Availability 71% × performance 84% × quality 97% = OEE 58% — dunia kelas itu 85%. Angka yang menyakitkan tapi MEMBEBASKAN: untuk pertama kalinya rapat produksi punya fakta yang sama. "Sering berhenti, Pak" kini punya pengganti: tujuh puluh satu persen.',
+    fx(){dash(1);toast('📊 OEE perdana: 58% — kini rapat bicara angka.','ok',3000);}},
+   {type:'act',aid:'BONGKAR',done:false,targets:()=>[mit.D.mesh],
+    desc:'Drill down: BONGKAR pencuri kapasitas terbesar (klik dashboard).',
+    why:'Pareto downtime: bukan breakdown besar yang sesekali — melainkan micro-stop TENUN-B: 212 kali × 2,5 menit = 9 JAM seminggu, tak pernah tercatat laporan manual karena "cuma sebentar". Penyebab: benang putus di stasiun 4. Satu perbaikan tension guide ≈ +6 poin OEE. Pencuri paling licin selalu yang mengaku "cuma sebentar".',
+    fx(){dash(2);toast('🕵️ Micro-stop 212x = 9 jam/mgg — pencuri tertangkap angka!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Pabrik mulai bicara data!</b> Sensor sederhana, validasi jujur, OEE yang menyakitkan tapi membebaskan, dan pencuri 9 jam seminggu yang akhirnya tertangkap. Digitalisasi bukan soal teknologi mewah — soal berhenti menebak.');
+    setTimeout(()=>showWin('iot'),2200);});
+  const s2i=seq.steps[2],of2i=s2i.fx;s2i.fx=()=>{of2i();mit.D.mesh.userData.aid='BONGKAR';};
+  say('VOLTA di sini 📡 Rapat produksi tanpa angka adalah debat perasaan. Proyek hari ini: <b>sensor IIoT + satu metrik sakti bernama OEE</b>. Pasang, validasi, lalu biarkan angka membongkar pencurinya. Mulai!');
+  $('#modTitle').textContent='J02·M8 — IIoT & OEE';
+  $('#taskHead').textContent='YANG TAK TERUKUR TAK TERPERBAIKI';}
+MISSIONS.iot.build=buildIoT;
+Object.assign(REAL,{
+ iot:[
+  'Mulai dari 1 line pilot & metrik sederhana — proyek IIoT gagal paling sering karena terlalu rakus scope',
+  'Definisikan OEE secara tertulis (apa masuk planned downtime?) — beda definisi antar shift = perang angka',
+  'Pisahkan jaringan OT dari IT (VLAN/firewall) sejak hari pertama — sensor murah jangan jadi pintu peretas',
+  'Tampilkan OEE di lantai produksi (layar andon) — data yang disembunyikan di kantor tak mengubah perilaku'],
+});

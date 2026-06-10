@@ -833,3 +833,107 @@ Object.assign(REAL,{
   'Validasi pola palet dengan uji transport nyata (getaran truk) — rapi di gudang belum tentu utuh di jalan',
   'Audit berkala fungsi safety (kurtain, e-stop) terjadwal — perangkat keselamatan juga bisa menua'],
 });
+
+/* =====================================================================
+   MISI 8 — CYBERSECURITY OT: BENTENG DUNIA KONTROL
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ cyber:{lvl:'JALUR 16 · KONTROL & OTOMASI · MISI 8',icon:'🔐',title:'Cybersecurity OT: Benteng Dunia Kontrol',strict:true,
+  loc:'📍 Gudang distribusi · Pasca-insiden USB di PC HMI',
+  story:'Senin pagi yang mengubah segalanya: teknisi mencolok USB pribadi ke PC HMI "cuma mau ngecas" — antivirus kantor menjerit: malware. Untungnya jinak. Tapi pertanyaannya menggigil: PC itu TERSAMBUNG ke PLC line sortir, robot, dan konveyor. Dunia OT-mu — yang dirancang puluhan tahun dgn asumsi "tak ada orang jahat di jaringan" — baru saja sadar ia telanjang. Saatnya membangun benteng.',
+  goal:'Postur keamanan OT terbangun: insiden ditangani benar, jaringan tersegmentasi IT/OT dgn zona, akses & USB terkendali, dan tim terlatih merespons — tanpa menghentikan produksi.',
+  obj:['Tangani insiden USB: isolasi, bersihkan, belajar','Segmentasi jaringan: zona & conduit IT/OT','Kendalikan akses & latih respons insiden'],
+  learn:['Dunia OT berbeda mazhab dari IT: prioritasnya AVAILABILITY — mematikan server kantor itu wajar, mematikan PLC line = produksi mati: respons insiden OT punya koreografinya sendiri','Segmentasi zona & conduit: kantor (IT) dan kontrol (OT) dipisah firewall industrial, yang boleh lewat hanya yang terdaftar — malware kantor tak boleh bisa "melihat" PLC','PC HMI bukan PC biasa: USB dikunci, tak ada email/browser, patch diuji dulu di staging — kenyamanan kantor adalah pintu masuk bencana kontrol','Manusia tetap firewall pertama & terakhir: pelatihan, kebijakan USB, dan budaya melapor tanpa takut — teknisi yang jujur hari itu adalah pahlawan, bukan tersangka'],
+  next:['Pelajari standar keamanan OT (IEC 62443) & asesmen kesenjangannya','Dalami monitoring jaringan OT pasif (tanpa mengganggu kontrol)','Susun rencana respons insiden OT bersama produksi & manajemen']},
+});
+let mcy={};
+function buildCyber(){
+  freshScene(0x1d2a3a,0x0a121c);
+  cam={theta:.05,phi:1.16,r:8.5,target:new THREE.Vector3(0,1.7,-.8)};
+  const Z=room(0x39424c,0xc4cdd6,16,11);
+  /* PC HMI dgn USB */
+  mcy.pc=box(.7,.5,.1,0x2b3a4a);mcy.pc.position.set(-4.4,1.5,Z+.08);scene.add(mcy.pc);
+  actMesh(mcy.pc,'ISOLASI');
+  mcy.usb=box(.06,.04,.12,0xd83a3a);mcy.usb.position.set(-4.0,1.3,Z+.14);scene.add(mcy.usb);
+  scene.add(label('PC HMI — USB tertancap! ⚠',.65,'#ff8d8d').translateX(-4.4).translateY(2.1).translateZ(Z+.1));
+  /* rak PLC & robot controller */
+  const rak=boxT(1.6,2.0,.5,TEX.metal(),{metalness:.35});rak.position.set(-1.6,1.05,Z);scene.add(rak);
+  rak.add(label('PLC LINE + ROBOT CTRL',.65).translateY(1.3));
+  /* firewall industrial (baru) */
+  mcy.fw=box(.6,.3,.4,0xd87a20);mcy.fw.position.set(1.2,1.3,Z+.1);mcy.fw.visible=false;scene.add(mcy.fw);
+  mcy.fwBtn=box(.6,.4,.4,0xd87a20);mcy.fwBtn.position.set(4.6,.4,.8);scene.add(mcy.fwBtn);
+  actMesh(mcy.fwBtn,'SEGMEN');
+  scene.add(label('FIREWALL INDUSTRIAL (dus)',.6,'#ffd23f').translateX(4.6).translateY(.95).translateZ(.8));
+  /* diagram zona */
+  const frame=boxT(3.6,2.2,.16,TEX.metal(),{metalness:.4});frame.position.set(2.4,2.5,Z+.05);scene.add(frame);
+  frame.add(label('PETA JARINGAN',.8).translateY(1.35));
+  mcy.D=makeDisplay(3.3,1.9,520,300);
+  mcy.D.mesh.position.set(2.4,2.5,Z+.15);scene.add(mcy.D.mesh);
+  actMesh(mcy.D.mesh,'AKSES');
+  mcy.mode=0;
+  function peta(){
+    const g=mcy.D.g,W=520,H=300;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.font='600 14px Consolas';g.textAlign='left';
+    if(mcy.mode===0){
+      g.fillStyle='#ff5a5a';g.font='700 16px Consolas';
+      g.fillText('SEBELUM: satu jaringan rata',16,30);
+      g.strokeStyle='#5d748c';g.lineWidth=3;
+      g.beginPath();g.moveTo(40,90);g.lineTo(480,90);g.stroke();
+      ['email','kantor','HMI','PLC','robot'].forEach((t,i)=>{
+        g.fillStyle='#13202f';g.fillRect(40+i*92,110,76,40);
+        g.fillStyle=i<2?'#8aa3bd':'#ffd23f';g.fillText(t,52+i*92,135);});
+      g.fillStyle='#ff8d8d';g.fillText('malware kantor bisa "melihat" PLC — telanjang',16,H-20);}
+    else{
+      g.fillStyle='#46ff8e';g.font='700 16px Consolas';
+      g.fillText('SESUDAH: zona & conduit',16,30);
+      g.fillStyle='#13202f';g.fillRect(30,60,200,90);
+      g.fillStyle='#8aa3bd';g.fillText('ZONA IT (kantor)',42,82);
+      g.fillStyle='#13202f';g.fillRect(290,60,200,90);
+      g.fillStyle='#ffd23f';g.fillText('ZONA OT (kontrol)',302,82);
+      g.fillStyle='#d87a20';g.fillRect(238,85,46,40);
+      g.fillStyle='#0a1018';g.font='700 13px Consolas';g.fillText('FW',250,110);
+      g.fillStyle='#46ff8e';g.font='600 14px Consolas';
+      g.fillText('hanya 3 aturan lewat: historian, backup, NTP',30,190);
+      g.fillText('selebihnya: DITOLAK & dicatat',30,216);
+      if(mcy.mode>=2){g.fillStyle='#5fd4ff';
+        g.fillText('USB: port terkunci · akses: per-orang + log',30,252);}}
+    mcy.D.tex.needsUpdate=true;}
+  peta();
+  /* ruang drill */
+  mcy.drill=box(.5,.66,.04,0xffe8c0);mcy.drill.position.set(5.4,2.0,Z+.06);scene.add(mcy.drill);
+  actMesh(mcy.drill,'DRILL');
+  scene.add(label('TABLETOP DRILL',.6,'#ffd23f').translateX(5.4).translateY(2.55).translateZ(Z+.1));
+  startSeq([
+   {type:'act',aid:'ISOLASI',done:false,targets:()=>[mcy.pc],
+    desc:'Tangani insiden ala OT: ISOLASI tanpa mematikan produksi (klik PC).',
+    why:'Mazhab IT bilang: matikan mesinnya. Mazhab OT bertanya dulu: PC ini mengendalikan apa? Jawab: hanya tampilan — PLC tetap jalan mandiri. Maka: kabel jaringan PC dicabut (bukan power!), line tetap berproduksi, PC di-imaging untuk forensik, HMI cadangan naik. Insiden tertangani; produksi tak kehilangan satu kotak pun.',
+    fx(){mcy.usb.visible=false;
+      toast('🔌 PC diisolasi dari jaringan — line TETAP berjalan.','ok',3200);}},
+   {type:'act',aid:'SEGMEN',done:false,targets:()=>[mcy.fwBtn],
+    desc:'Bangun benteng: SEGMENTASI zona IT/OT dgn firewall industrial (klik dus).',
+    why:'Jaringan rata dibelah dua zona: kantor (email, browser — dunia liar) dan kontrol (PLC, HMI, robot — dunia steril), dipisah firewall industrial yang hanya melewatkan TIGA aturan terdaftar: data historian keluar, backup, sinkron waktu. Malware kantor kini menatap tembok. Dipasang saat jendela maintenance — produksi tak terinterupsi.',
+    fx(){mcy.fw.visible=true;mcy.fwBtn.visible=false;mcy.mode=1;peta();
+      toast('🧱 Zona IT|FW|OT berdiri — hanya 3 aturan boleh lewat.','ok',3200);}},
+   {type:'act',aid:'AKSES',done:false,targets:()=>[mcy.D.mesh],
+    desc:'Kunci pintu-pintu kecil: USB, akun, remote (klik peta).',
+    why:'Port USB PC OT dikunci kebijakan + fisik (yang butuh transfer: USB khusus ber-scan di kios transfer), akun bersama "operator/operator" dipecah jadi per-orang ber-log, akses remote vendor lewat jalur khusus yang DINYALAKAN hanya saat diperlukan. Pintu besar sudah berbenteng; pintu kecil inilah yang biasanya dilupakan.',
+    fx(){mcy.mode=2;peta();
+      toast('🔑 USB terkunci · akun per-orang · remote on-demand ✓','ok',3200);}},
+   {type:'act',aid:'DRILL',done:false,targets:()=>[mcy.drill],
+    desc:'Benteng butuh penjaga terlatih: TABLETOP DRILL (klik lembar).',
+    why:'Skenario di atas meja: "HMI semua line menampilkan ransom note — apa yang kalian lakukan dalam 10 menit pertama?" Tim belajar koreografinya: line bisa jalan manual? siapa memutuskan isolasi? siapa menelepon siapa? Dan satu keputusan budaya: teknisi pelapor USB diberi APRESIASI terbuka — pelapor jujur berikutnya sedang diciptakan hari ini.',
+    fx(){toast('🎭 Drill tuntas + pelapor diapresiasi — benteng punya penjaga.','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Dunia kontrolmu tak lagi telanjang!</b> Insiden dijawab tanpa menghentikan produksi, zona berdinding firewall, pintu-pintu kecil terkunci, dan manusianya terlatih plus dihargai kejujurannya. Otomasi yang hebat kini juga otomasi yang berbenteng.');
+    setTimeout(()=>showWin('cyber'),2200);});
+  say('VOLTA di sini 🔐 Senin pagi: USB "cuma ngecas" + malware + PC yang tersambung ke SEMUA PLC-mu. Dunia OT dirancang dgn asumsi semua orang baik — saatnya tumbuh dewasa. Bangun bentengnya, tanpa mematikan produksi!');
+  $('#modTitle').textContent='J16·M8 — Cybersecurity OT';
+  $('#taskHead').textContent='AVAILABILITY ADALAH RAJA';}
+MISSIONS.cyber.build=buildCyber;
+Object.assign(REAL,{
+ cyber:[
+  'Mulai dari asset inventory OT — tak bisa melindungi yang tak diketahui keberadaannya',
+  'Patch OT diuji di staging & dijadwalkan di jendela maintenance — bukan auto-update ala kantor',
+  'Monitoring pasif (network TAP) lebih aman dari scanning aktif — perangkat OT tua bisa crash di-scan',
+  'Latih drill respons bersama produksi minimal tahunan — keputusan "matikan atau jalan terus" jangan lahir saat panik'],
+});

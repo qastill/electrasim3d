@@ -709,3 +709,98 @@ Object.assign(REAL,{
   'Lindungi privasi: analisis pada agregat/anonim, akses data individu berjenjang',
   'Ukur keberhasilan program per segmen (uplift) dan umpankan kembali ke segmentasi berikutnya'],
 });
+
+/* =====================================================================
+   MISI 8 — GENAI UTILITY: ASISTEN AI YANG BISA DIPERCAYA
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ genai:{lvl:'JALUR 05 · ENERGY ANALYST · MISI 8',icon:'🤖',title:'GenAI Utility: Asisten AI yang Bisa Dipercaya',strict:false,
+  loc:'📍 Kantor UP3 · Proyek asisten AI internal',
+  story:'Manajemen melihat demo chatbot & langsung bermimpi: "Buatkan AI yang menjawab semua pertanyaan SOP teknisi!" Kamu — kini analis paling senior — tahu kebenaran di balik demo: LLM yang dilepas tanpa pengawal akan MENGARANG nomor SOP dengan percaya diri. Misi: bangun asisten yang menjawab dari dokumen resmi (RAG), tahu kapan harus diam, dan diuji sebelum dipercaya teknisi lapangan.',
+  goal:'Asisten AI internal layak rilis: menjawab berdasar dokumen resmi dengan kutipan sumber, lulus uji halusinasi, dan punya pagar untuk pertanyaan berbahaya.',
+  obj:['Siapkan basis pengetahuan: kurasi dokumen resmi','Bangun RAG: jawab dengan kutipan, diam saat tak tahu','Uji halusinasi & pasang guardrails keselamatan'],
+  learn:['LLM tanpa konteks adalah pencerita ulung, bukan ensiklopedia: ia melengkapi pola — termasuk MENGARANG nomor SOP yang terdengar meyakinkan','RAG (retrieval augmented generation) menjawab dari dokumenMU: pertanyaan → cari pasal relevan → AI merangkum DENGAN kutipan — sumber bisa diklik & diverifikasi','Jawaban terbaik kedua adalah "saya tidak menemukan dasarnya di dokumen": AI yang berani diam lebih aman dari yang selalu menjawab','Untuk domain berisiko (manuver, K3), guardrails wajib: AI menjelaskan prosedur tapi MENOLAK memberi perintah eksekusi — keputusan berbahaya tetap milik manusia berwenang'],
+  next:['Pelajari evaluasi sistematis (golden questions & skor faithfulness)','Dalami akses berjenjang: dokumen rahasia tak boleh bocor lewat jawaban','Eksplorasi AI multimodal: foto nameplate → data terstruktur']},
+});
+let mga={};
+function buildGenAI(){
+  freshScene(0x1d2a3a,0x0a121c);
+  cam={theta:0,phi:1.16,r:8,target:new THREE.Vector3(0,2,-1)};
+  const floor=boxT(16,.1,10,TEX.concrete());floor.position.y=-.05;scene.add(floor);
+  const wall=boxT(14,4.6,.2,TEX.metal(),{metalness:.2});wall.position.set(0,2.3,-3.3);scene.add(wall);
+  /* layar chat besar */
+  const frame=boxT(4.8,2.8,.16,TEX.metal(),{metalness:.4});frame.position.set(-1.4,2.4,-3.2);scene.add(frame);
+  mga.D=makeDisplay(4.5,2.5,620,360);
+  mga.D.mesh.position.set(-1.4,2.4,-3.1);scene.add(mga.D.mesh);
+  actMesh(mga.D.mesh,'NAIF');
+  scene.add(label('ASISTEN AI INTERNAL — DEV',.9).translateX(-1.4).translateY(4.05).translateZ(-3.1));
+  mga.mode=0;
+  function chat(){
+    const g=mga.D.g,W=620,H=360;
+    g.fillStyle='#101820';g.fillRect(0,0,W,H);
+    g.font='600 15px Consolas';g.textAlign='left';
+    function bubble(y,who,txt,col){
+      g.fillStyle=who==='T'?'#1a2c40':'#13202f';
+      g.fillRect(who==='T'?40:20,y,W-80,52);
+      g.fillStyle=col||'#eaf2fb';
+      txt.forEach((t,i)=>g.fillText(t,(who==='T'?52:32),y+22+i*22));}
+    bubble(20,'T',['Teknisi: "Berapa jarak aman kerja 20 kV?"']);
+    if(mga.mode===0){
+      bubble(90,'A',['AI (naif): "Sesuai SOP-DIS-0247 jarak aman','20 kV adalah 45 cm."'],'#ff8d8d');
+      g.fillStyle='#ff5a5a';g.font='700 16px Consolas';
+      g.fillText('⚠ SOP-DIS-0247 TIDAK ADA — nomor & angka DIKARANG',24,180);
+      g.font='600 14px Consolas';g.fillStyle='#8aa3bd';
+      g.fillText('meyakinkan, rapi… dan berbahaya',24,206);}
+    else if(mga.mode>=1){
+      bubble(90,'A',['AI (RAG): "Minimal 60 cm utk 20 kV','— sumber: SOP-K3-012 §4.2 [lihat]"'],'#8df0b8');
+      if(mga.mode>=2){
+        bubble(170,'T',['Teknisi: "Kapan tarif tenaga listrik naik?"']);
+        bubble(240,'A',['AI: "Tidak ditemukan dasarnya di dokumen','internal — saya tidak bisa menjawab."'],'#ffd23f');}}
+    mga.D.tex.needsUpdate=true;}
+  chat();
+  /* rak dokumen */
+  mga.dok=box(.7,.9,.3,0x8a6a3a);mga.dok.position.set(2.6,2.6,-3.2);scene.add(mga.dok);
+  actMesh(mga.dok,'KURASI');
+  scene.add(label('KORPUS: 412 DOKUMEN',.6,'#5fd4ff').translateX(2.6).translateY(3.35).translateZ(-3.1));
+  /* kartu uji & guardrail */
+  mga.uji=box(.9,.5,.08,0x8a5a2a);mga.uji.position.set(2.6,1.6,-3.25);scene.add(mga.uji);
+  actMesh(mga.uji,'UJI');
+  scene.add(label('UJI 100 SOAL',.55,'#e8c890').translateX(2.6).translateY(2.0).translateZ(-3.2));
+  mga.guard=box(.9,.5,.08,0x8a2a2a);mga.guard.position.set(4.0,1.6,-3.25);scene.add(mga.guard);
+  actMesh(mga.guard,'GUARD');
+  scene.add(label('GUARDRAILS',.55,'#ff9d9d').translateX(4.0).translateY(2.0).translateZ(-3.2));
+  startSeq([
+   {type:'act',aid:'NAIF',done:false,targets:()=>[mga.D.mesh],
+    desc:'Demo jujur dulu: tanya AI POLOS tanpa pengawal (klik layar).',
+    why:'"Jarak aman 20 kV?" — AI menjawab fasih: SOP-DIS-0247, 45 cm. Meyakinkan, rapi… dan SEPENUHNYA KARANGAN: SOP itu tak ada, angkanya salah. Inilah halusinasi: model melengkapi pola, bukan membuka arsip. Demo lima menit ini menyelamatkan proyek dari rilis yang mencelakai teknisi.',
+    fx(){toast('🎭 AI mengarang SOP fiktif dengan pede — bukti terkumpul.','bad',3200);}},
+   {type:'act',aid:'KURASI',done:false,targets:()=>[mga.dok],
+    desc:'Bangun fondasi: KURASI korpus dokumen resmi (klik rak).',
+    why:'412 dokumen disaring: hanya SOP & instruksi kerja TERBARU yang masuk (versi lama justru racun — AI tak tahu mana kadaluarsa), dipotong per pasal, di-indeks untuk pencarian. Kualitas asisten ditentukan di rak ini: AI hanya sebaik lemari arsipnya.',
+    fx(){toast('📚 412 dok → 290 valid terindeks per pasal — fondasi sah.','ok',3000);}},
+   {type:'act',aid:'RAG',done:false,targets:()=>[mga.D.mesh],
+    desc:'Pasang RAG: jawab DARI dokumen + kutipan + berani diam (klik layar).',
+    why:'Pertanyaan kini lewat jalur baru: cari pasal relevan → AI merangkum HANYA dari pasal itu → jawaban tampil dengan sumber yang bisa diklik. Jarak aman 20 kV: "60 cm — SOP-K3-012 §4.2". Dan pertanyaan di luar korpus dijawab dengan kalimat terpenting: "tidak ditemukan dasarnya." AI yang tahu batasnya = AI yang bisa dipercaya.',
+    fx(){mga.mode=2;chat();toast('📎 Jawaban berkutipan + berani bilang tidak tahu ✓','ok',3200);}},
+   {type:'act',aid:'UJI',done:false,targets:()=>[mga.uji],
+    desc:'UJI sistematis: 100 soal emas dari para ahli (klik kartu).',
+    why:'100 pertanyaan dengan jawaban kunci dari engineer senior: akurasi 91%, kutipan benar 96%, dan NOL halusinasi nomor SOP (yang salah kini menjawab "tidak ditemukan" — gagal yang aman). 9% yang keliru dianalisis: kebanyakan dokumen ambigu — umpan balik untuk merapikan SOP-nya sendiri. AI menguji arsipmu balik.',
+    fx(){toast('🧪 91% akurat · 0 halusinasi · gagal = diam (aman).','ok',3200);}},
+   {type:'act',aid:'GUARD',done:false,targets:()=>[mga.guard],
+    desc:'Pagar terakhir: GUARDRAILS untuk domain berbahaya (klik kartu).',
+    why:'Aturan keras dipasang: pertanyaan manuver/K3 dijawab penjelasan prosedur + peringatan "eksekusi wajib izin dispatcher/pengawas" — AI MENOLAK menjadi pemberi perintah. Plus akses berjenjang & log semua percakapan. Rilis ke 60 teknisi: asisten yang membantu mencari, bukan menggantikan yang berwenang.',
+    fx(){toast('🛡️ Guardrails aktif — rilis ke 60 teknisi. AI yang tahu diri!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Asisten AI yang layak dipercaya nyawa orang!</b> Halusinasi dibuktikan dulu, dijawab dengan RAG berkutipan, diuji 100 soal, dipagari di domain bahaya. GenAI di dunia listrik bukan soal kecanggihan — soal tahu batas.');
+    setTimeout(()=>showWin('genai'),2200);});
+  const s0g=seq.steps[0],of0g=s0g.fx;s0g.fx=()=>{of0g();mga.D.mesh.userData.aid='RAG';};
+  say('VOLTA di sini 🤖 (ya, AI membicarakan AI!) Manajemen mau chatbot SOP — tapi LLM polos akan <b>mengarang nomor SOP dengan percaya diri</b>. Buktikan dulu bahayanya, lalu bangun yang benar: RAG, kutipan, dan keberanian untuk diam.');
+  $('#modTitle').textContent='J05·M8 — GenAI untuk Utility';
+  $('#taskHead').textContent='BERKUTIPAN & BERANI DIAM';}
+MISSIONS.genai.build=buildGenAI;
+Object.assign(REAL,{
+ genai:[
+  'Bangun golden test set bersama ahli domain SEBELUM rilis & jalankan ulang tiap update model/korpus',
+  'Tata kelola dokumen adalah separuh proyek: satu sumber kebenaran, versi terbaru, pemilik jelas',
+  'Log semua tanya-jawab untuk audit & perbaikan — termasuk yang dijawab "tidak tahu"',
+  'Sosialisasikan batas AI ke pengguna: asisten pencari dasar, bukan pengganti izin & kewenangan'],
+});

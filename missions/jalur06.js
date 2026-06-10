@@ -656,3 +656,83 @@ Object.assign(REAL,{
   'Auditor internal dilatih & independen dari area yang diauditnya',
   'Siapkan bukti objektif (log, kalibrasi, notulen) — sertifikasi menilai jejak, bukan niat'],
 });
+
+/* =====================================================================
+   MISI 8 — AUDIT DATA CENTER: MEMBURU PUE
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ pue:{lvl:'JALUR 06 · ENERGY AUDITOR · MISI 8',icon:'🖥️',title:'Audit Data Center: Memburu PUE',strict:false,
+  loc:'📍 DC perusahaan daerah · 120 rak, tagihan menggila',
+  story:'Klien era baru: data center 120 rak yang tagihannya menyalip pabrik. Dunia ini punya metrik kebangsawanannya sendiri: PUE — power usage effectiveness: total listrik gedung dibagi listrik yang BENAR-BENAR sampai ke server. PUE 2,0 artinya tiap watt komputasi dikawal satu watt "pengawal" (pendingin, UPS, lampu). Auditor terbaik dunia menurunkannya mendekati 1: hari ini giliranmu berburu.',
+  goal:'PUE terukur benar, tiga pemboros khas DC terbongkar (aliran udara, suhu setpoint, UPS), dan PUE turun terverifikasi tanpa satu server pun overheat.',
+  obj:['Ukur PUE aktual dengan batas pengukuran yang benar','Bongkar aliran udara: hot/cold aisle & kebocoran','Naikkan setpoint sesuai standar & optimasi UPS'],
+  learn:['PUE = total fasilitas ÷ daya IT: 2,1 = boros, 1,5 = rata-rata, <1,3 = kelas dunia — satu angka yang merangkum seluruh "pengawal"','Musuh #1 DC tropis: udara dingin & panas yang BERCAMPUR — server menghisap udara panas tetangganya, pendingin bekerja dua kali untuk hasil setengah','Standar termal modern (ASHRAE) mengizinkan suhu masuk server sampai 27°C — DC yang membeku di 18°C membakar uang demi kekhawatiran era 1990','UPS punya kurva efisiensi: beban 20% bisa hanya 85% efisien — konsolidasi & mode eco mengembalikan persen-persen yang diam-diam hilang'],
+  next:['Pelajari containment penuh & economizer untuk iklim tropis','Dalami WUE & metrik air — pendingin juga minum','Eksplorasi liquid cooling: era chip yang tak bisa lagi didinginkan udara']},
+});
+let mpe={};
+function buildPUE(){
+  freshScene(0x9fb6c8,0x0f1820);
+  cam={theta:.05,phi:1.16,r:8.5,target:new THREE.Vector3(0,1.6,-.8)};
+  const Z=room(0x39424c,0xc4cdd6,16,11);
+  /* deretan rak server */
+  mpe.raks=[];
+  for(let i=0;i<4;i++){
+    const r=box(.8,2.0,1.0,0x18242f);r.position.set(-4.4+i*1.3,1.05,-1.8);scene.add(r);
+    for(let j=0;j<6;j++){const led=box(.7,.04,.02,0x2a72c8,{emissive:0x2a72c8,emissiveIntensity:.6});
+      led.position.set(-4.4+i*1.3,.4+j*.3,-1.28);scene.add(led);}
+    mpe.raks.push(r);}
+  scene.add(label('120 RAK (4 tampak) — lorong campur aduk',.75).translateX(-3).translateY(2.6).translateZ(-1.8));
+  actMesh(mpe.raks[1],'AISLE');
+  /* CRAC unit */
+  mpe.crac=boxT(1.2,2.0,.8,TEX.metal(),{metalness:.35});mpe.crac.position.set(-.4,1.05,-2.2);scene.add(mpe.crac);
+  actMesh(mpe.crac,'SUHU');
+  scene.add(label('CRAC — setpoint 18°C ❄',.65,'#9cc4ff').translateX(-.4).translateY(2.4).translateZ(-2.2));
+  /* UPS room */
+  mpe.ups=boxT(1.4,1.6,.9,TEX.metal(),{metalness:.35});mpe.ups.position.set(2.2,.85,-2.2);scene.add(mpe.ups);
+  actMesh(mpe.ups,'UPS');
+  scene.add(label('2x UPS 300 kVA',.65).translateX(2.2).translateY(2.0).translateZ(-2.2));
+  /* layar PUE */
+  mpe.D=makeDisplay(2.2,1.3,440,260);
+  mpe.D.mesh.position.set(5.0,2.3,-2.2);scene.add(mpe.D.mesh);
+  actMesh(mpe.D.mesh,'UKUR');
+  scene.add(label('METER PUE',.75,'#5fd4ff').translateX(5.0).translateY(3.1).translateZ(-2.2));
+  function layar(p,note,col){
+    dispText(mpe.D,['PUE '+p,note||''],[col||'#ff5a5a','#8aa3bd']);}
+  layar('?','belum terukur','#7d8f84');
+  startSeq([
+   {type:'act',aid:'UKUR',done:false,targets:()=>[mpe.D.mesh],
+    desc:'Ukur PUE dengan batas yang benar: total vs daya IT (klik meter).',
+    why:'Meter utama: 740 kW masuk gedung; meter PDU (yang benar-benar dimakan server): 352 kW → PUE 2,10 — tiap watt komputasi mengongkosi 1,1 watt pengawal. Batas ukur menentukan kejujuran angka: PUE yang "bagus" karena salah meter adalah kebohongan yang menjalar ke semua keputusan.',
+    fx(){layar('2,10','740 kW total · 352 kW IT');
+      toast('📏 PUE 2,10 — separuh tagihan untuk para pengawal.','bad',3000);}},
+   {type:'act',aid:'AISLE',done:false,targets:()=>[mpe.raks[1]],
+    desc:'Bongkar pemborosan #1: ALIRAN UDARA lorong (klik rak).',
+    why:'Termal kamera & asap uji bercerita: rak menghadap arah campur aduk — buangan panas rak A langsung dihisap rak B (resirkulasi 31%!), slot kosong tanpa blanking panel jadi jalan pintas udara. Solusi murah meriah: susun hot/cold aisle, pasang 240 blanking panel, tutup celah kabel. Udara diatur seperti lalu lintas — bukan dibiarkan berkerumun.',
+    fx(){toast('🌬️ Hot/cold aisle + blanking → resirkulasi 31%→6%.','ok',3200);}},
+   {type:'act',aid:'SUHU',done:false,targets:()=>[mpe.crac],
+    desc:'Pemborosan #2: setpoint 18°C era 1990 — naikkan dengan ilmu (klik CRAC).',
+    why:'Standar termal modern: server sehat dengan udara masuk sampai 27°C. Dengan aliran udara yang kini rapi, setpoint dinaikkan bertahap 18→24°C sambil memantau suhu masuk tiap rak: semua hijau. Tiap derajat ≈ 3-4% hemat pendingin — DC yang membeku ternyata hanya membakar uang demi kekhawatiran kuno.',
+    fx(){toast('🌡️ 18→24°C bertahap — semua inlet rak aman <27°C ✓','ok',3200);}},
+   {type:'act',aid:'UPS',done:false,targets:()=>[mpe.ups],
+    desc:'Pemborosan #3: dua UPS setengah menganggur (klik UPS).',
+    why:'Dua UPS 300 kVA masing-masing berbeban 25% — zona terburuk kurva efisiensinya (86%). Konsolidasi ke konfigurasi yang tetap redundan namun berbeban sehat + mode eco tervalidasi: efisiensi naik ke 95%. Sembilan persen dari ratusan kW, 24 jam, 365 hari — para pengawal kini ikut berhemat.',
+    fx(){toast('🔋 UPS 86→95% efisien — redundansi tetap utuh.','ok',3000);}},
+   {type:'act',aid:'VERIF',done:false,targets:()=>[mpe.D.mesh],
+    desc:'Sebulan kemudian: VERIFIKASI PUE baru (klik meter).',
+    why:'PUE 2,10 → 1,58: dari 740 kW menjadi 556 kW untuk daya IT yang sama — hemat ±Rp 2,4 miliar setahun, tanpa satu server pun melambat atau memanas. Dan ilmu M&V-mu memastikan klaim ini tahan audit. DC ini belum kelas dunia — tapi sudah berhenti jadi kelas boros.',
+    fx(){layar('1,58','556 kW · −Rp 2,4 M/thn ✓','#46ff8e');
+      toast('🏆 PUE 2,10 → 1,58 — Rp 2,4 M/thn pulang!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Para pengawal berhasil dirampingkan!</b> Udara diatur seperti lalu lintas, suhu dinaikkan dengan ilmu, UPS keluar dari zona malasnya. PUE 1,58 — dan server-server itu bahkan tak menyadari ada yang berubah.');
+    setTimeout(()=>showWin('pue'),2200);});
+  const s0e=seq.steps[0],of0e=s0e.fx;s0e.fx=()=>{of0e();mpe.D.mesh.userData.aid='VERIF';};
+  say('VOLTA di sini 🖥️ Klien zaman baru: <b>data center yang tagihannya menyalip pabrik</b>. Metrik buruannya: PUE — berapa watt pengawal per watt komputasi. Tiga pemboros klasik menunggu. Ukur dulu!');
+  $('#modTitle').textContent='J06·M8 — Audit Data Center';
+  $('#taskHead').textContent='BURU PUE MENDEKATI 1';}
+MISSIONS.pue.build=buildPUE;
+Object.assign(REAL,{
+ pue:[
+  'Sepakati batas pengukuran PUE tertulis (kategori pengukuran) — perbandingan antar waktu wajib apel-ke-apel',
+  'Perubahan suhu/airflow dilakukan bertahap dgn pemantauan inlet per rak — uptime adalah KPI #1 klien DC',
+  'Validasi mode eco UPS terhadap kebutuhan ride-through beban IT kritis sebelum diaktifkan',
+  'PUE dipantau kontinu bulanan (musiman!) — angka sekali ukur menipu di iklim tropis'],
+});

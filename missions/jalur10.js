@@ -675,3 +675,107 @@ Object.assign(REAL,{
   'Struktur lebih tinggi = beban angin lebih besar: hitung pondasi & sertifikasi strukturnya',
   'Libatkan dinas pertanian & kelompok tani sejak desain — adopsi sosial menentukan umur proyek'],
 });
+
+/* =====================================================================
+   MISI 8 — DRONE & AI: INSPEKSI PLTS DARI LANGIT
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ drone:{lvl:'JALUR 10 · PV & SOLAR · MISI 8',icon:'🚁',title:'Drone & AI: Inspeksi PLTS dari Langit',strict:false,
+  loc:'📍 PLTS 50 MWp · Inspeksi tahunan 110.000 panel',
+  story:'Ladang 50 MWp-mu punya 110.000 panel — inspeksi manual dengan thermal kamera genggam butuh tiga bulan dan sepasang lutut baja. Era baru tiba di kotak peli-case: DRONE thermal + AI. Satu penerbangan memotret ribuan panel; algoritma menandai yang demam. Tapi seperti semua alat hebat: hasilnya hanya sebaik perencanaan terbang & validasi manusianya.',
+  goal:'Inspeksi udara tuntas: rencana terbang & izin benar, kondisi pemotretan valid, AI menandai anomali, divalidasi lapangan, dan laporan per-panel terbit dgn prioritas perbaikan.',
+  obj:['Rencanakan misi: izin, jalur, parameter thermal','Terbang pada kondisi valid & kumpulkan data','Validasi temuan AI di darat & terbitkan prioritas'],
+  learn:['Thermal udara valid hanya pada kondisinya: irradiance tinggi (>600 W/m²), langit cerah, sudut kamera benar — terbang asal = ribuan foto cantik tanpa makna diagnostik','AI mengklasifikasi pola panas: hotspot sel, string mati (sejajar dingin), diode bypass, soiling — ribuan panel tersaring jadi puluhan tersangka dalam semalam','AI menandai, manusia memvonis: validasi sampel di darat mengukur false positive — laporan tanpa validasi adalah daftar tebakan yang rapi','Hasil per-panel masuk peta digital aset: inspeksi tahun depan membandingkan panel yang SAMA — degradasi jadi cerita berseri, bukan potret lepas'],
+  next:['Pelajari regulasi penerbangan drone komersial & sertifikasi pilot','Dalami radiometric thermal: membaca suhu absolut, bukan sekadar warna','Eksplorasi inspeksi otomatis terjadwal: drone-in-a-box']},
+});
+let mdr={};
+function buildDrone(){
+  freshScene(0xcfe2f0,0x16242f);
+  cam={theta:.1,phi:1.1,r:11,target:new THREE.Vector3(0,2,-1)};
+  const ground=boxT(28,.1,15,TEX.gravel());ground.position.y=-.05;scene.add(ground);
+  /* ladang panel */
+  for(let r=0;r<3;r++)for(let c=0;c<6;c++){
+    const p=box(2.0,.05,1.0,0x16263e,{roughness:.25,metalness:.5});
+    p.position.set(-8+c*2.5,.75,-4+r*1.7);p.rotation.x=-.28;scene.add(p);}
+  scene.add(label('50 MWp · 110.000 PANEL',.9).translateX(-2).translateY(2.4).translateZ(-3));
+  /* drone */
+  mdr.drone=new THREE.Group();
+  const bodyD=box(.4,.12,.4,0x18242f);mdr.drone.add(bodyD);
+  [[-.3,-.3],[.3,-.3],[-.3,.3],[.3,.3]].forEach(o=>{
+    const arm=box(.25,.04,.04,0x444b55);arm.position.set(o[0]*.6,.05,o[1]*.6);mdr.drone.add(arm);
+    const rotor=cyl(.14,.14,.02,0x8aa3bd,10,{transparent:true,opacity:.5});
+    rotor.position.set(o[0],.1,o[1]);mdr.drone.add(rotor);});
+  const gimbal=box(.12,.12,.12,0xd8b020);gimbal.position.y=-.12;mdr.drone.add(gimbal);
+  mdr.drone.position.set(5.5,.8,1.5);scene.add(mdr.drone);
+  actMesh(bodyD,'TERBANG');
+  scene.add(label('DRONE THERMAL',.65,'#5fd4ff').translateX(5.5).translateY(1.5).translateZ(1.5));
+  /* ground station */
+  mdr.gs=box(.6,.42,.08,0x2b3a4a);mdr.gs.position.set(7,1.0,.2);scene.add(mdr.gs);
+  actMesh(mdr.gs,'RENCANA');
+  const tbl=boxT(1.0,.07,.6,TEX.wood());tbl.position.set(7,.92,.2);scene.add(tbl);
+  const tleg=boxT(.08,.92,.08,TEX.wood());tleg.position.set(7,.46,.2);scene.add(tleg);
+  scene.add(label('GROUND STATION',.6,'#5fd4ff').translateX(7).translateY(1.5).translateZ(.2));
+  /* layar AI hasil */
+  const frame=boxT(3.4,2.0,.16,TEX.metal(),{metalness:.4});frame.position.set(0,2.6,3.2);frame.rotation.y=Math.PI;scene.add(frame);
+  mdr.D=makeDisplay(3.1,1.7,520,300);
+  mdr.D.mesh.position.set(0,2.6,3.1);mdr.D.mesh.rotation.y=Math.PI;scene.add(mdr.D.mesh);
+  actMesh(mdr.D.mesh,'AI');
+  scene.add(label('AI ANALYTICS',.8,'#5fd4ff').translateY(3.85).translateZ(3.1));
+  mdr.mode=0;mdr.fly=false;mdr.t=0;
+  function layar(){
+    const g=mdr.D.g,W=520,H=300;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.font='600 15px Consolas';g.textAlign='left';
+    if(mdr.mode===0){g.fillStyle='#5d748c';g.font='700 16px Consolas';
+      g.fillText('menunggu data penerbangan…',20,H/2);}
+    else{
+      /* mosaic thermal */
+      for(let i=0;i<60;i++){
+        const x=20+(i%12)*40,y=40+Math.floor(i/12)*40;
+        const anom=[7,23,38,38,51].includes(i);
+        g.fillStyle=anom?'#ff8d3a':'#2a4a6a';
+        g.fillRect(x,y,34,30);}
+      g.fillStyle='#ffd23f';g.font='700 16px Consolas';
+      g.fillText(mdr.mode===1?'AI: 64 anomali dari 110.000 panel':'TERVALIDASI: 58 nyata · laporan terbit',20,26);
+      if(mdr.mode===2){g.fillStyle='#46ff8e';g.font='600 14px Consolas';
+        g.fillText('hotspot 31 · string mati 2 · diode 11 · soiling 14',20,H-16);}}
+    mdr.D.tex.needsUpdate=true;}
+  layar();
+  moduleTick=(dt,T)=>{if(mdr.fly){mdr.t+=dt;
+    mdr.drone.position.x=-6+((mdr.t*2.5)%14);
+    mdr.drone.position.y=3.2;mdr.drone.position.z=-4+Math.floor((mdr.t*2.5)/14)%3*1.7;
+    mdr.drone.children.forEach((c,i)=>{if(i>=5&&i<9)c.rotation.y+=dt*40;});}};
+  startSeq([
+   {type:'act',aid:'RENCANA',done:false,targets:()=>[mdr.gs],
+    desc:'RENCANAKAN misi: izin, jalur, parameter thermal (klik ground station).',
+    why:'Izin kawasan udara diurus, pilot bersertifikat, lalu parameter yang menentukan validitas: ketinggian 40 m (resolusi 3 cm/piksel — cukup melihat satu sel), overlap 70%, kamera tegak lurus panel, dan JADWAL: jam 11-13 saat irradiance >600 W/m² — panel bermasalah hanya "demam" saat bekerja keras. Misi thermal direncanakan seperti operasi: salah jam = data sia-sia.',
+    fx(){toast('🗺️ Izin ✓ jalur 40m ✓ jadwal irradiance tinggi ✓','ok',3200);}},
+   {type:'act',aid:'TERBANG',done:false,targets:()=>[mdr.drone.children[0]],
+    desc:'TERBANGKAN: 32 menit untuk 110.000 panel (klik drone).',
+    why:'Langit cerah, 870 W/m² — GO. Drone menyusuri jalur otomatis: dua kamera (thermal + visual) memotret serempak, RTK menandai posisi tiap frame presisi sentimeter. Tiga bulan kerja lutut manusia terselesaikan dalam setengah jam terbang — tapi ingat: ini baru pengumpulan; kecerdasan datang setelah mendarat.',
+    fx(){mdr.fly=true;
+      toast('🚁 4.180 pasang foto thermal+visual ber-RTK terkumpul.','ok',3200);}},
+   {type:'act',aid:'AI',done:false,targets:()=>[mdr.D.mesh],
+    desc:'Proses semalam: baca temuan AI (klik layar).',
+    why:'Algoritma memilah pola panas: 64 anomali tertanda — hotspot sel (titik panas tunggal), 2 string DINGIN sejajar (mati — tak bekerja sama sekali!), diode bypass aktif (sepertiga panel hangat), dan pola soiling. Dari 110.000 menjadi 64: AI bukan menggantikan inspektor — ia membuang 99,9% pekerjaan membosankannya.',
+    fx(){mdr.fly=false;mdr.mode=1;layar();
+      toast('🤖 64 tersangka dari 110.000 panel — saatnya validasi.','ok',3200);}},
+   {type:'act',aid:'VALID',done:false,targets:()=>[mdr.D.mesh],
+    desc:'AI menandai, manusia memvonis: VALIDASI sampel di darat (klik layar).',
+    why:'20 sampel didatangi dgn thermal genggam & IV-tracer: 18 benar, 2 false positive (pantulan awan tipis) — akurasi 90%, bias diketahui. Laporan final: 58 temuan nyata ber-prioritas (2 string mati = rugi terbesar, perbaiki minggu ini!), tiap panel ber-ID & koordinat, masuk peta aset untuk dibandingkan tahun depan. Dari langit ke spreadsheet ke obeng: lingkaran inspeksi modern.',
+    fx(){mdr.mode=2;layar();
+      toast('📋 58 valid ber-prioritas — 2 string mati dieksekusi dulu!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>110.000 panel terperiksa dalam sehari!</b> Misi direncanakan seperti operasi, drone memotret saat panel "berkeringat", AI menyaring, manusia memvonis. Inspeksi modern: lutut diganti baling-baling, kebosanan diganti algoritma — dan keputusan tetap milik engineer.');
+    setTimeout(()=>showWin('drone'),2200);});
+  const s2d=seq.steps[2],of2d2=s2d.fx;s2d.fx=()=>{of2d2();mdr.D.mesh.userData.aid='VALID';};
+  say('VOLTA di sini 🚁 110.000 panel vs sepasang lutut manusia — tidak adil. Era baru di peli-case: <b>drone thermal + AI</b>. Tapi ingat: data hanya valid bila terbangnya benar. Rencanakan dulu!');
+  $('#modTitle').textContent='J10·M8 — Drone & AI Inspeksi';
+  $('#taskHead').textContent='AI MENANDAI, MANUSIA MEMVONIS';}
+MISSIONS.drone.build=buildDrone;
+Object.assign(REAL,{
+ drone:[
+  'Patuh regulasi penerbangan drone (izin wilayah, ketinggian, sertifikasi pilot) — legalitas dulu',
+  'Catat kondisi saat terbang (irradiance, suhu, angin) di metadata — interpretasi thermal bergantung padanya',
+  'Bangun baseline: inspeksi pertama adalah pembanding seumur hidup aset — konsistensi parameter penting',
+  'Gabungkan dgn data inverter/string monitoring — anomali thermal + data listrik = vonis paling kuat'],
+});

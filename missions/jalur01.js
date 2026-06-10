@@ -697,3 +697,99 @@ Object.assign(REAL,{
   'Gunakan format klasifikasi bahaya yang konsisten (C1/C2/C3 ala EICR) agar prioritas jelas',
   'Jangan menambal instalasi yang isolasinya tamat — rewiring lebih murah dari kebakaran'],
 });
+
+/* =====================================================================
+   MISI 8 — DESAIN DIGITAL: GAMBAR DULU, PASANG SEKALI
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ desain:{lvl:'JALUR 01 · INSTALASI BANGUNAN · MISI 8',icon:'📐',title:'Desain Digital: Gambar Dulu, Pasang Sekali',strict:false,
+  loc:'📍 Kantor konsultan MEP · Proyek ruko 3 lantai baru',
+  story:'Kariermu naik meja: dari memasang instalasi menjadi MENDESAINNYA. Klien membangun ruko 3 lantai dan butuh gambar kerja listrik lengkap — single line diagram, perhitungan beban, jatuh tegangan, sampai BOM material. Di software desain, kabel boleh salah ukur seribu kali tanpa sehelai tembaga pun terbuang. Di lapangan, satu kali saja sudah mahal.',
+  goal:'Paket desain lengkap & benar: beban terhitung dengan faktor kebutuhan, SLD tersusun, ukuran kabel & proteksi lolos cek jatuh tegangan, dan BOM siap tender.',
+  obj:['Hitung beban per lantai dengan faktor kebutuhan','Susun single line diagram & pembagian grup','Validasi jatuh tegangan & terbitkan BOM'],
+  learn:['Desain dimulai dari daftar beban, bukan dari katalog kabel: tiap titik dihitung, lalu faktor kebutuhan diterapkan — tak semua beban menyala serentak','Single line diagram adalah bahasa universal instalasi: satu garis mewakili tiga fasa — pembaca di lapangan & di dinas yang sama-sama paham','Jatuh tegangan maksimal (umumnya ≤4% total) memvonis ukuran kabel: jalur panjang sering butuh kabel lebih besar dari sekadar kuat arusnya','BOM (bill of materials) yang akurat = tender yang adil & proyek tanpa drama "kurang material" — desainer yang baik menghitung sampai klem terakhir'],
+  next:['Pelajari software desain profesional & library komponen lokal','Dalami koordinasi proteksi kaskade di desain (selektivitas)','Eksplorasi BIM elektrikal: desain 3D yang mendeteksi tabrakan antar disiplin']},
+});
+let mds={};
+function buildDesain(){
+  freshScene(0xa8c0d4,0x141e2a);
+  cam={theta:0,phi:1.16,r:7.5,target:new THREE.Vector3(0,2,-1)};
+  const floor=boxT(14,.1,9,TEX.concrete());floor.position.y=-.05;scene.add(floor);
+  const wall=boxT(13,4.6,.15,TEX.plaster());wall.position.set(0,2.3,-3);scene.add(wall);
+  /* layar workstation besar */
+  const frame=boxT(5.0,2.8,.16,TEX.metal(),{metalness:.4});frame.position.set(-1.2,2.4,-2.9);scene.add(frame);
+  mds.D=makeDisplay(4.7,2.5,640,360);
+  mds.D.mesh.position.set(-1.2,2.4,-2.79);scene.add(mds.D.mesh);
+  actMesh(mds.D.mesh,'BEBAN');
+  scene.add(label('WORKSTATION DESAIN MEP',.9).translateX(-1.2).translateY(4.05).translateZ(-2.8));
+  mds.mode=0;
+  function layar(){
+    const g=mds.D.g,W=640,H=360;
+    g.fillStyle='#f0f2f4';g.fillRect(0,0,W,H); /* CAD putih */
+    g.font='600 15px Consolas';g.textAlign='left';
+    if(mds.mode===0){g.fillStyle='#222a31';g.font='700 18px Consolas';
+      g.fillText('DAFTAR BEBAN — RUKO 3 LANTAI',20,34);
+      g.font='600 15px Consolas';
+      [['LT.1 toko','penerangan+KK+AC','9.800 VA'],['LT.2 kantor','penerangan+KK+AC','8.400 VA'],
+       ['LT.3 gudang','penerangan+KK','4.200 VA'],['Pompa+lift','3 fasa','6.500 VA']].forEach((r,i)=>{
+        const y=76+i*38;g.fillStyle='#445';g.fillText(r[0],20,y);
+        g.fillText(r[1],180,y);g.fillStyle='#1a6a3a';g.fillText(r[2],440,y);});
+      g.fillStyle='#8a2a2a';g.font='700 16px Consolas';
+      g.fillText('total terpasang 28,9 kVA → ???',20,H-24);}
+    else if(mds.mode>=1){ /* SLD */
+      g.strokeStyle='#222a31';g.lineWidth=3;
+      g.beginPath();g.moveTo(60,50);g.lineTo(60,300);g.stroke();
+      g.fillStyle='#222a31';g.fillText('PLN 23 kVA / 3φ',70,46);
+      [['MCB 40A 3φ',80],['LT.1 — 3 grup',140],['LT.2 — 3 grup',190],['LT.3 — 2 grup',240],['Pompa/lift 3φ',290]].forEach((r,i)=>{
+        g.strokeStyle='#222a31';g.beginPath();g.moveTo(60,r[1]);g.lineTo(140,r[1]);g.stroke();
+        g.strokeRect(140,r[1]-12,26,24);
+        g.fillText(r[0],180,r[1]+5);});
+      if(mds.mode>=2){g.fillStyle='#1a6a3a';g.font='700 15px Consolas';
+        g.fillText('feeder LT.3: 4mm² → ΔV 4,8% ✗ → 6mm² → 3,1% ✓',300,120);
+        g.fillText('semua jalur ≤4% ✓',300,160);}
+      if(mds.mode>=3){g.fillStyle='#8a5a00';
+        g.fillText('BOM: 14 item · NYM 412 m · MCB 11 · panel 4',300,230);
+        g.fillText('siap tender ✓',300,266);}}
+    mds.D.tex.needsUpdate=true;}
+  layar();
+  /* kartu langkah */
+  mds.cards=[];
+  [['FAKTOR','FK',2.4],['SLD','SLD',3.5],['ΔV CEK','DV',2.4],['BOM','BOM',3.5]].forEach((o,i)=>{
+    const y=i<2?2.9:1.8;
+    const c=box(.9,.5,.08,0x2b3a4a);c.position.set(o[2],y,-2.85);scene.add(c);
+    actMesh(c,o[1]);mds.cards.push(c);
+    scene.add(label(o[0],.48,'#5fd4ff').translateX(o[2]).translateY(y+.4).translateZ(-2.8));});
+  startSeq([
+   {type:'act',aid:'BEBAN',done:false,targets:()=>[mds.D.mesh],
+    desc:'Susun DAFTAR BEBAN lengkap per lantai (klik layar).',
+    why:'Setiap titik lampu, kotak kontak, AC, pompa & lift didata: total terpasang 28,9 kVA. Tapi angka itu BELUM ukuran langganan — tak ada gedung yang menyalakan semuanya serentak. Daftar beban adalah fondasi; faktor kebutuhan adalah kebijaksanaannya.',
+    fx(){toast('📋 28,9 kVA terpasang terdata — kini faktor kebutuhan.','ok',2800);}},
+   {type:'act',aid:'FK',done:false,targets:()=>[mds.cards[0]],
+    desc:'Terapkan FAKTOR KEBUTUHAN per jenis beban (klik kartu).',
+    why:'Penerangan 90%, kotak kontak 60% (tak semua dicolok serentak), AC 85%, lift intermiten — total kebutuhan maksimum: 21,4 kVA → langganan 23 kVA 3 fasa, pas tanpa mubazir. Desainer yang melewatkan faktor ini membuat klien membayar daya yang tak pernah dipakai, selamanya.',
+    fx(){toast('🧮 Demand 21,4 kVA → langganan 23 kVA 3φ — pas.','ok',3000);}},
+   {type:'act',aid:'SLD',done:false,targets:()=>[mds.cards[1]],
+    desc:'Gambar SINGLE LINE DIAGRAM & bagi grup (klik kartu).',
+    why:'Dari APP turun ke MDP, melahirkan 4 feeder: tiap lantai + 3 fasa khusus pompa/lift. Grup dibagi dengan ilmu lamamu: penerangan terpisah dari kotak kontak, beban 3 fasa diseimbangkan antar fasa (ilmu misi balancing!). Satu garis di kertas = tiga fasa di dunia — bahasa yang dipahami dari kantor dinas sampai tukang di lapangan.',
+    fx(){mds.mode=1;layar();toast('📐 SLD tersusun: 4 feeder · 8 grup · fasa seimbang.','ok',3000);}},
+   {type:'act',aid:'DV',done:false,targets:()=>[mds.cards[2]],
+    desc:'Validasi JATUH TEGANGAN tiap jalur (klik kartu).',
+    why:'Software menghitung tiap jalur: feeder lantai 3 (jalur terpanjang, 38 m) dengan 4 mm² jatuh 4,8% — GAGAL batas 4%. Naikkan ke 6 mm²: 3,1% ✓. Kabel itu lolos kuat arus sejak awal — jarak yang menggugurkannya. Inilah kenapa desain dihitung, bukan dikira: kuat arus dan jatuh tegangan adalah dua hakim yang berbeda.',
+    fx(){mds.mode=2;layar();toast('📏 LT.3: 4mm²→6mm² karena ΔV — semua jalur ≤4% ✓','ok',3200);}},
+   {type:'act',aid:'BOM',done:false,targets:()=>[mds.cards[3]],
+    desc:'Terbitkan BOM & paket gambar kerja (klik kartu).',
+    why:'Software menjumlah otomatis: NYM 412 meter (per ukuran), 11 MCB (per rating), 4 panel, klem, conduit, sampai lasdop. Paket lengkap: SLD, layout per lantai, detail panel, BOM — kontraktor mana pun bisa menawar adil & memasang tanpa menebak. Desain yang baik membuat lapangan membosankan: semuanya sudah diputuskan di sini.',
+    fx(){mds.mode=3;layar();toast('📦 Paket desain terbit: gambar + BOM 14 item — siap tender!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Dari tukang pasang menjadi perancang!</b> Beban dihitung dengan faktor, SLD jadi bahasa bersama, jatuh tegangan memvonis ukuran kabel, dan BOM menghitung sampai klem terakhir. Gambar dulu seribu kali — pasang sekali, benar.');
+    setTimeout(()=>showWin('desain'),2200);});
+  say('VOLTA di sini 📐 Naik meja: dari MEMASANG ke <b>MENDESAIN</b>. Di software, kesalahan itu gratis; di lapangan, mahal. Empat gerbang menanti: beban, faktor, SLD, jatuh tegangan. Mulai dari daftar beban!');
+  $('#modTitle').textContent='J01·M8 — Desain Digital MEP';
+  $('#taskHead').textContent='GAMBAR SERIBU KALI, PASANG SEKALI';}
+MISSIONS.desain.build=buildDesain;
+Object.assign(REAL,{
+ desain:[
+  'Acu PUIL & SNI terbaru untuk faktor kebutuhan & batas jatuh tegangan per jenis bangunan',
+  'Survei lapangan tetap wajib sebelum desain final — as-built bangunan sering beda dari arsitek',
+  'Sertakan perhitungan arus hubung singkat untuk pemilihan breaking capacity proteksi',
+  'Versi-kan gambar (rev A/B/C) & catat perubahan — gambar kadaluarsa di lapangan = bencana koordinasi'],
+});

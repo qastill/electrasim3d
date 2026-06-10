@@ -727,3 +727,94 @@ Object.assign(REAL,{
   'Air damkar untuk proteksi eksposur — siapkan suplai & akses yang dihitung sejak desain site',
   'Pasca-kejadian sekecil apa pun: sel/modul terdampak dikarantina — reignition berjam-jam kemudian itu nyata'],
 });
+
+/* =====================================================================
+   MISI 8 — AI BATTERY ANALYTICS: MERAMAL SEL YANG SAKIT
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ twin:{lvl:'JALUR 15 · BATERAI & BESS · MISI 8',icon:'🧠',title:'AI Battery Analytics: Meramal Sel yang Sakit',strict:false,
+  loc:'📍 Fleet BESS · 4 site, jutaan titik data BMS per hari',
+  story:'Empat site BESS-mu kini menghasilkan jutaan titik data BMS per hari — dan semua hanya jadi arsip. Insiden termal tahun lalu (yang kamu tangani manual) meninggalkan pertanyaan menggoda: data sebelum kejadian itu… apakah sudah BERBISIK? Proyek barumu menjawabnya: AI analytics yang membaca jutaan suhu & tegangan sel, menemukan yang menyimpang dari saudara-saudaranya — berminggu-minggu sebelum alarm konvensional bangun.',
+  goal:'Pipeline analitik berjalan: data BMS terpusat & bersih, model anomali tervalidasi terhadap insiden lampau, dan alert pertama tertangkap & terverifikasi di lapangan.',
+  obj:['Pusatkan & bersihkan data BMS 4 site','Latih deteksi anomali & uji ke insiden lampau','Operasikan alert & verifikasi temuan pertama'],
+  learn:['Sel dalam rack adalah saudara kembar statistik: dirawat sama, dibebani sama — sel yang pelan-pelan MENYIMPANG dari saudaranya adalah bisikan paling dini','Validasi terbaik model: putar ulang data SEBELUM insiden nyata — bila model membunyikan alarm 3 minggu lebih awal, ia layak dipercaya ke depan','Self-discharge naik, delta suhu mikro, tegangan istirahat melenceng: pola-pola yang tenggelam di alarm ambang konvensional, muncul di analitik pembanding','Alert AI dieskalasi berjenjang seperti triase AMI: investigasi data dulu, lapangan kemudian — model menunjuk, manusia memvonis (prinsip yang tak pernah berubah)'],
+  next:['Pelajari estimasi SoH per-sel dari data operasional (tanpa capacity test)','Dalami digital twin elektro-termal untuk simulasi skenario','Eksplorasi analitik sebagai layanan untuk pemilik BESS lain — lini bisnis baru']},
+});
+let mtw={};
+function buildTwin(){
+  freshScene(0x9fb0c4,0x101822);
+  cam={theta:0,phi:1.16,r:8.5,target:new THREE.Vector3(0,1.9,-1)};
+  const floor=boxT(18,.1,11,TEX.concrete());floor.position.y=-.05;scene.add(floor);
+  const wall=boxT(16,4.6,.2,TEX.metal(),{metalness:.2});wall.position.set(0,2.3,-3.3);scene.add(wall);
+  /* layar analitik besar */
+  const frame=boxT(5.2,2.9,.16,TEX.metal(),{metalness:.4});frame.position.set(-1.2,2.4,-3.2);scene.add(frame);
+  mtw.D=makeDisplay(4.9,2.6,640,360);
+  mtw.D.mesh.position.set(-1.2,2.4,-3.1);scene.add(mtw.D.mesh);
+  actMesh(mtw.D.mesh,'DATA');
+  scene.add(label('BATTERY ANALYTICS — 4 SITE · 28.800 SEL',.9).translateX(-1.2).translateY(4.05).translateZ(-3.1));
+  mtw.mode=0;
+  function layar(){
+    const g=mtw.D.g,W=640,H=360;
+    g.fillStyle='#0a1018';g.fillRect(0,0,W,H);
+    g.font='600 15px Consolas';g.textAlign='left';
+    if(mtw.mode===0){g.fillStyle='#5d748c';g.font='700 17px Consolas';
+      g.fillText('4 site · data tercecer di tiap BMS lokal…',24,H/2);}
+    else{
+      /* heatmap sel */
+      for(let i=0;i<240;i++){
+        const x=20+(i%30)*20,y=50+Math.floor(i/30)*28;
+        const anom=(mtw.mode>=2&&(i===67||i===142));
+        const warm=(mtw.mode>=2&&i===188);
+        g.fillStyle=anom?'#ff5a3a':(warm?'#ffd23f':'#1d3a5a');
+        g.fillRect(x,y,16,22);}
+      g.fillStyle='#5fd4ff';g.font='700 17px Consolas';
+      g.fillText(mtw.mode===1?'data terpusat: 28.800 sel · 2,1 jt titik/hari':
+        'ANOMALI: 2 sel menyimpang + 1 waspada',20,32);
+      if(mtw.mode>=3){g.fillStyle='#46ff8e';g.font='700 15px Consolas';
+        g.fillText('backtest insiden 2027: model alarm H-19 hari ✓',20,H-18);}}
+    mtw.D.tex.needsUpdate=true;}
+  layar();
+  /* kartu langkah */
+  mtw.cards=[];
+  [['BACKTEST','BACK',2.6],['ALERT LIVE','ALERT',3.7]].forEach((o,i)=>{
+    const c=box(.95,.5,.08,0x2b3a4a);c.position.set(o[2],2.4,-3.15);scene.add(c);
+    actMesh(c,o[1]);mtw.cards.push(c);
+    scene.add(label(o[0],.48,'#5fd4ff').translateX(o[2]).translateY(2.8).translateZ(-3.1));});
+  /* teknisi lapangan */
+  mtw.tek=new THREE.Group();
+  const badan=cyl(.2,.26,.85,0xd87a20);badan.position.y=.7;mtw.tek.add(badan);
+  const kepala=new THREE.Mesh(new THREE.SphereGeometry(.14,14,12),
+    new THREE.MeshStandardMaterial({color:0xd8b090}));kepala.position.y=1.3;mtw.tek.add(kepala);
+  mtw.tek.position.set(4.6,0,-.8);scene.add(mtw.tek);
+  actMesh(badan,'VERIF');
+  scene.add(label('TEKNISI SITE-2',.6).translateX(4.6).translateY(1.8).translateZ(-.8));
+  startSeq([
+   {type:'act',aid:'DATA',done:false,targets:()=>[mtw.D.mesh],
+    desc:'Pusatkan & bersihkan DATA BMS 4 site (klik layar).',
+    why:'Empat BMS lokal beda merek, beda format, beda zona waktu — pipeline menyeragamkan: 28.800 sel, 2,1 juta titik/hari mengalir ke satu rumah, dgn pembersihan (sensor mati, stempel waktu kacau) otomatis. Ilmu lama yang selalu benar: model sehebat apa pun lahir mati di atas data kotor.',
+    fx(){mtw.mode=1;layar();toast('🗄️ 4 site → satu rumah data: 2,1 jt titik/hari bersih.','ok',3000);}},
+   {type:'act',aid:'BACK',done:false,targets:()=>[mtw.cards[0]],
+    desc:'Uji kejujuran model: BACKTEST ke insiden termal lampau (klik kartu).',
+    why:'Model pembanding-saudara dilatih, lalu ujian paling adil: data SEBELUM insiden modul 7 tahun lalu diputar ulang TANPA memberi tahu jawabannya. Hasil: model menandai sel itu menyimpang 19 HARI sebelum alarm BMS bangun — self-discharge-nya merayap naik pelan, tenggelam di rata-rata, menonjol di perbandingan. Sel itu memang sudah berbisik; dulu belum ada yang mendengarkan.',
+    fx(){mtw.mode=3;layar();toast('🕰️ Backtest: alarm H-19 hari sebelum insiden nyata ✓','ok',3400);}},
+   {type:'act',aid:'ALERT',done:false,targets:()=>[mtw.cards[1]],
+    desc:'Operasikan: ALERT LIVE dgn eskalasi berjenjang (klik kartu).',
+    why:'Model kini berjaga 24/7. Minggu kedua: dua sel site-2 ditandai menyimpang (skor tinggi), satu waspada. Protokol triase berjalan — bukan panik: data didalami dulu (tren 30 hari konsisten ✓, bukan sensor error ✓), baru lapangan diutus. Model menunjuk; manusia tetap yang memvonis.',
+    fx(){mtw.mode=2;layar();toast('🚨 2 sel ditandai di site-2 — triase data lolos, utus lapangan.','ok',3200);}},
+   {type:'act',aid:'VERIF',done:false,targets:()=>[mtw.tek.children[0]],
+    desc:'Vonis lapangan: VERIFIKASI dua sel tersangka (klik teknisi).',
+    why:'Teknisi site-2 mengukur langsung: kedua sel benar ber-self-discharge tinggi — indikasi micro-short dini, persis kata model. Modul dikarantina TERJADWAL (bukan darurat tengah malam!), klaim garansi vendor didukung data 30 hari yang rapi. Insiden termal berikutnya baru saja dibatalkan — 19 hari sebelum ia sempat punya nama.',
+    fx(){toast('🔬 Terverifikasi: micro-short dini ×2 — karantina terjadwal, garansi cair!','ok',3400);sfx.big();}},
+  ],()=>{say('🎉 <b>Jutaan data yang dulu jadi arsip kini jadi peramal!</b> Disatukan, diuji ke masa lalu, dan alert pertamanya terbukti di lapangan. Baterai selalu berbisik sebelum sakit — sekarang ada yang mendengarkan, 24 jam, tanpa lelah.');
+    setTimeout(()=>showWin('twin'),2200);});
+  say('VOLTA di sini 🧠 Empat site, jutaan titik data BMS per hari — semuanya cuma jadi arsip. Pertanyaan menggodanya: insiden termal dulu… <b>apakah datanya sudah berbisik?</b> Bangun pendengarnya. Mulai dari menyatukan data!');
+  $('#modTitle').textContent='J15·M8 — AI Battery Analytics';
+  $('#taskHead').textContent='DENGARKAN BISIKAN SEL';}
+MISSIONS.twin.build=buildTwin;
+Object.assign(REAL,{
+ twin:[
+  'Backtest ke insiden nyata adalah gerbang go/no-go model — tanpa itu, alert hanyalah opini statistik',
+  'Kelola false positive dgn target eksplisit — alert yang sering salah akan diabaikan saat benar',
+  'Simpan data resolusi penuh insiden & anomali selamanya — bahan latih paling berharga',
+  'Selaraskan alert AI dgn SOP eskalasi existing (triase-data-dulu) — jangan bikin jalur panik baru'],
+});
