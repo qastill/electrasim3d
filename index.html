@@ -28,37 +28,62 @@
   button{font-family:inherit}
 
   /* ---------- MENU ---------- */
-  #menu{position:fixed;inset:0;z-index:40;display:block;overflow:auto;padding:34px 20px 50px;
+  #menu{position:fixed;inset:0;z-index:40;display:block;overflow:auto;padding:32px 20px 64px;
     background:
-      repeating-linear-gradient(135deg,transparent 0 26px,#ffd23f07 26px 52px),
-      radial-gradient(1100px 600px at 50% -10%,#16314e 0%,#0b1420 60%);}
-  .menuInner{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:20px}
-  .brandRow{display:flex;align-items:center;gap:14px}
-  .boltIc{width:50px;height:50px;border:2px solid var(--yellow);transform:rotate(45deg);
-    display:flex;align-items:center;justify-content:center;flex:none}
-  .boltIc span{transform:rotate(-45deg);font-size:26px;color:var(--yellow)}
+      repeating-linear-gradient(135deg,transparent 0 26px,#ffd23f06 26px 52px),
+      radial-gradient(1200px 720px at 50% -12%,#1a3c5e 0%,#0b1420 62%);}
+  .menuInner{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:18px}
+  .brandRow{display:flex;align-items:center;gap:15px}
+  .boltIc{width:54px;height:54px;border:2px solid var(--yellow);transform:rotate(45deg);
+    display:flex;align-items:center;justify-content:center;flex:none;
+    box-shadow:0 0 22px #ffd23f3d, inset 0 0 14px #ffd23f1f}
+  .boltIc span{transform:rotate(-45deg);font-size:28px;color:var(--yellow)}
   .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.35em;color:var(--cyan);text-transform:uppercase}
-  h1{font-size:clamp(24px,4.5vw,40px);font-weight:800;letter-spacing:-.02em;line-height:1.05}
+  h1{font-size:clamp(26px,4.7vw,42px);font-weight:800;letter-spacing:-.02em;line-height:1.05}
   h1 em{font-style:normal;color:var(--yellow)}
-  .sub{color:var(--dim);max-width:640px;text-align:center;font-size:13.5px;line-height:1.6}
+  .sub{color:var(--dim);max-width:660px;text-align:center;font-size:13.5px;line-height:1.6}
   .sub b{color:var(--cyan)}
-  .grid16{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:12px;width:100%}
-  .tcard{background:var(--panel);border:1px solid var(--line);padding:14px 14px 12px;position:relative;text-align:left}
-  .tcard.active{border-color:#3a557a}
+
+  /* statistik progres global */
+  .statsRow{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .statChip{background:var(--panel);border:1px solid var(--line);padding:8px 16px;
+    display:flex;align-items:center;gap:10px;border-radius:3px}
+  .statChip .n{font-family:var(--mono);font-size:20px;font-weight:800;color:var(--yellow);line-height:1}
+  .statChip .l{font-size:9.5px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase;line-height:1.3}
+
+  .grid16{display:grid;grid-template-columns:repeat(auto-fill,minmax(292px,1fr));gap:14px;width:100%}
+  .tcard{background:linear-gradient(180deg,#14253799,#101d2cf2);border:1px solid var(--line);
+    position:relative;text-align:left;border-radius:4px;overflow:hidden;
+    transition:border-color .18s, transform .18s, box-shadow .18s}
+  .tcard:hover{border-color:#3a557a;transform:translateY(-2px);box-shadow:0 10px 26px #0006}
   .tcard.active::before{content:"";position:absolute;left:0;top:0;width:100%;height:3px;
     background:repeating-linear-gradient(135deg,var(--yellow) 0 9px,#0b1420 9px 18px)}
+  .tcard.complete::before{background:var(--ok)}
+  .tcHead{display:flex;gap:11px;align-items:flex-start;padding:15px 14px 9px}
+  .tcIc{width:44px;height:44px;flex:none;background:#0d1a29;border:1px solid var(--line);
+    border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:23px}
+  .tcMeta{flex:1;min-width:0}
   .tcard .lvl{font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;color:var(--cyan)}
-  .tcard h2{font-size:15.5px;margin:6px 0 5px;line-height:1.25}
-  .tcard p{font-size:11.5px;color:var(--dim);line-height:1.5;margin-bottom:9px;min-height:34px}
-  .mBtn{display:flex;justify-content:space-between;align-items:center;width:100%;cursor:pointer;
-    background:#0d1a29;border:1px solid var(--line);color:var(--ink);padding:8px 10px;margin-top:6px;
-    font-size:12px;text-align:left;gap:8px}
-  .mBtn:hover{border-color:var(--yellow)}
-  .mBtn .st{font-size:11px;color:var(--yellow);font-family:var(--mono);flex:none}
-  .mBtn .pl{color:var(--yellow);font-family:var(--mono);font-size:10px;letter-spacing:.1em;flex:none}
+  .tcard h2{font-size:15px;margin:3px 0 0;line-height:1.2}
+  .tcDesc{font-size:11.5px;color:var(--dim);line-height:1.5;padding:0 14px;margin-bottom:9px;min-height:34px}
+  .tcProg{display:flex;align-items:center;gap:9px;padding:0 14px 11px}
+  .tcBar{flex:1;height:4px;background:#0d1a29;border:1px solid var(--line);border-radius:3px;overflow:hidden}
+  .tcBar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--yellow));transition:width .5s}
+  .tcProg .pct{font-family:var(--mono);font-size:10px;color:var(--dim);flex:none;letter-spacing:.06em}
+  .tcMissions{padding:0 12px 13px;display:flex;flex-direction:column;gap:7px}
+  .mBtn{display:flex;align-items:center;width:100%;cursor:pointer;
+    background:#0d1a29;border:1px solid var(--line);color:var(--ink);padding:9px 11px;
+    font-size:12.5px;text-align:left;gap:10px;border-radius:3px;transition:border-color .15s, background .15s}
+  .mBtn:hover{border-color:var(--yellow);background:#13263a}
+  .mBtn .mNum{flex:none;font-family:var(--mono);font-size:10px;font-weight:700;color:#0b1420;
+    background:var(--cyan);padding:3px 6px;border-radius:2px;letter-spacing:.04em}
+  .mBtn.done .mNum{background:var(--ok)}
+  .mBtn .mTitle{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mBtn .st{font-size:12px;color:var(--yellow);font-family:var(--mono);flex:none;letter-spacing:1.5px}
+  .mBtn .st .e{color:#3a4a5c}
   .tcard.locked{opacity:.45;filter:saturate(.4)}
   .tcard.locked .lockTag{font-family:var(--mono);font-size:10px;color:var(--dim);border:1px dashed var(--line);
-    padding:7px 10px;margin-top:6px;text-align:center;letter-spacing:.15em}
+    padding:9px 10px;margin:0 12px 13px;text-align:center;letter-spacing:.15em;border-radius:3px}
   .hintTxt{font-size:11.5px;color:var(--dim);font-family:var(--mono);text-align:center;line-height:1.7}
 
   /* ---------- BRIEFING ---------- */
@@ -116,6 +141,12 @@
   /* ---------- TUTOR ---------- */
   #tutor{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;width:min(680px,95vw);
     background:var(--panel);border:1px solid var(--line);pointer-events:auto;display:flex}
+  #tutorMin{position:absolute;top:-25px;right:-1px;background:var(--panel);border:1px solid var(--line);
+    border-bottom:none;color:var(--cyan);font-family:var(--mono);font-size:10px;padding:4px 12px;
+    cursor:pointer;letter-spacing:.1em}
+  #tutorMin:hover{color:var(--yellow)}
+  #tutor.min{width:auto}
+  #tutor.min #tutorBody{display:none}
   #avatar{width:72px;flex:none;background:#0a1623;border-right:1px solid var(--line);
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:8px 4px}
   #avFace{width:42px;height:42px;border:2px solid var(--cyan);border-radius:50%;display:flex;
@@ -185,7 +216,8 @@
       <h1>Electra<em>Sim</em> VR 3D</h1>
     </div>
   </div>
-  <p class="sub">Simulator 3D berbasis misi untuk <b>16 jalur spesialisasi</b> ketenagalistrikan, dipandu <b>VOLTA</b> — AI instructor yang menjelaskan langkah & alasannya, dan bisa ditanya kapan saja. <b>Tahap 3: 21 misi · grafis material realistis · 4 jalur sudah punya 2 materi!</b> Selesaikan misi, kumpulkan bintang, kuasai kompetensi.</p>
+  <p class="sub">Simulator 3D berbasis misi untuk <b>16 jalur spesialisasi</b> ketenagalistrikan, dipandu <b>VOLTA</b> — AI instructor yang menjelaskan langkah & alasannya, dan bisa ditanya kapan saja. Selesaikan misi, kumpulkan bintang, kuasai kompetensi.</p>
+  <div class="statsRow" id="statsRow"></div>
   <div class="grid16" id="trackGrid"></div>
   <div class="hintTxt">🖱️ drag = lihat sekeliling · scroll/pinch = zoom · klik kanan/shift-drag = geser · ikuti penanda kuning ▼</div>
 </div></div>
@@ -226,6 +258,7 @@
   </div>
   <div id="toast"></div>
   <div id="tutor">
+    <button id="tutorMin">▾ SEMBUNYIKAN</button>
     <div id="avatar"><div id="avFace">⚡</div><div class="nm">VOLTA</div></div>
     <div id="tutorBody">
       <div id="tutorTxt"></div>
@@ -259,7 +292,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 /* =====================================================================
-   ElectraSim VR 3D v3 — 16 jalur · 8 misi tahap 1 · AI tutor VOLTA
+   ElectraSim VR 3D v4 — 16 jalur · 32 misi (2 per jalur) · AI tutor VOLTA
    ===================================================================== */
 window.onerror=function(msg,src,line){
   const b=document.getElementById('errBar');
@@ -282,193 +315,87 @@ function saveStars(){ try{ window.localStorage.setItem('esim_stars',JSON.stringi
    16 JALUR (TRACKS) — sesuai Electra Skill Academy
    ===================================================================== */
 const TRACKS=[
- {code:'S1 · JALUR 01',icon:'🏗️',name:'Instalasi Bangunan',desc:'MEP design gedung & rumah: wiring dasar sampai smart building.',missions:['rumah','phb']},
- {code:'S2 · JALUR 02',icon:'🏭',name:'Industri & Manufaktur',desc:'Motor, drive, reliability & maintenance pabrik.',missions:['star']},
- {code:'S3 · JALUR 03',icon:'⚡',name:'Distribusi',desc:'Jantung PLN: jaringan 20kV, gardu, APP, SCADA.',missions:['app','gardu']},
- {code:'S4 · JALUR 04',icon:'🗼',name:'Transmisi',desc:'Saluran 150/500 kV, GI/GITET, switching & proteksi.',missions:['transmisi','normal']},
- {code:'S5 · JALUR 05',icon:'📊',name:'Energy Analyst & Data Science',desc:'Python, SQL, ML untuk utility & NTL detection.',missions:['ntl']},
- {code:'S6 · JALUR 06',icon:'📋',name:'Energy Auditor',desc:'Audit energi industri, ISO 50001.',missions:['audit']},
- {code:'S7 · JALUR 07',icon:'🌱',name:'Pembangkitan & Renewable',desc:'PLTU, PLTG, PLTA, hybrid system.',missions:['pltu']},
- {code:'S8 · JALUR 08',icon:'🦺',name:'K3 Listrik',desc:'Safety officer: APD, LOTO, izin kerja, JSA.',missions:['k3']},
- {code:'S9 · JALUR 09',icon:'🤝',name:'Sales & Technical Marketing',desc:'Technical sales vendor electrical.',missions:['sales']},
- {code:'S10 · JALUR 10',icon:'☀️',name:'PV & Solar Engineer',desc:'PLTS rooftop, ground-mount, utility-scale.',missions:['solar','riso']},
- {code:'S11 · JALUR 11',icon:'🌍',name:'Sustainability & Carbon',desc:'GHG accounting & strategi net zero.',missions:['carbon']},
- {code:'S12 · JALUR 12',icon:'🚗',name:'EV & EV Charging',desc:'SPKLU design, BMS, ekosistem EV.',missions:['ev']},
- {code:'S13 · JALUR 13',icon:'♻️',name:'Waste to Energy',desc:'Insinerator, gasifikasi, PLTSa.',missions:['wte']},
- {code:'S14 · JALUR 14',icon:'💧',name:'Hydrogen Energy',desc:'Green hydrogen, elektrolisis, fuel cell.',missions:['h2']},
- {code:'S15 · JALUR 15',icon:'🔋',name:'Baterai & BESS',desc:'BESS, BMS, integrasi grid, peak shaving.',missions:['bess']},
- {code:'S16 · JALUR 16',icon:'🎛️',name:'Kontrol & Otomasi',desc:'PLC, HMI, SCADA, panel kontrol motor.',missions:['motor','plc']},
+ {code:'S1 · JALUR 01',icon:'🏗️',name:'Instalasi Bangunan',desc:'MEP design gedung & rumah: wiring dasar sampai smart building.',missions:[{k:'rumah',t:'Instalasi Listrik Rumah'},{k:'phb',t:'Panel Hubung Bagi & Proteksi RCD'}],file:'missions/jalur01.js'},
+ {code:'S2 · JALUR 02',icon:'🏭',name:'Industri & Manufaktur',desc:'Motor, drive, reliability & maintenance pabrik.',missions:[{k:'star',t:'Komisioning Star-Delta Starter'},{k:'trip',t:'Troubleshooting Motor Trip'}],file:'missions/jalur02.js'},
+ {code:'S3 · JALUR 03',icon:'⚡',name:'Distribusi',desc:'Jantung PLN: jaringan 20kV, gardu, APP, SCADA.',missions:[{k:'app',t:'Pemasangan APP / kWh Meter'},{k:'gardu',t:'Manuver Pembebasan Gardu 20 kV'}],file:'missions/jalur03.js'},
+ {code:'S4 · JALUR 04',icon:'🗼',name:'Transmisi',desc:'Saluran 150/500 kV, GI/GITET, switching & proteksi.',missions:[{k:'transmisi',t:'Switching Bay Penghantar GI 150 kV'},{k:'normal',t:'Penormalan Bay GI 150 kV'}],file:'missions/jalur04.js'},
+ {code:'S5 · JALUR 05',icon:'📊',name:'Energy Analyst & Data Science',desc:'Python, SQL, ML untuk utility & NTL detection.',missions:[{k:'ntl',t:'Investigasi NTL (Susut Non-Teknis)'},{k:'beban',t:'Analisis Profil Beban Trafo'}],file:'missions/jalur05.js'},
+ {code:'S6 · JALUR 06',icon:'📋',name:'Energy Auditor',desc:'Audit energi industri, ISO 50001.',missions:[{k:'audit',t:'Walkthrough Audit Energi Pabrik'},{k:'logger',t:'Pemasangan Power Logger'}],file:'missions/jalur06.js'},
+ {code:'S7 · JALUR 07',icon:'🌱',name:'Pembangkitan & Renewable',desc:'PLTU, PLTG, PLTA, hybrid system.',missions:[{k:'pltu',t:'Start-Up & Sinkronisasi Generator'},{k:'gov',t:'Kontrol Frekuensi & Pembebanan'}],file:'missions/jalur07.js'},
+ {code:'S8 · JALUR 08',icon:'🦺',name:'K3 Listrik',desc:'Safety officer: APD, LOTO, izin kerja, JSA.',missions:[{k:'k3',t:'APD & LOTO Pekerjaan Panel'},{k:'rescue',t:'Pertolongan Korban Sengatan Listrik'}],file:'missions/jalur08.js'},
+ {code:'S9 · JALUR 09',icon:'🤝',name:'Sales & Technical Marketing',desc:'Technical sales vendor electrical.',missions:[{k:'sales',t:'Solusi Kapasitor Bank Pelanggan'},{k:'survey',t:'Site Survey & Proposal PLTS'}],file:'missions/jalur09.js'},
+ {code:'S10 · JALUR 10',icon:'☀️',name:'PV & Solar Engineer',desc:'PLTS rooftop, ground-mount, utility-scale.',missions:[{k:'solar',t:'Wiring PLTS Rooftop On-Grid'},{k:'riso',t:'Komisioning & Pengujian PLTS'}],file:'missions/jalur10.js'},
+ {code:'S11 · JALUR 11',icon:'🌍',name:'Sustainability & Carbon',desc:'GHG accounting & strategi net zero.',missions:[{k:'carbon',t:'Inventarisasi GHG Scope 1-2-3'},{k:'reduksi',t:'Roadmap Reduksi Menuju Net Zero'}],file:'missions/jalur11.js'},
+ {code:'S12 · JALUR 12',icon:'🚗',name:'EV & EV Charging',desc:'SPKLU design, BMS, ekosistem EV.',missions:[{k:'ev',t:'Komisioning SPKLU'},{k:'evfix',t:'Troubleshooting SPKLU Error'}],file:'missions/jalur12.js'},
+ {code:'S13 · JALUR 13',icon:'♻️',name:'Waste to Energy',desc:'Insinerator, gasifikasi, PLTSa.',missions:[{k:'wte',t:'Operasi PLTSa (Insinerasi)'},{k:'abu',t:'Mass Balance & Pengelolaan Abu'}],file:'missions/jalur13.js'},
+ {code:'S14 · JALUR 14',icon:'💧',name:'Hydrogen Energy',desc:'Green hydrogen, elektrolisis, fuel cell.',missions:[{k:'h2',t:'Start-Up Green Hydrogen Plant'},{k:'fcell',t:'Refueling H₂ & Fuel Cell Bus'}],file:'missions/jalur14.js'},
+ {code:'S15 · JALUR 15',icon:'🔋',name:'Baterai & BESS',desc:'BESS, BMS, integrasi grid, peak shaving.',missions:[{k:'bess',t:'Komisioning BESS Peak Shaving'},{k:'thermal',t:'Respon Alarm Termal BESS'}],file:'missions/jalur15.js'},
+ {code:'S16 · JALUR 16',icon:'🎛️',name:'Kontrol & Otomasi',desc:'PLC, HMI, SCADA, panel kontrol motor.',missions:[{k:'motor',t:'Wiring Motor DOL (Direct On Line)'},{k:'plc',t:'Ladder PLC Start-Stop Pertamamu'}],file:'missions/jalur16.js'},
 ];
-const NEXTCHAIN=['rumah','phb','app','gardu','transmisi','normal','k3','solar','riso','ev','motor','plc','star','pltu','bess','h2','wte','ntl','audit','carbon','sales'];
+const NEXTCHAIN=['rumah','phb','app','gardu','transmisi','normal','k3','rescue','solar','riso','ev','evfix','motor','plc','star','trip','pltu','gov','bess','thermal','h2','fcell','wte','abu','ntl','beban','audit','logger','carbon','reduksi','sales','survey'];
+
+/* =====================================================================
+   LAZY LOADER — modul misi per jalur (missions/jalurNN.js)
+   ===================================================================== */
+const FILE_OF={}; TRACKS.forEach(t=>t.missions.forEach(m=>FILE_OF[m.k]=t.file));
+const _loadedFiles={};
+function loadFile(f){
+  if(_loadedFiles[f])return _loadedFiles[f];
+  _loadedFiles[f]=new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src=f; s.onload=res;
+    s.onerror=()=>{delete _loadedFiles[f];rej(new Error(f));};
+    document.head.appendChild(s);});
+  return _loadedFiles[f];}
+function ensureMission(k){
+  return (MISSIONS[k]&&MISSIONS[k].build)?Promise.resolve():loadFile(FILE_OF[k]);}
+function loadFail(f){
+  const b=document.getElementById('errBar');
+  if(b){b.style.display='block';
+    b.textContent='⚠️ Gagal memuat modul misi ('+f+') — periksa koneksi lalu klik lagi.';}}
 
 /* =====================================================================
    DATA MISI — briefing, learn, next (build() didaftarkan di bawah)
    ===================================================================== */
-const MISSIONS={
- rumah:{lvl:'JALUR 01 · INSTALASI BANGUNAN',icon:'🏠',title:'Instalasi Listrik Rumah',strict:false,
-  loc:'📍 Rumah Pak Dadang · Griya Indah, Indramayu',
-  story:'Pak Dadang baru selesai membangun rumah — dinding sudah dicat tapi listrik masih kosong. Kamu instalatirnya: pasang rangkaian penerangan & kotak-kontak sesuai PUIL.',
-  goal:'Lampu menyala dikendalikan saklar & stop kontak bertegangan dengan grounding aman.',
-  obj:['Jalur fasa: PLN → MCB → saklar → lampu','Netral & grounding sesuai kode warna','Uji nyala lampu & tes tegangan stop kontak'],
-  learn:['Saklar memutus jalur FASA, bukan netral (PUIL)','MCB pengaman pertama — semua fasa wajib melewatinya','Kode warna: merah=fasa, biru=netral, kuning-hijau=grounding','Grounding membuang arus bocor agar manusia tak tersengat'],
-  next:['Lanjut Jalur 03: pasang APP/kWh meter pelanggan','Pelajari pembagian grup MCB rumah berbeban banyak','Baca diagram satu garis instalasi gedung']},
- app:{lvl:'JALUR 03 · DISTRIBUSI',icon:'🔌',title:'Pemasangan APP / kWh Meter',strict:false,
-  loc:'📍 Pasang baru 900 VA · Jl. Veteran, Indramayu',
-  story:'Pelanggan baru 900 VA sudah bayar BP. Kabel SR sudah ditarik dari tiang JTR. Sebagai petugas penyambungan, rangkai APP dengan urutan terminal yang benar — salah wiring bisa membuat meter tak mencatat (susut!).',
-  goal:'Pelanggan menyala & kWh meter mencatat benar (standar terminal 1-3-4-6).',
-  obj:['SR → terminal masuk kWh meter','Fasa keluar meter → MCB pembatas → instalasi','Energize & pastikan register berputar'],
-  learn:['Terminal kWh 1 fasa: 1 fasa masuk · 3 keluar · 4 netral masuk · 6 keluar','MCB di APP = PEMBATAS daya kontrak, bukan sekadar pengaman','APP = titik transaksi energi PLN–pelanggan','Wiring meter salah = energi tak tercatat = NTL'],
-  next:['Lanjut misi gardu distribusi 20 kV','Pelajari kWh 3 fasa pengukuran langsung & CT','Kaitkan dengan P2TL: modus pelanggaran APP']},
- gardu:{lvl:'JALUR 03 · DISTRIBUSI',icon:'🏭',title:'Manuver Pembebasan Gardu 20 kV',strict:true,
-  loc:'📍 Gardu IDR-042 · Penyulang Karang, UP3 Indramayu',
-  story:'Tim har akan mengganti terminasi kabel kubikel outgoing. Sebelum mereka menyentuh apapun, kamu wajib MEMBEBASKAN TEGANGAN. Di 20.000 volt tidak ada kesempatan kedua — salah urutan = pelanggaran K2/K3 fatal.',
-  goal:'Kubikel outgoing bebas tegangan & aman dikerjakan — 6 langkah SOP urut tanpa pelanggaran.',
-  obj:['Izin manuver dispatcher','APD lengkap','Buka CB → bukti tegangan nol → grounding → rambu'],
-  learn:['Urutan emas: IZIN → APD → BUKA CB → CEK NOL → GROUNDING → RAMBU','Tegangan nol harus DIBUKTIKAN, bukan diasumsikan','Earthing switch membuang muatan sisa & menahan tegangan balik','LOTO mencegah orang lain mengoperasikan saat tim bekerja'],
-  next:['Lanjut Jalur 04: switching bay GI 150 kV','Pelajari manuver PENORMALAN (kebalikannya)','Dalami format komunikasi dispatcher yang baku']},
- transmisi:{lvl:'JALUR 04 · TRANSMISI',icon:'🗼',title:'Switching Bay Penghantar GI 150 kV',strict:true,
-  loc:'📍 GI 150 kV Kosambi · Bay Penghantar arah Sukamandi',
-  story:'Hasil inspeksi: isolator string penghantar arah Sukamandi retak dan harus diganti hari ini. Kamu operator GI. Bebaskan bay penghantar dengan urutan switching yang benar — di sini ada dua jenis pemutus dengan kemampuan SANGAT berbeda: PMT dan PMS.',
-  goal:'Bay penghantar bebas tegangan: PMT & PMS dioperasikan pada urutan yang benar (PMS tak pernah memutus beban!).',
-  obj:['Izin dispatcher (UIT/P2B)','Buka PMT lebih dulu (pemutus berbeban)','Buka PMS line & bus, masuk PMS tanah, rambu'],
-  learn:['PMT punya peredam busur api → satu-satunya yang boleh memutus arus beban','PMS hanya pemisah visual — dioperasikan SETELAH PMT membuka (tanpa beban)','Urutan buka: PMT → PMS line → PMS bus; menutup kebalikannya','PMS tanah mengamankan dari tegangan induksi penghantar paralel'],
-  next:['Pelajari interlocking PMT–PMS pada sistem kontrol GI','Dalami proteksi penghantar: distance relay zona 1-2-3','Lanjut Jalur 08: budaya K3 pekerjaan listrik']},
- k3:{lvl:'JALUR 08 · K3 LISTRIK',icon:'🦺',title:'APD & LOTO Pekerjaan Panel',strict:true,
-  loc:'📍 Workshop industri · Panel LVMDP 380 V',
-  story:'Kamu safety officer. Teknisi akan mengganti breaker di panel LVMDP yang masih beroperasi. Sebelum pekerjaan dimulai, pastikan prosedur keselamatan dijalankan TANPA satu pun langkah terlewat: dari izin kerja sampai bukti tegangan nol.',
-  goal:'Pekerjaan panel siap dimulai dengan aman: JSA ditandatangani, APD lengkap, panel ter-LOTO, dan tegangan terbukti nol.',
-  obj:['Izin kerja & JSA','APD berurutan: helm → sarung tangan → sepatu','LOTO breaker utama & verifikasi tegangan nol'],
-  learn:['JSA mengidentifikasi bahaya SEBELUM bekerja, bukan setelah kejadian','APD = pertahanan terakhir setelah eliminasi/substitusi/engineering control','LOTO: gembok + tag pribadi — hanya pemasang yang boleh melepas','"Test before touch": tegangan nol wajib diverifikasi alat ukur'],
-  next:['Pelajari hierarki pengendalian risiko 5 level','Dalami kategori arc flash & pemilihan APD per kategori','Lanjut Jalur 10: keselamatan kerja sistem PLTS (DC!)']},
- solar:{lvl:'JALUR 10 · PV & SOLAR',icon:'☀️',title:'Wiring PLTS Rooftop On-Grid',strict:false,
-  loc:'📍 Atap gudang CV Berkah · 5 kWp, Indramayu',
-  story:'CV Berkah memasang PLTS atap 5 kWp untuk memangkas tagihan. Panel sudah terpasang di rel — tinggal wiring DC dan AC. Hati-hati: sisi DC tidak seperti AC, busur api DC tidak padam sendiri, dan polaritas terbalik bisa merusak inverter.',
-  goal:'PLTS tersambung benar dari string panel → proteksi DC → inverter → AC breaker → kWh exim, lalu inverter ON dan mulai produksi.',
-  obj:['Rangkai sisi DC: string PV → fuse DC → inverter (jaga polaritas!)','Grounding rangka panel','Sisi AC: inverter → breaker → kWh exim, lalu energize'],
-  learn:['Arus DC tak punya titik nol → wajib fuse/switch khusus DC','Polaritas DC terbalik = inverter rusak; cek + dan − dua kali','Rangka panel wajib dibumikan (proteksi petir & arus bocor)','kWh exim mencatat dua arah: impor dari PLN & ekspor dari PLTS'],
-  next:['Pelajari sizing string: Voc vs tegangan input maks inverter','Dalami komisioning: riso, polaritas, kurva I-V','Lanjut Jalur 12: infrastruktur pengisian EV']},
- ev:{lvl:'JALUR 12 · EV & EV CHARGING',icon:'🚗',title:'Komisioning SPKLU',strict:false,
-  loc:'📍 SPKLU baru · Rest Area KM 158 Tol Cipali',
-  story:'Unit SPKLU 25 kW baru tiba di rest area KM 158. Tugasmu: sambungkan suplai dari panel ke unit, lalu jalankan prosedur komisioning sampai mobil listrik pertama berhasil mengisi daya. Grounding di sini bukan formalitas — charger memeriksa pembumian sebelum mau bekerja.',
-  goal:'SPKLU tersambung, lolos uji komisioning, dan sukses mengisi daya kendaraan pertama.',
-  obj:['Wiring suplai: sumber → MCCB → unit SPKLU + grounding','Uji isolasi & pembumian sebelum energize','ON MCCB → autentikasi kartu → colok gun → charging!'],
-  learn:['Charger menolak beroperasi tanpa pembumian baik (proteksi arus bocor DC)','Urutan komisioning: uji dulu, energize kemudian — tak pernah terbalik','Alur transaksi SPKLU: autentikasi → handshake gun-kendaraan → charging','Mode 3/4 charging: komunikasi pilot antara EVSE dan kendaraan'],
-  next:['Pelajari OCPP: protokol SPKLU ↔ sistem backend','Dalami pemilihan lokasi SPKLU (analisis spasial!)','Lanjut Jalur 16: panel kontrol motor industri']},
- motor:{lvl:'JALUR 16 · KONTROL & OTOMASI',icon:'🎛️',title:'Wiring Motor DOL (Direct On Line)',strict:false,
-  loc:'📍 Bengkel produksi · Panel kontrol motor pompa',
-  story:'Pompa air baku pabrik butuh panel kontrol baru. Kamu merangkai starter DOL klasik: MCB → kontaktor → thermal overload → motor. Inilah rangkaian yang menjadi fondasi semua otomasi industri — sebelum PLC dan VFD, semuanya dimulai dari sini.',
-  goal:'Motor berputar saat tombol START ditekan dan berhenti dengan STOP — melalui rangkaian daya MCB-kontaktor-TOR yang benar.',
-  obj:['Rangkai daya: sumber → MCB → kontaktor K1 → TOR → motor','Lengkapi jalur netral motor','Uji fungsi: START memutar motor, STOP menghentikan'],
-  learn:['Kontaktor = saklar elektromagnetik berdaya besar yang dikendalikan tombol kecil','TOR melindungi MOTOR dari beban lebih; MCB melindungi KABEL dari hubung singkat','DOL menarik arus start 6–8× nominal — hanya untuk motor kecil-menengah','Dari sinilah otomasi naik kelas: kontaktor → relay logic → PLC'],
-  next:['Pelajari rangkaian kontrol: holding contact / pengunci','Naik level: star-delta starter untuk motor besar','Masuk dunia PLC: ladder diagram start-stop pertamamu']},
- star:{lvl:'JALUR 02 · INDUSTRI & MANUFAKTUR',icon:'🏭',title:'Komisioning Star-Delta Starter',strict:false,
-  loc:'📍 Pabrik tekstil · Motor blower 22 kW',
-  story:'Motor blower 22 kW terlalu besar untuk DOL — arus startnya bisa 7× nominal dan membuat tegangan pabrik anjlok. Solusinya starter star-delta: motor start di hubungan bintang (arus ⅓), lalu otomatis pindah ke delta. Kamu yang mengkomisioning panelnya hari ini.',
-  goal:'Motor start mulus di STAR, transisi ke DELTA tepat waktu, dan arus nominal terverifikasi.',
-  obj:['Periksa setting timer & kondisi lilitan motor','Start di STAR — amati arus start yang jinak','Eksekusi transisi ke DELTA pada momen yang tepat'],
-  learn:['Hubungan bintang memberi tegangan kumparan 1/√3 → arus start hanya ⅓ DOL','Timer star-delta umum diset 5–8 detik (sampai motor mendekati kecepatan nominal)','Transisi terlalu cepat = lonjakan arus; terlalu lama = motor terbebani di star','Motor harus delta-rated pada tegangan jaringan (lihat nameplate: Δ380V)'],
-  next:['Pelajari soft starter & VFD — penerus star-delta','Dalami penyebab trip: unbalance, bearing, beban macet','Masuk ke predictive maintenance dengan sensor getaran']},
- ntl:{lvl:'JALUR 05 · ENERGY ANALYST',icon:'📊',title:'Investigasi NTL (Susut Non-Teknis)',strict:false,
-  loc:'📍 Feeder Cendana · Target analitik ML, Indramayu',
-  story:'Model machine learning kantor menandai satu feeder dengan susut tidak wajar. Empat pelanggan jadi kandidat. Tugasmu sebagai analis: baca pola konsumsi di dashboard, tentukan pelanggan paling anomali, lalu verifikasi ke lapangan — karena prediksi model hanyalah hipotesis sampai dibuktikan mata kepala.',
-  goal:'Temukan pelanggan dengan bypass meter berdasar data, kumpulkan bukti, dan laporkan ke tim P2TL.',
-  obj:['Analisis pola konsumsi 4 pelanggan di dashboard','Identifikasi & datangi pelanggan anomali','Temukan modus bypass, dokumentasi, lapor P2TL'],
-  learn:['Penurunan konsumsi drastis tanpa perubahan aktivitas = red flag klasik NTL','Model ML memberi target list — keputusan tetap dari verifikasi lapangan','Modus umum: bypass jumper, meter dibalik, segel palsu, magnet','Bukti = foto + berita acara; analis tidak main hakim sendiri'],
-  next:['Bangun model deteksi NTL-mu sendiri (fitur: pola beban, jam nyala)','Pelajari proses P2TL resmi & perhitungan tagihan susulan','Dalami AMI/smart meter: deteksi anomali real-time']},
- audit:{lvl:'JALUR 06 · ENERGY AUDITOR',icon:'📋',title:'Walkthrough Audit Energi Pabrik',strict:false,
-  loc:'📍 PT Maju Plastik · Audit energi level 1',
-  story:'PT Maju Plastik mengeluh tagihan listrik naik 30% setahun terakhir. Kamu auditor energinya. Hari ini walkthrough audit: berkeliling pabrik dengan mata terlatih, menemukan pemborosan yang bagi orang lain "biasa saja", mengukurnya, dan menyusun rekomendasi yang masuk akal secara bisnis.',
-  goal:'Temukan 4 sumber pemborosan, kuantifikasi, dan serahkan laporan potensi penghematan.',
-  obj:['Walkthrough sistematis area produksi','Identifikasi pemborosan: pencahayaan, udara tekan, motor, HVAC','Susun laporan dengan potensi penghematan terukur'],
-  learn:['Kebocoran udara tekan 3 mm ≈ jutaan rupiah per tahun — musuh tak terlihat pabrik','Lampu menyala siang hari = masalah kontrol & perilaku, solusi termurah','Motor standar IE1 vs IE3 + VFD: selisih efisiensi nyata pada jam operasi panjang','Setiap 1°C setting AC lebih dingin ≈ +6% konsumsi pendinginan'],
-  next:['Pelajari pengukuran baseline dengan power logger','Susun audit ISO 50001: siklus Plan-Do-Check-Act','Hitung kelayakan investasi: simple payback & IRR']},
- pltu:{lvl:'JALUR 07 · PEMBANGKITAN',icon:'🌱',title:'Start-Up & Sinkronisasi Generator',strict:true,
-  loc:'📍 PLTU unit 2 · Control room turbin',
-  story:'Unit 2 selesai overhaul dan siap kembali ke sistem. Kamu operator turbin. Membawa generator dari diam sampai paralel ke jaringan adalah momen paling menegangkan di pembangkit: menutup breaker di luar fase berarti hentakan torsi raksasa yang bisa memuntir poros. Synchroscope adalah matamu.',
-  goal:'Generator sinkron mulus ke jaringan: breaker ditutup TEPAT saat jarum synchroscope di posisi 12, lalu naikkan beban.',
-  obj:['Persiapan: pelumas & putaran turbin nominal','Eksitasi ON — bangkitkan tegangan','Tutup breaker tepat saat sinkron, lalu naikkan beban'],
-  learn:['Syarat paralel: tegangan sama, frekuensi sama, urutan & sudut fase sama','Synchroscope berputar = beda frekuensi; posisi 12 = sudut fase nol','Menutup breaker di luar fase = arus & torsi kejut yang merusak poros-kopling','Setelah sinkron, governor menaikkan beban MW secara bertahap'],
-  next:['Pelajari auto-synchronizer & sync-check relay (proteksi 25)','Dalami kurva kapabilitas generator (P-Q)','Eksplorasi black start: menghidupkan sistem dari nol']},
- sales:{lvl:'JALUR 09 · SALES & TECHNICAL MARKETING',icon:'🤝',title:'Solusi Kapasitor Bank Pelanggan',strict:false,
-  loc:'📍 PT Sinar Logam · Meeting room pelanggan',
-  story:'PT Sinar Logam kena denda kVArh jutaan rupiah tiap bulan karena faktor daya buruk. Kamu technical sales engineer. Bedanya sales biasa dan sales engineer: kamu tidak menjual barang — kamu membaca tagihan, mengukur, menghitung, lalu menjual SOLUSI dengan angka yang tak terbantahkan.',
-  goal:'Diagnosis masalah faktor daya dari data nyata, hitung kapasitas kapasitor yang tepat, dan tutup dengan proposal ber-ROI jelas.',
-  obj:['Bedah tagihan: temukan komponen denda kVArh','Baca meter: cosφ aktual & beban','Hitung Q = P(tanφ1−tanφ2), pilih bank yang tepat, presentasikan ROI'],
-  learn:['Denda kVArh muncul saat cosφ < 0,85 — beban induktif (motor, trafo) penyebabnya','Rumus emas: Q = P × (tanφ1 − tanφ2); 400 kW dari 0,78 → 0,95 butuh ±190 kVAr','Oversize kapasitor = leading & resonansi; undersize = denda tetap jalan','ROI dari penghapusan denda biasanya < 18 bulan — proposal yang menjual dirinya sendiri'],
-  next:['Pelajari detuned reactor untuk jaringan berharmonisa','Susun template ROI calculator untuk prospekmu','Latih discovery call: bertanya sebelum menawarkan']},
- carbon:{lvl:'JALUR 11 · SUSTAINABILITY & CARBON',icon:'🌍',title:'Inventarisasi GHG Scope 1-2-3',strict:false,
-  loc:'📍 PT Maju Plastik · Penyusunan baseline emisi',
-  story:'Buyer Eropa meminta PT Maju Plastik melaporkan jejak karbon — tanpa itu, kontrak ekspor melayang. Kamu carbon analyst pertama mereka. Langkah awal semua perjalanan net zero sama: inventarisasi. Keliling pabrik, identifikasi setiap sumber emisi, dan klasifikasikan dengan benar menurut GHG Protocol.',
-  goal:'Klasifikasikan sumber emisi ke Scope 1, 2, 3 dengan benar, hitung total baseline, dan tetapkan strategi reduksi pertama.',
-  obj:['Identifikasi emisi langsung (Scope 1)','Identifikasi emisi listrik (Scope 2) & rantai nilai (Scope 3)','Hitung baseline & pilih quick-win reduksi'],
-  learn:['Scope 1 = pembakaran langsung milik sendiri (genset, boiler, kendaraan dinas)','Scope 2 = listrik yang dibeli; grid Jawa ±0,77 kg CO₂e per kWh','Scope 3 = rantai nilai (pemasok, logistik, produk) — biasanya porsi terbesar & tersulit','Tanpa baseline tak ada target; tanpa target tak ada net zero'],
-  next:['Pelajari GHG Protocol & ISO 14064 lebih dalam','Susun roadmap reduksi: efisiensi → PLTS → REC/offset','Eksplorasi carbon pricing & perdagangan karbon Indonesia']},
- wte:{lvl:'JALUR 13 · WASTE TO ENERGY',icon:'♻️',title:'Operasi PLTSa (Insinerasi)',strict:true,
-  loc:'📍 PLTSa kapasitas 8 ton/jam · Shift pagi',
-  story:'Truk sampah kota sudah mengantre sejak subuh. Kamu operator PLTSa: hari ini mengawal sampah dari jembatan timbang sampai menjadi listrik 1,2 MW — dengan satu angka keramat yang tak boleh dilanggar: suhu ruang bakar minimal 850°C, karena di bawah itu dioksin beracun lolos ke udara kota.',
-  goal:'Jalankan rantai operasi lengkap: timbang → umpan → bakar ≥850°C → uap → listrik → emisi memenuhi baku mutu.',
-  obj:['Timbang & catat sampah masuk (mass balance)','Operasikan crane & insinerator pada suhu aman','Produksi listrik & verifikasi sistem kontrol emisi'],
-  learn:['Suhu ≥850°C (≥2 detik) menguraikan dioksin & furan — angka keramat insinerasi','Mass balance harian: input sampah vs output listrik, abu & emisi','Energi sampah ±8-10 MJ/kg: 8 ton/jam ≈ 1-1,5 MW listrik netto','Scrubber + filter menangkap gas asam & partikulat sebelum cerobong'],
-  next:['Bandingkan teknologi: insinerasi vs gasifikasi vs landfill gas','Pelajari pengelolaan fly ash & bottom ash (limbah B3)','Hitung kelayakan PLTSa: tipping fee + jual listrik']},
- h2:{lvl:'JALUR 14 · HYDROGEN ENERGY',icon:'💧',title:'Start-Up Green Hydrogen Plant',strict:true,
-  loc:'📍 Pilot plant elektroliser PEM 1 MW',
-  story:'Pilot plant hidrogen hijau pertama daerahmu siap produksi perdana. Kamu operatornya. Hidrogen adalah gas menakjubkan sekaligus menuntut respek penuh: tak berwarna, tak berbau, terbakar pada rentang konsentrasi 4–75%. Di sini, urutan safety bukan formalitas — ia satu-satunya pagar.',
-  goal:'Produksi H₂ pertama yang benar-benar hijau & aman: listrik terbukti dari PLTS, area terbukti bebas bocor, purity memenuhi syarat fuel cell.',
-  obj:['Verifikasi sumber listrik terbarukan (definisi "hijau"!)','Safety check kebocoran SEBELUM start','Start elektroliser, verifikasi purity, kompresi ke storage'],
-  learn:['"Hijau"-nya hidrogen ditentukan sumber listriknya — elektroliser + listrik batubara = hidrogen abu-abu','H₂ flammable 4–75% konsentrasi, tak terdeteksi indra — leak detector adalah hidungmu','Fuel cell menuntut purity 99,97% (ISO 14687)','Elektrolisis PEM: air + listrik → H₂ di katoda, O₂ di anoda'],
-  next:['Pelajari rantai nilai: produksi → kompresi/penyimpanan → fuel cell','Hitung LCOH (levelized cost of hydrogen) dari LCOE PLTS','Eksplorasi blending H₂ ke jaringan gas & amonia hijau']},
- bess:{lvl:'JALUR 15 · BATERAI & BESS',icon:'🔋',title:'Komisioning BESS Peak Shaving',strict:false,
-  loc:'📍 Kawasan industri · BESS container 1 MWh',
-  story:'Pabrik di kawasan ini membayar mahal beban puncak sore hari. Solusinya berdiri di hadapanmu: kontainer BESS 1 MWh. Tugasmu menyambungkan rack baterai ke PCS dan jaringan, lalu mengaktifkan mode peak shaving — mengisi saat murah, melepas saat mahal.',
-  goal:'BESS tersambung benar (DC rack → PCS → trafo → grid), BMS sehat, dan mode peak shaving aktif.',
-  obj:['Wiring DC rack ke PCS (jaga polaritas!) + grounding','Verifikasi kesehatan sel via BMS','Energize PCS & aktifkan mode peak shaving'],
-  learn:['Arsitektur BESS: sel → modul → rack → DC bus → PCS (inverter dua arah) → trafo → grid','BMS menjaga tiap sel: tegangan, suhu, balancing — penentu umur & keselamatan baterai','PCS dua arah: charging (AC→DC) saat tarif murah, discharging (DC→AC) saat puncak','Peak shaving memangkas biaya beban puncak; use case lain: arbitrase, frekuensi, backup'],
-  next:['Pelajari kimia sel: LFP vs NMC (keamanan vs densitas)','Dalami sizing BESS dari profil beban pelanggan','Eksplorasi stacking revenue: peak shaving + regulasi frekuensi']},
- phb:{lvl:'JALUR 01 · INSTALASI BANGUNAN · MISI 2',icon:'🗄️',title:'Panel Hubung Bagi & Proteksi RCD',strict:false,
-  loc:'📍 Rumah 2 lantai · Upgrade panel, Indramayu',
-  story:'Setelah instalasi dasar, kini naik kelas: rumah 2 lantai butuh Panel Hubung Bagi (PHB) dengan pembagian grup dan satu penjaga nyawa bernama RCD/ELCB 30 mA — perangkat yang merasakan arus bocor sekecil 30 per seribu ampere dan memutus sebelum jantung manusia sempat terganggu.',
-  goal:'PHB terangkai: MCB utama → RCD → dua grup beban, lalu RCD terbukti trip saat tombol TEST ditekan.',
-  obj:['Rangkai jalur utama: masuk → MCB utama → RCD 30mA','Bagi beban ke Grup 1 (penerangan) & Grup 2 (stop kontak)','Uji fungsi RCD dengan tombol TEST, lalu reset'],
-  learn:['Pembagian grup membatasi dampak gangguan: satu grup trip, grup lain tetap menyala','RCD 30 mA memutus dalam <40 ms — di bawah ambang fibrilasi jantung','RCD merasakan SELISIH arus fasa vs netral; selisih = ada arus bocor (mungkin lewat tubuh manusia!)','Tombol TEST menyuntik arus bocor buatan — uji bulanan adalah ritual wajib'],
-  next:['Pelajari selektivitas: koordinasi rating MCB utama vs grup','Dalami RCBO (MCB+RCD jadi satu) per sirkit','Rancang PHB 3 fasa untuk rumah dengan daya besar']},
- normal:{lvl:'JALUR 04 · TRANSMISI · MISI 2',icon:'🔄',title:'Penormalan Bay GI 150 kV',strict:true,
-  loc:'📍 GI 150 kV Kosambi · Bay Sukamandi, pukul 16:30',
-  story:'Penggantian isolator selesai. Tim sudah turun dari tower, peralatan sudah dihitung, grounding lokal sudah dilepas. Kini bagian yang sama menegangkannya dengan pembebasan: PENORMALAN — mengembalikan 150.000 volt ke penghantar. Urutannya kebalikan persis dari pembebasan, dan PMT tetap memegang peran pamungkas.',
-  goal:'Bay kembali bertegangan dengan selamat: clearance dipastikan, PMS ditutup TANPA beban, dan PMT menutup TERAKHIR.',
-  obj:['Pastikan clearance: tim, alat & grounding lokal sudah bebas','Cabut PMS tanah, tutup PMS bus & line (kondisi tanpa beban)','Tutup PMT paling akhir, lapor normal ke dispatcher'],
-  learn:['Penormalan = cermin pembebasan: yang dibuka terakhir, ditutup pertama... kecuali satu hal','PMT selalu TERAKHIR menutup — hanya ia yang sanggup memikul lonjakan arus saat kontak bertemu','Menutup PMS lebih dulu aman KARENA PMT masih terbuka (tak ada arus mengalir)','Clearance dari pengawas pekerjaan adalah gerbang mutlak — tak ada penormalan selama satu orang pun masih di area'],
-  next:['Pelajari prosedur switching ganda: transfer bus tanpa padam','Dalami sinkronisasi check pada PMT penghantar (synchro-check 25)','Bandingkan filosofi interlock elektrik vs mekanik'],},
- riso:{lvl:'JALUR 10 · PV & SOLAR · MISI 2',icon:'🔬',title:'Komisioning & Pengujian PLTS',strict:true,
-  loc:'📍 Atap gudang CV Berkah · Hari komisioning',
-  story:'Wiring PLTS sudah rapi sejak misi pertama — tapi rapi belum berarti benar. Hari ini hari pembuktian: serangkaian pengukuran yang menentukan apakah sistem layak disinkronkan ke jaringan PLN. Ingat: selama matahari bersinar, string panel ini HIDUP dan tak bisa dimatikan.',
-  goal:'PLTS lolos uji komisioning lengkap: Voc aman, polaritas benar, isolasi sehat, parameter grid sesuai — lalu sinkron.',
-  obj:['Ukur Voc string & bandingkan dengan batas inverter','Verifikasi polaritas & tahanan isolasi array','Set parameter grid & sinkronkan inverter'],
-  learn:['Voc string harus < tegangan input maks inverter — dihitung pada suhu TERDINGIN (Voc naik saat dingin!)','Polaritas dicek dengan multimeter DC sebelum konektor terpasang — terbalik = inverter wafat','Riso array mendeteksi isolasi kabel yang terluka saat instalasi (tertekuk, tergores rel)','Parameter grid (tegangan, frekuensi, anti-islanding) wajib sesuai ketentuan interkoneksi PLN'],
-  next:['Pelajari pengukuran kurva I-V untuk deteksi panel bermasalah','Dalami thermal imaging: hotspot & bypass diode','Susun dokumen komisioning untuk pengajuan exim PLN']},
- plc:{lvl:'JALUR 16 · KONTROL & OTOMASI · MISI 2',icon:'📟',title:'Ladder PLC Start-Stop Pertamamu',strict:false,
-  loc:'📍 Workshop otomasi · PLC trainer kit',
-  story:'Di misi pertama kamu merangkai start-stop dengan kabel dan kontaktor. Sekarang logika yang sama dipindahkan ke tempat ia hidup di industri modern: LADDER DIAGRAM di dalam PLC. Susun anak tangga pertamamu — kontak demi kontak — download, dan saksikan logika menggantikan kabel.',
-  goal:'Ladder start-stop dengan self-holding tersusun benar, terdownload ke PLC, dan lolos uji START/STOP di tombol fisik.',
-  obj:['Susun rung: kontak NO Start → NC Stop → coil K1','Tambahkan kontak holding (self-latching) paralel Start','Download program & uji fungsi pada tombol fisik'],
-  learn:['Ladder = jelmaan rangkaian relay: rel kiri (fasa) → kontak-kontak → coil → rel kanan (netral)','Self-holding: kontak bantu K1 paralel tombol Start "mengunci" coil setelah tombol dilepas','Tombol STOP selalu kontak NC: kabel putus = rangkaian berhenti = fail-safe by design','Logika yang sama, medium berbeda: kabel kemarin, ladder hari ini, function block esok'],
-  next:['Tambah timer (TON) untuk star-delta versi PLC','Pelajari input/output addressing & wiring sensor ke PLC','Naik ke HMI: tombol virtual & monitoring real-time']},
-};
+const MISSIONS={}; /* entri diisi oleh missions/jalurNN.js (lazy load) */
 
 /* =====================================================================
    MENU 16 TRACK
    ===================================================================== */
-function starsOf(k){const s=bestStars[k]||0;return '★'.repeat(s)+'☆'.repeat(3-s);}
+function starsOf(k){const s=bestStars[k]||0;
+  return '<span class="st">'+'★'.repeat(s)+'<span class="e">'+'★'.repeat(3-s)+'</span></span>';}
 function renderMenu(){
   const g=$('#trackGrid'); g.innerHTML='';
+  /* statistik global */
+  let totMis=0,doneMis=0,totStars=0;
+  TRACKS.forEach(t=>t.missions.forEach(m=>{totMis++;const s=bestStars[m.k]||0;
+    if(s>0)doneMis++; totStars+=s;}));
+  const sr=$('#statsRow');
+  if(sr)sr.innerHTML=
+    `<div class="statChip"><span class="n">${totMis}</span><span class="l">Total<br>Simulator</span></div>`+
+    `<div class="statChip"><span class="n">${doneMis}</span><span class="l">Misi<br>Selesai</span></div>`+
+    `<div class="statChip"><span class="n">${totStars}<span style="font-size:12px;color:var(--dim)">/${totMis*3}</span></span><span class="l">Bintang<br>Terkumpul</span></div>`+
+    `<div class="statChip"><span class="n">16</span><span class="l">Jalur<br>Spesialisasi</span></div>`;
   TRACKS.forEach(t=>{
     const d=document.createElement('div');
-    d.className='tcard '+(t.missions.length?'active':'locked');
-    let inner=`<div class="lvl">${t.code}</div><h2>${t.icon} ${t.name}</h2><p>${t.desc}</p>`;
+    const done=t.missions.filter(m=>(bestStars[m.k]||0)>0).length;
+    const allDone=t.missions.length&&done===t.missions.length;
+    d.className='tcard '+(t.missions.length?'active':'locked')+(allDone?' complete':'');
+    let inner=`<div class="tcHead"><div class="tcIc">${t.icon}</div>`+
+      `<div class="tcMeta"><div class="lvl">${t.code}</div><h2>${t.name}</h2></div></div>`+
+      `<div class="tcDesc">${t.desc}</div>`;
     if(t.missions.length){
-      t.missions.forEach(mk=>{const m=MISSIONS[mk];
-        inner+=`<button class="mBtn" data-m="${mk}"><span>▶ ${m.title}</span><span class="st">${starsOf(mk)}</span></button>`;});
-      if(t.missions.length<2)
-        inner+=`<div class="lockTag">🔜 MISI 2 — TAHAP BERIKUTNYA</div>`;
+      const pct=Math.round(done/t.missions.length*100);
+      inner+=`<div class="tcProg"><div class="tcBar"><i style="width:${pct}%"></i></div>`+
+        `<span class="pct">${done}/${t.missions.length}</span></div>`;
+      inner+=`<div class="tcMissions">`;
+      t.missions.forEach((m,i)=>{
+        const isDone=(bestStars[m.k]||0)>0;
+        inner+=`<button class="mBtn${isDone?' done':''}" data-m="${m.k}">`+
+          `<span class="mNum">M${i+1}</span>`+
+          `<span class="mTitle">${m.t}</span>`+
+          `${starsOf(m.k)}</button>`;});
+      inner+=`</div>`;
     }else{
       inner+=`<div class="lockTag">🔒 TAHAP BERIKUTNYA</div>`;
     }
@@ -480,14 +407,16 @@ function renderMenu(){
 /* ---------- briefing ---------- */
 let briefKey=null;
 function openBrief(k){
-  briefKey=k; const m=MISSIONS[k];
-  $('#bLvl').textContent='MISSION BRIEFING · '+m.lvl;
-  $('#bTitle').textContent=m.icon+' '+m.title;
-  $('#bLoc').textContent=m.loc;
-  $('#bStory').textContent=m.story;
-  $('#bGoal').textContent=m.goal;
-  $('#bObj').innerHTML=m.obj.map(o=>`<li>${o}</li>`).join('');
-  $('#brief').style.display='flex';
+  ensureMission(k).then(()=>{
+    briefKey=k; const m=MISSIONS[k];
+    $('#bLvl').textContent='MISSION BRIEFING · '+m.lvl;
+    $('#bTitle').textContent=m.icon+' '+m.title;
+    $('#bLoc').textContent=m.loc;
+    $('#bStory').textContent=m.story;
+    $('#bGoal').textContent=m.goal;
+    $('#bObj').innerHTML=m.obj.map(o=>`<li>${o}</li>`).join('');
+    $('#brief').style.display='flex';
+  }).catch(()=>loadFail(FILE_OF[k]||'?'));
 }
 $('#bCancel').onclick=()=>$('#brief').style.display='none';
 $('#bStart').onclick=()=>{$('#brief').style.display='none';startModule(briefKey);};
@@ -650,9 +579,14 @@ function renderTasks(items,curIdx){
 $('#taskToggle').onclick=()=>{const l=$('#taskList');
   const hid=l.style.display==='none'; l.style.display=hid?'':'none';
   $('#taskToggle').textContent=hid?'tutup':'buka';};
+$('#tutorMin').onclick=()=>{const t=$('#tutor');t.classList.toggle('min');
+  $('#tutorMin').textContent=t.classList.contains('min')?'▴ VOLTA':'▾ SEMBUNYIKAN';};
 let typeTO=null;
 function say(html){
   clearTimeout(typeTO);
+  /* pesan baru → buka kembali panel tutor bila sedang disembunyikan */
+  const tu=$('#tutor');
+  if(tu.classList.contains('min')){tu.classList.remove('min');$('#tutorMin').textContent='▾ SEMBUNYIKAN';}
   const el=$('#tutorTxt'), av=$('#avatar');
   el.innerHTML=''; av.classList.add('talk');
   const tmp=document.createElement('div'); tmp.innerHTML=html;
@@ -760,771 +694,6 @@ function room(floorC,wallC,W=12,D=9){
   return -2.86;}
 
 /* =====================================================================
-   MISI 1 — RUMAH (Jalur 01)
-   ===================================================================== */
-let m1={};
-function buildRumah(){
-  freshScene(0x9fb8d0,0x121e2c);
-  cam={theta:0,phi:1.18,r:6.4,target:new THREE.Vector3(0,2,-1)};
-  const Z=room(0x6b5a45,0xcfd8d2);
-  const skirt=box(11,.25,.18,0x3d4a55);skirt.position.set(0,.12,-2.96);scene.add(skirt);
-
-  const src=box(1.15,.95,.18,COL.dark);src.position.set(-3.6,3.0,Z);scene.add(src);
-  src.add(label('SUMBER PLN',.85).translateY(.72));
-  terminal('PLN-F','fasa',-3.95,2.62,Z+.12);
-  terminal('PLN-N','netral',-3.6,2.62,Z+.12);
-  terminal('PLN-G','ground',-3.25,2.62,Z+.12);
-  scene.add(label('F',.45,'#ff8d8d').translateX(-3.95).translateY(2.38).translateZ(Z+.1));
-  scene.add(label('N',.45,'#9cc4ff').translateX(-3.6).translateY(2.38).translateZ(Z+.1));
-  scene.add(label('G',.45,'#8df0b8').translateX(-3.25).translateY(2.38).translateZ(Z+.1));
-
-  const mcb=box(.5,.8,.2,COL.cream);mcb.position.set(-1.9,2.95,Z);scene.add(mcb);
-  mcb.add(label('MCB 6A',.7).translateY(.62));
-  terminal('MCB-IN','fasa',-1.9,3.45,Z+.12);
-  terminal('MCB-OUT','fasa',-1.9,2.45,Z+.12);
-  scene.add(label('IN',.4).translateX(-1.55).translateY(3.45).translateZ(Z+.1));
-  scene.add(label('OUT',.4).translateX(-1.5).translateY(2.45).translateZ(Z+.1));
-
-  const sk=box(.42,.42,.16,COL.cream);sk.position.set(.2,1.7,Z);scene.add(sk);
-  m1.lever=box(.14,.2,.09,0xc8d2dc);m1.lever.position.set(.2,1.7,Z+.13);scene.add(m1.lever);
-  actMesh(m1.lever,'SAKLAR'); actMesh(sk,'SAKLAR');
-  sk.add(label('SAKLAR',.62).translateY(.45));
-  terminal('SK-IN','fasa',.2,2.12,Z+.12);
-  terminal('SK-OUT','fasa',.2,1.28,Z+.12);
-
-  const fit=cyl(.1,.14,.22,0x444444);fit.position.set(2,3.6,Z+.1);scene.add(fit);
-  m1.bulbMat=new THREE.MeshStandardMaterial({color:0xfff4c2,roughness:.3,emissive:0x000000});
-  m1.bulb=new THREE.Mesh(new THREE.SphereGeometry(.2,20,16),m1.bulbMat);
-  m1.bulb.position.set(2,3.36,Z+.1);scene.add(m1.bulb);
-  m1.light=new THREE.PointLight(0xffe9a8,0,7);m1.light.position.set(2,3.2,Z+.6);scene.add(m1.light);
-  scene.add(label('LAMPU',.62).translateX(2).translateY(3.95).translateZ(Z));
-  terminal('L-F','fasa',1.78,3.62,Z+.16);
-  terminal('L-N','netral',2.22,3.62,Z+.16);
-
-  const skk=box(.5,.5,.16,COL.cream);skk.position.set(3.1,1.5,Z);scene.add(skk);
-  skk.add(label('STOP KONTAK',.62).translateY(.5));
-  actMesh(skk,'STOPKONTAK');
-  terminal('SKK-F','fasa',2.85,1.18,Z+.12);
-  terminal('SKK-N','netral',3.35,1.18,Z+.12);
-  terminal('SKK-G','ground',3.1,1.92,Z+.12);
-
-  terms={};clickables.forEach(c=>{if(c.userData.kind==='terminal')terms[c.userData.id]=c;});
-
-  startSeq([
-   {type:'wire',a:'PLN-F',b:'MCB-IN',color:COL.fasa,done:false,
-    desc:'Sambungkan FASA sumber PLN (merah) ke terminal IN MCB.',
-    why:'MCB adalah benteng pertama instalasi: saat korsleting atau beban lebih, ia trip dan memutus arus sebelum kabel terbakar. Karena itu semua fasa wajib lewat MCB.',
-    wrong:'Fasa (merah) harus masuk ke MCB dulu, jangan langsung ke beban.'},
-   {type:'wire',a:'MCB-OUT',b:'SK-IN',color:COL.fasa,done:false,
-    desc:'Dari OUT MCB, tarik fasa ke terminal IN SAKLAR.',
-    why:'Saklar wajib memutus FASA, bukan netral (PUIL). Kalau saklar di netral: lampu mati, tapi fitting masih bertegangan — menyetrum saat ganti bohlam!'},
-   {type:'wire',a:'SK-OUT',b:'L-F',color:COL.fasa,done:false,
-    desc:'Dari OUT SAKLAR, sambungkan ke terminal FASA lampu (L-F).',
-    why:'Inilah rangkaian kendali paling dasar: saklar menjadi gerbang fasa menuju lampu. ON = gerbang terbuka = lampu menyala.'},
-   {type:'wire',a:'PLN-N',b:'L-N',color:COL.netral,done:false,
-    desc:'Sambungkan NETRAL PLN (biru) langsung ke L-N lampu.',
-    why:'Netral adalah jalur balik arus dan tidak boleh diputus saklar. Arus: fasa → saklar → lampu → netral → sumber. Tanpa jalur balik, rangkaian tak tertutup.',
-    wrong:'Kabel biru (netral) langsung ke lampu, tanpa lewat saklar/MCB.'},
-   {type:'wire',a:'MCB-OUT',b:'SKK-F',color:COL.fasa,done:false,
-    desc:'Cabangkan fasa dari OUT MCB ke terminal F stop kontak.',
-    why:'Stop kontak butuh fasa permanen (tanpa saklar) agar peralatan bisa dicolok kapan saja — tapi tetap dari MCB agar terlindungi.'},
-   {type:'wire',a:'PLN-N',b:'SKK-N',color:COL.netral,done:false,
-    desc:'Sambungkan netral PLN ke terminal N stop kontak.',
-    why:'Jalur balik untuk peralatan yang dicolok — melengkapi rangkaian tertutup.'},
-   {type:'wire',a:'PLN-G',b:'SKK-G',color:COL.ground,done:false,
-    desc:'Terakhir: GROUNDING (kuning-hijau) PLN ke terminal G stop kontak.',
-    why:'Grounding = penyelamat nyawa. Arus bocor ke bodi peralatan langsung dibuang ke tanah — bukan lewat tubuh orang yang menyentuhnya.',
-    wrong:'Kabel kuning-hijau khusus grounding, hanya ke terminal G.'},
-   {type:'act',aid:'SAKLAR',done:false,targets:()=>[sk],
-    desc:'UJI COBA: klik SAKLAR untuk menyalakan lampu!',
-    why:'Commissioning test — wiring belum selesai sebelum terbukti berfungsi.',
-    fx(){m1.lever.rotation.x=-.4;
-      m1.bulbMat.emissive.setHex(0xffd97a);m1.bulbMat.emissiveIntensity=1;m1.light.intensity=1.5;
-      toast('💡 LAMPU MENYALA!','ok',2400);sfx.big();}},
-   {type:'act',aid:'STOPKONTAK',done:false,targets:()=>[skk],
-    desc:'UJI COBA: klik STOP KONTAK untuk tes tegangan dengan tespen.',
-    why:'Tespen membuktikan fasa hadir di lubang yang benar & grounding tersambung.',
-    fx(){toast('🔍 Tespen menyala: 220V & grounding OK ✓','ok',2400);}},
-  ],()=>{say('🎉 <b>Misi tuntas!</b> Rumah Pak Dadang terang & aman sesuai PUIL.');
-    setTimeout(()=>showWin('rumah'),1500);});
-
-  say('Halo, aku <b>VOLTA</b> ⚡ Selamat datang di rumah Pak Dadang! Aturan main: <b>klik terminal asal → klik terminal tujuan</b>. Ikuti penanda kuning ▼, dan tekan <b>❓ KENAPA</b> kalau penasaran alasan teknisnya. Ayo mulai!');
-  $('#modTitle').textContent='J01 — Instalasi Listrik Rumah';
-  $('#taskHead').textContent='DIAGRAM PENYAMBUNGAN';}
-
-/* =====================================================================
-   MISI 2 — APP (Jalur 03)
-   ===================================================================== */
-let m2={};
-function buildApp(){
-  freshScene(0xaac4dc,0x10202e);
-  cam={theta:0,phi:1.2,r:6,target:new THREE.Vector3(0,2.2,-1)};
-  const Z=room(0x55606a,0xb9c4bd);
-
-  const pole=cyl(.09,.12,5.2,0x6f7a84);pole.position.set(-4.6,2.6,-2.2);scene.add(pole);
-  scene.add(label('TIANG JTR',.7).translateX(-4.6).translateY(5.0).translateZ(-2.2));
-  scene.add(label('SR (Sambungan Rumah)',.8).translateX(-3.1).translateY(4.45).translateZ(Z));
-  terminal('SR-F','fasa',-3.2,3.75,Z+.12);
-  terminal('SR-N','netral',-2.8,3.75,Z+.12);
-
-  const kwh=box(1.05,1.35,.22,0x2d3a4a);kwh.position.set(-.6,2.7,Z);scene.add(kwh);
-  kwh.add(label('kWh METER 1 FASA',.8).translateY(.92));
-  m2.lcdC=document.createElement('canvas');m2.lcdC.width=256;m2.lcdC.height=96;
-  m2.lcdTex=new THREE.CanvasTexture(m2.lcdC);
-  const lcd=new THREE.Mesh(new THREE.PlaneGeometry(.72,.27),
-    new THREE.MeshBasicMaterial({map:m2.lcdTex}));
-  lcd.position.set(-.6,2.92,Z+.115);scene.add(lcd);
-  m2.kwhVal=0;m2.on=false;drawLCD('00000.0','STANDBY');
-  const tb=box(.85,.2,.24,0x1c2630);tb.position.set(-.6,2.05,Z);scene.add(tb);
-  const tx=[-.93,-.71,-.49,-.27],ids=['T1','T3','T4','T6'],ty=['fasa','fasa','netral','netral'],nm=['1','3','4','6'];
-  tx.forEach((x,i)=>{terminal(ids[i],ty[i],x,2.05,Z+.16);
-    scene.add(label(nm[i],.38).translateX(x).translateY(1.83).translateZ(Z+.12));});
-
-  const mcb=box(.5,.8,.2,COL.cream);mcb.position.set(1.4,2.7,Z);scene.add(mcb);
-  mcb.add(label('MCB PEMBATAS',.7).translateY(.62));
-  m2.lever=box(.16,.22,.1,0x2255aa);m2.lever.position.set(1.4,2.7,Z+.16);
-  m2.lever.rotation.x=.35;scene.add(m2.lever);
-  actMesh(m2.lever,'MCB2'); actMesh(mcb,'MCB2');
-  terminal('MCB-IN','fasa',1.4,3.2,Z+.12);
-  terminal('MCB-OUT','fasa',1.4,2.2,Z+.12);
-
-  const inst=box(.8,.45,.16,0x3a4a3e);inst.position.set(3.2,1.7,Z);scene.add(inst);
-  inst.add(label('KE INSTALASI',.7).translateY(.42));
-  terminal('INST-F','fasa',3.0,1.7,Z+.12);
-  terminal('INST-N','netral',3.4,1.7,Z+.12);
-
-  terms={};clickables.forEach(c=>{if(c.userData.kind==='terminal')terms[c.userData.id]=c;});
-  moduleTick=(dt)=>{if(m2.on){m2.kwhVal+=dt*.8;drawLCD(m2.kwhVal.toFixed(1).padStart(7,'0'),'ON');}};
-
-  startSeq([
-   {type:'wire',a:'SR-F',b:'T1',color:COL.fasa,done:false,
-    desc:'Sambungkan FASA SR ke TERMINAL 1 kWh meter (fasa masuk).',
-    why:'Terminal 1 = pintu masuk fasa ke kumparan arus meter. Semua energi harus "melapor" lewat sini — kalau mem-bypass meter, itulah susut non-teknis (NTL).',
-    wrong:'Standar kWh 1 fasa: terminal 1 = fasa MASUK.'},
-   {type:'wire',a:'T3',b:'MCB-IN',color:COL.fasa,done:false,
-    desc:'Dari TERMINAL 3 (fasa keluar), sambungkan ke IN MCB pembatas.',
-    why:'MCB di sini PEMBATAS daya kontrak: pelanggan 900 VA dapat MCB 4A — pakai melebihi kontrak, MCB trip.'},
-   {type:'wire',a:'SR-N',b:'T4',color:COL.netral,done:false,
-    desc:'Sambungkan NETRAL SR ke TERMINAL 4 (netral masuk).',
-    why:'Kumparan tegangan meter butuh referensi netral untuk mengukur 220V. Tanpa ini meter tak bisa menghitung daya.'},
-   {type:'wire',a:'T6',b:'INST-N',color:COL.netral,done:false,
-    desc:'Dari TERMINAL 6, teruskan netral ke instalasi pelanggan.',
-    why:'Lengkap sudah polanya: 1-masuk 3-keluar (fasa), 4-masuk 6-keluar (netral). Hafalkan: ganjil=fasa, genap=netral.'},
-   {type:'wire',a:'MCB-OUT',b:'INST-F',color:COL.fasa,done:false,
-    desc:'Terakhir: OUT MCB ke fasa instalasi pelanggan.',
-    why:'Rantai energi utuh: JTR → SR → kWh meter → MCB → instalasi. Setiap kWh kini melewati alat ukur — adil bagi semua.'},
-   {type:'act',aid:'MCB2',done:false,targets:()=>[mcb],
-    desc:'ENERGIZE! Klik MCB pembatas untuk ON. Lihat register meter.',
-    why:'Momen kebenaran: register berputar = wiring benar. Petugas selalu cek sebelum menyegel.',
-    fx(){m2.on=true;m2.lever.rotation.x=-.35;sfx.big();
-      toast('⚡ MCB ON — kWh meter mencatat!','ok',2600);}},
-  ],()=>{say('🎉 <b>Pelanggan baru resmi menyala!</b> Meter mencatat, segel siap dipasang.');
-    setTimeout(()=>showWin('app'),2400);});
-
-  say('VOLTA di sini ⚡ Kita pasang <b>APP — Alat Pembatas & Pengukur</b>. Kunci level ini: hafalan emas terminal kWh 1 fasa = <b>1 · 3 · 4 · 6</b>. Ikuti penanda ▼ dan jangan ON-kan MCB sebelum waktunya!');
-  $('#modTitle').textContent='J03 — Pemasangan APP / kWh Meter';
-  $('#taskHead').textContent='URUTAN 1-3-4-6';}
-function drawLCD(num,status){
-  const g=m2.lcdC.getContext('2d');
-  g.fillStyle='#0d1a12';g.fillRect(0,0,256,96);
-  g.fillStyle='#46ff8e';g.font='700 44px Consolas,monospace';
-  g.textAlign='right';g.fillText(num,236,52);
-  g.font='600 20px Consolas,monospace';g.textAlign='left';
-  g.fillStyle=status==='ON'?'#46ff8e':'#7d8f84';g.fillText(status+' · kWh',16,82);
-  m2.lcdTex.needsUpdate=true;}
-
-/* =====================================================================
-   MISI 3 — GARDU (Jalur 03)
-   ===================================================================== */
-let m3={};
-function buildGardu(){
-  freshScene(0x6e87a3,0x0c151f);
-  cam={theta:.15,phi:1.22,r:7.5,target:new THREE.Vector3(.4,1.5,-.5)};
-  const floor=box(14,.1,10,0x39424c);floor.position.y=-.05;scene.add(floor);
-  const wall=box(13,4.2,.2,0x55626e);wall.position.set(0,2.1,-3.4);scene.add(wall);
-  const line=box(10,.02,.12,0xffd23f,{emissive:0x6b5200,emissiveIntensity:.4});
-  line.position.set(0,.02,.9);scene.add(line);
-
-  const desk=box(1.3,.08,.7,0x6b4f33);desk.position.set(-3.6,1.0,-1.2);scene.add(desk);
-  const leg=box(.08,1,.08,0x4a3624);leg.position.set(-4.15,.5,-1.5);scene.add(leg);
-  const l2=leg.clone();l2.position.x=-3.05;scene.add(l2);
-  const l3=leg.clone();l3.position.set(-4.15,.5,-.9);scene.add(l3);
-  const l4=leg.clone();l4.position.set(-3.05,.5,-.9);scene.add(l4);
-  m3.radio=box(.18,.34,.1,0x141a20,{emissive:0x06303d,emissiveIntensity:.5});
-  m3.radio.position.set(-3.6,1.22,-1.2);scene.add(m3.radio);
-  actMesh(m3.radio,'RADIO');
-  scene.add(label('RADIO HT',.7,'#5fd4ff').translateX(-3.6).translateY(1.75).translateZ(-1.2));
-
-  const rack=box(.9,1.6,.12,0x3a444e);rack.position.set(-1.9,1.5,-3.3);scene.add(rack);
-  m3.helm=new THREE.Mesh(new THREE.SphereGeometry(.18,18,14,0,Math.PI*2,0,Math.PI/2),
-    new THREE.MeshStandardMaterial({color:0xffd23f,roughness:.4}));
-  m3.helm.position.set(-1.9,1.85,-3.2);scene.add(m3.helm);
-  actMesh(m3.helm,'APD'); actMesh(rack,'APD');
-  scene.add(label('RAK APD',.7,'#5fd4ff').translateX(-1.9).translateY(2.5).translateZ(-3.2));
-
-  const names=['INCOMING','METERING','OUTGOING PENYULANG'];
-  [-0.2,1.2,2.6].forEach((x,i)=>{
-    const k=box(1.15,2.3,.9,0x9aa7b4);k.position.set(x,1.15,-2.8);scene.add(k);
-    k.add(label(names[i],.78).translateY(1.45));});
-  const KX=2.6,KZ=-2.3;
-  m3.cbInd=new THREE.Mesh(new THREE.SphereGeometry(.06,14,12),
-    new THREE.MeshStandardMaterial({color:0xff3b3b,emissive:0xff3b3b,emissiveIntensity:1}));
-  m3.cbInd.position.set(KX-.3,1.95,KZ);scene.add(m3.cbInd);
-  m3.handle=box(.1,.42,.1,0x18242f,{emissive:0x000000});
-  m3.handle.position.set(KX+.25,1.45,KZ);scene.add(m3.handle);
-  actMesh(m3.handle,'CB');
-  scene.add(label('TUAS CB',.5,'#5fd4ff').translateX(KX+.25).translateY(1.78).translateZ(KZ));
-  m3.vlamps=[];
-  [-.14,0,.14].forEach(dx=>{
-    const l=new THREE.Mesh(new THREE.SphereGeometry(.035,10,8),
-      new THREE.MeshStandardMaterial({color:0xff8030,emissive:0xff8030,emissiveIntensity:1}));
-    l.position.set(KX+dx,1.05,KZ);scene.add(l);actMesh(l,'VOLT');m3.vlamps.push(l);});
-  scene.add(label('INDIKATOR TEGANGAN',.55).translateX(KX).translateY(.85).translateZ(KZ));
-  m3.earth=box(.3,.1,.1,0xffd23f);
-  m3.earth.position.set(KX-.25,.5,KZ);m3.earth.rotation.z=.5;scene.add(m3.earth);
-  actMesh(m3.earth,'EARTH');
-  scene.add(label('EARTHING SW',.5,'#5fd4ff').translateX(KX-.25).translateY(.28).translateZ(KZ));
-  m3.sign=box(.7,.45,.04,0xd8d8d8);m3.sign.position.set(4.1,1.2,-1.6);scene.add(m3.sign);
-  const sp2=cyl(.03,.03,1.1,0x666666);sp2.position.set(4.1,.55,-1.6);scene.add(sp2);
-  m3.sign.add(label('RAMBU K3',.6,'#ff8d8d').translateY(.45));
-  actMesh(m3.sign,'RAMBU'); actMesh(sp2,'RAMBU');
-  const pl=new THREE.PointLight(0xbfd6ea,.5,12);pl.position.set(0,3.6,0);scene.add(pl);
-
-  startSeq([
-   {type:'act',aid:'RADIO',done:false,targets:()=>[m3.radio],
-    desc:'Lapor & minta IZIN MANUVER ke dispatcher (klik RADIO HT).',
-    why:'Dispatcher melihat keseluruhan jaringan — tanpa izinnya, manuvermu bisa bertabrakan dengan operasi lain dan membahayakan tim di lokasi berbeda.',
-    fx(){toast('📻 "IDR-042, izin manuver pembebasan — DISETUJUI."','ok',2800);}},
-   {type:'act',aid:'APD',done:false,targets:()=>[m3.helm],
-    desc:'Kenakan APD lengkap: helm, sarung tangan 20kV, sepatu isolasi.',
-    why:'Arc flash di tegangan menengah mencapai ribuan derajat sekejap. APD dipakai SEBELUM mendekati kubikel, bukan setelahnya.',
-    fx(){toast('🦺 APD lengkap terpasang!','ok',2200);}},
-   {type:'act',aid:'CB',done:false,targets:()=>[m3.handle],
-    desc:'BUKA CB kubikel outgoing penyulang (klik TUAS CB).',
-    why:'CB dirancang memutus arus beban penuh dengan aman — peredam busurnya menelan percikan. Satu-satunya alat yang boleh memutus rangkaian berbeban.',
-    fx(){m3.cbInd.material.color.setHex(0x36e07a);m3.cbInd.material.emissive.setHex(0x36e07a);
-      m3.handle.rotation.z=.6;toast('🔓 CB TERBUKA — indikator merah → hijau.','ok',2400);}},
-   {type:'act',aid:'VOLT',done:false,targets:()=>[m3.vlamps[1]],
-    desc:'BUKTIKAN tegangan NOL pada indikator (klik lampu indikator).',
-    why:'Aturan keramat: "anggap bertegangan sampai terbukti tidak". CB terbuka bukan jaminan — bisa ada tegangan balik dari sisi lain.',
-    fx(){m3.vlamps.forEach(l=>{l.material.emissiveIntensity=0;l.material.color.setHex(0x553322);});
-      toast('🔍 Indikator PADAM — tegangan terbukti NOL.','ok',2400);}},
-   {type:'act',aid:'EARTH',done:false,targets:()=>[m3.earth],
-    desc:'Masukkan EARTHING SWITCH / pentanahan (klik tuas kuning).',
-    why:'Kabel 20kV menyimpan muatan kapasitif walau diputus — seperti kapasitor raksasa. Earthing membuang muatan sisa & menahan tegangan tiba-tiba.',
-    fx(){m3.earth.rotation.z=0;m3.earth.position.y=.62;
-      toast('⏚ EARTHING MASUK.','ok',2200);}},
-   {type:'act',aid:'RAMBU',done:false,targets:()=>[m3.sign],
-    desc:'Pasang RAMBU "JANGAN DIOPERASIKAN" + lockout.',
-    why:'LOTO melindungi tim dari "orang ketiga" — operator lain yang tak tahu ada pekerjaan. Gembok + rambu = komunikasi yang tak bisa diabaikan.',
-    fx(){m3.sign.material.color.setHex(0xffd23f);
-      m3.sign.add(label('JANGAN DIOPERASIKAN!',.62,'#b02020').translateZ(.06));
-      toast('🚧 AREA KERJA AMAN.','ok',2400);}},
-  ],()=>{say('🎉 <b>Manuver pembebasan TUNTAS!</b> "Dispatcher, penyulang Karang bebas tegangan, tim har dipersilakan bekerja."');
-    setTimeout(()=>showWin('gardu'),2000);});
-
-  say('VOLTA di sini, dan kali ini aku serius ⚡ Kamu memegang gardu 20.000 volt. <b>Ikuti 6 langkah SOP persis berurutan</b> — salah urutan = pelanggaran berat. Tarik napas, kita mulai.');
-  $('#modTitle').textContent='J03 — Manuver Pembebasan Gardu 20 kV';
-  $('#taskHead').textContent='SOP MANUVER PEMBEBASAN';}
-
-/* =====================================================================
-   MISI 4 — TRANSMISI: SWITCHING GI 150 kV (Jalur 04)
-   ===================================================================== */
-let mt={};
-function buildTransmisi(){
-  freshScene(0x7f9cc0,0x0d1726);
-  cam={theta:.2,phi:1.15,r:11,target:new THREE.Vector3(0,2.6,-1)};
-  const ground=box(26,.1,18,0x4a4f56);ground.position.y=-.05;scene.add(ground);
-  const gravel=box(12,.04,8,0x5a6068);gravel.position.set(0,.02,-1);scene.add(gravel);
-
-  /* menara sederhana kiri-kanan */
-  [-8,8].forEach(x=>{
-    const t1=box(.25,7,.25,0x8d99a6);t1.position.set(x-.6,3.5,-3);scene.add(t1);
-    const t2=t1.clone();t2.position.x=x+.6;scene.add(t2);
-    const cross=box(2.4,.2,.2,0x8d99a6);cross.position.set(x,6.6,-3);scene.add(cross);});
-  /* busbar atas */
-  const bus=cyl(.05,.05,16,0xb9c4cf);bus.rotation.z=Math.PI/2;bus.position.set(0,5.6,-3);scene.add(bus);
-  scene.add(label('BUSBAR 150 kV',.9).translateY(6.1).translateZ(-3));
-
-  /* panel kontrol (radio/izin) */
-  const ctrl=box(.9,1.5,.5,0x2b3a4a);ctrl.position.set(-5.2,.75,1.6);scene.add(ctrl);
-  ctrl.add(label('PANEL KONTROL',.7,'#5fd4ff').translateY(1.05));
-  actMesh(ctrl,'IZIN');
-
-  /* PMS BUS - frame dengan lengan */
-  function pms(x,name,key){
-    const base=box(.9,.18,.5,0x6f7a84);base.position.set(x,2.0,-3);scene.add(base);
-    const p1=cyl(.06,.08,1.9,0xc9b08a);p1.position.set(x-.3,1.05,-3);scene.add(p1);
-    const p2=p1.clone();p2.position.x=x+.3;scene.add(p2);
-    const arm=box(.7,.07,.07,0xd8e0e8,{metalness:.6});arm.position.set(x,2.12,-3);scene.add(arm);
-    actMesh(arm,key); actMesh(base,key);
-    scene.add(label(name,.62,'#5fd4ff').translateX(x).translateY(2.55).translateZ(-3));
-    return arm;}
-  mt.pmsBus=pms(-2.4,'PMS BUS','PMSB');
-  /* PMT - tabung besar */
-  const pmtBody=cyl(.4,.45,1.6,0x9aa7b4);pmtBody.position.set(0,1.6,-3);scene.add(pmtBody);
-  const bush1=cyl(.09,.12,1.1,0xc9b08a);bush1.position.set(-.22,2.9,-3);scene.add(bush1);
-  const bush2=bush1.clone();bush2.position.x=.22;scene.add(bush2);
-  actMesh(pmtBody,'PMT');
-  mt.pmtInd=new THREE.Mesh(new THREE.SphereGeometry(.07,14,12),
-    new THREE.MeshStandardMaterial({color:0xff3b3b,emissive:0xff3b3b,emissiveIntensity:1}));
-  mt.pmtInd.position.set(0,1.0,-2.6);scene.add(mt.pmtInd);
-  scene.add(label('PMT (CB 150kV)',.72,'#5fd4ff').translateY(3.8).translateZ(-3));
-  /* PMS LINE */
-  mt.pmsLine=pms(2.4,'PMS LINE','PMSL');
-  /* PMS tanah */
-  mt.earth=box(.45,.12,.12,0xffd23f);mt.earth.position.set(2.4,.55,-2.5);mt.earth.rotation.z=.5;scene.add(mt.earth);
-  actMesh(mt.earth,'EARTH');
-  scene.add(label('PMS TANAH',.55,'#5fd4ff').translateX(2.4).translateY(.3).translateZ(-2.4));
-  /* rambu */
-  mt.sign=box(.7,.45,.04,0xd8d8d8);mt.sign.position.set(4.6,1.1,.4);scene.add(mt.sign);
-  const sp=cyl(.03,.03,1.0,0x666666);sp.position.set(4.6,.5,.4);scene.add(sp);
-  mt.sign.add(label('RAMBU',.55,'#ff8d8d').translateY(.42));
-  actMesh(mt.sign,'RAMBU'); actMesh(sp,'RAMBU');
-  /* kawat penghantar ke arah PMS line */
-  const span=cyl(.025,.025,7,0x3c4754);span.rotation.z=Math.PI/2;span.position.set(5.5,5.0,-3);scene.add(span);
-  scene.add(label('→ ARAH SUKAMANDI',.7).translateX(6.4).translateY(4.5).translateZ(-3));
-
-  startSeq([
-   {type:'act',aid:'IZIN',done:false,targets:()=>[ctrl],
-    desc:'Minta IZIN SWITCHING ke dispatcher UIT/P2B (klik PANEL KONTROL).',
-    why:'Penghantar 150 kV adalah aset sistem interkoneksi. Membukanya mengubah aliran daya se-region — hanya dispatcher yang tahu apakah sistem siap kehilangan satu sirkit.',
-    fx(){toast('📻 "GI Kosambi, izin pembebasan bay Sukamandi — DISETUJUI."','ok',2800);}},
-   {type:'act',aid:'PMT',done:false,targets:()=>[pmtBody],
-    desc:'BUKA PMT terlebih dahulu (klik tabung PMT).',
-    why:'PMT (pemutus tenaga) punya media peredam busur api (gas SF6/vakum) — satu-satunya peralatan yang mampu memutus arus beban & hubung singkat dengan selamat.',
-    fx(){mt.pmtInd.material.color.setHex(0x36e07a);mt.pmtInd.material.emissive.setHex(0x36e07a);
-      toast('🔓 PMT TERBUKA — arus beban terputus aman.','ok',2400);}},
-   {type:'act',aid:'PMSL',done:false,targets:()=>[mt.pmsLine],
-    desc:'Buka PMS LINE (klik lengan pemisah sisi penghantar).',
-    why:'PMS TIDAK punya peredam busur — membukanya saat berbeban menciptakan busur api yang tak padam. PMS hanya boleh dioperasikan SETELAH PMT membuka. Inilah pelajaran terpenting GI.',
-    fx(){mt.pmsLine.rotation.y=.9;toast('PMS LINE terbuka (tanpa beban ✓)','ok',2200);}},
-   {type:'act',aid:'PMSB',done:false,targets:()=>[mt.pmsBus],
-    desc:'Buka PMS BUS (klik lengan pemisah sisi busbar).',
-    why:'Dengan PMS bus terbuka, bay terlihat terpisah secara VISUAL dari busbar — fungsi PMS memang pemisah yang bisa dilihat mata, untuk keyakinan pekerja.',
-    fx(){mt.pmsBus.rotation.y=.9;toast('PMS BUS terbuka — bay terisolasi visual.','ok',2200);}},
-   {type:'act',aid:'EARTH',done:false,targets:()=>[mt.earth],
-    desc:'Masukkan PMS TANAH (klik tuas kuning).',
-    why:'Penghantar paralel menginduksikan tegangan ke sirkit yang dikerjakan — bisa puluhan kV walau "mati". PMS tanah mengalirkan induksi itu ke bumi, bukan ke tubuh pekerja.',
-    fx(){mt.earth.rotation.z=0;mt.earth.position.y=.65;toast('⏚ PMS TANAH MASUK.','ok',2200);}},
-   {type:'act',aid:'RAMBU',done:false,targets:()=>[mt.sign],
-    desc:'Pasang rambu & lockout pada bay (klik RAMBU).',
-    why:'Switching belum sah tanpa pengaman administratif: tagging di lapangan + update ke dispatcher, agar tak seorang pun menormalkan bay selagi tim di atas tower.',
-    fx(){mt.sign.material.color.setHex(0xffd23f);
-      mt.sign.add(label('BAY DIKERJAKAN!',.55,'#b02020').translateZ(.06));
-      toast('🚧 Bay aman — tim pemeliharaan dipersilakan naik.','ok',2600);}},
-  ],()=>{say('🎉 <b>Switching sempurna!</b> Kamu baru menjalankan urutan paling sakral di GI: PMT dulu, baru PMS. Tak pernah terbalik, selamanya.');
-    setTimeout(()=>showWin('transmisi'),2000);});
-
-  say('VOLTA di sini ⚡ Selamat datang di switchyard 150 kV. Hari ini satu pelajaran yang menyelamatkan nyawa operator GI turun-temurun: <b>PMT mampu memutus beban, PMS tidak</b>. Urutan adalah segalanya. Ikuti penanda ▼.');
-  $('#modTitle').textContent='J04 — Switching Bay GI 150 kV';
-  $('#taskHead').textContent='SOP SWITCHING BAY';}
-
-/* =====================================================================
-   MISI 5 — K3: APD & LOTO (Jalur 08)
-   ===================================================================== */
-let mk={};
-function buildK3(){
-  freshScene(0xb8c6d4,0x141d28);
-  cam={theta:-.1,phi:1.2,r:6.5,target:new THREE.Vector3(0,1.6,-1)};
-  const Z=room(0x5a5f66,0xccd4cf);
-  const line=box(9,.02,.12,0xffd23f,{emissive:0x6b5200,emissiveIntensity:.4});
-  line.position.set(0,.02,.6);scene.add(line);
-
-  /* papan JSA */
-  const jsa=box(.8,1.0,.06,0xe8e4d8);jsa.position.set(-3.6,2.0,Z);scene.add(jsa);
-  jsa.add(label('PAPAN JSA / IZIN KERJA',.78,'#5fd4ff').translateY(.75));
-  actMesh(jsa,'JSA');
-
-  /* rak APD: helm, sarung tangan, sepatu */
-  const rack=box(1.6,2.0,.12,0x3a444e);rack.position.set(-1.6,1.5,-3.3);scene.add(rack);
-  rack.add(label('RAK APD',.7).translateY(1.25));
-  mk.helm=new THREE.Mesh(new THREE.SphereGeometry(.17,18,14,0,Math.PI*2,0,Math.PI/2),
-    new THREE.MeshStandardMaterial({color:0xffd23f,roughness:.4}));
-  mk.helm.position.set(-2.1,2.0,-3.18);scene.add(mk.helm);actMesh(mk.helm,'HELM');
-  scene.add(label('HELM',.42).translateX(-2.1).translateY(2.32).translateZ(-3.1));
-  mk.glove=box(.2,.3,.05,0xcc6b2c);mk.glove.position.set(-1.6,1.95,-3.2);scene.add(mk.glove);
-  actMesh(mk.glove,'GLOVE');
-  scene.add(label('SARUNG TGN',.42).translateX(-1.6).translateY(2.32).translateZ(-3.1));
-  mk.shoe=box(.3,.16,.14,0x35404c);mk.shoe.position.set(-1.1,1.9,-3.2);scene.add(mk.shoe);
-  actMesh(mk.shoe,'SHOE');
-  scene.add(label('SEPATU',.42).translateX(-1.1).translateY(2.32).translateZ(-3.1));
-
-  /* panel LVMDP + breaker + gembok */
-  const panel=box(1.5,2.2,.35,0x8a96a2);panel.position.set(1.6,1.3,Z-.05);scene.add(panel);
-  panel.add(label('PANEL LVMDP 380V',.85).translateY(1.4));
-  mk.breaker=box(.3,.42,.12,0x223a55);mk.breaker.position.set(1.6,1.7,Z+.18);scene.add(mk.breaker);
-  actMesh(mk.breaker,'LOTO');
-  scene.add(label('BREAKER UTAMA + GEMBOK',.6,'#5fd4ff').translateX(1.6).translateY(2.55).translateZ(Z+.1));
-  mk.lampPanel=new THREE.Mesh(new THREE.SphereGeometry(.05,12,10),
-    new THREE.MeshStandardMaterial({color:0xff8030,emissive:0xff8030,emissiveIntensity:1}));
-  mk.lampPanel.position.set(1.2,2.1,Z+.2);scene.add(mk.lampPanel);
-
-  /* tespen / voltage tester di meja kecil */
-  const tbl=box(.7,.06,.5,0x6b4f33);tbl.position.set(3.6,1.0,-1.4);scene.add(tbl);
-  const tleg=box(.07,1,.07,0x4a3624);tleg.position.set(3.6,.5,-1.4);scene.add(tleg);
-  mk.tester=cyl(.035,.05,.34,0xffd23f);mk.tester.rotation.z=.9;mk.tester.position.set(3.6,1.1,-1.4);scene.add(mk.tester);
-  actMesh(mk.tester,'TEST');
-  scene.add(label('VOLTAGE TESTER',.6,'#5fd4ff').translateX(3.6).translateY(1.45).translateZ(-1.4));
-
-  startSeq([
-   {type:'act',aid:'JSA',done:false,targets:()=>[jsa],
-    desc:'Baca & tanda tangani JSA + izin kerja (klik PAPAN JSA).',
-    why:'JSA (Job Safety Analysis) memetakan bahaya SEBELUM pekerjaan: titik energi, risiko arc flash, jalur evakuasi. Tanda tanganmu = bukti semua orang paham risikonya.',
-    fx(){toast('📋 JSA ditandatangani — bahaya teridentifikasi.','ok',2400);}},
-   {type:'act',aid:'HELM',done:false,targets:()=>[mk.helm],
-    desc:'Kenakan HELM safety (klik helm).',
-    why:'Kepala dulu — helm kelas E tahan tegangan melindungi dari benturan & sengatan. APD = pertahanan terakhir setelah eliminasi, substitusi, dan engineering control.',
-    fx(){toast('⛑️ Helm terpasang.','ok',1800);}},
-   {type:'act',aid:'GLOVE',done:false,targets:()=>[mk.glove],
-    desc:'Kenakan SARUNG TANGAN isolasi (klik sarung tangan).',
-    why:'Tangan adalah anggota tubuh yang paling sering kontak. Sarung tangan isolasi diuji berkala — periksa sobekan dengan tes gulung udara sebelum dipakai.',
-    fx(){toast('🧤 Sarung tangan isolasi OK.','ok',1800);}},
-   {type:'act',aid:'SHOE',done:false,targets:()=>[mk.shoe],
-    desc:'Kenakan SEPATU safety isolasi (klik sepatu).',
-    why:'Sepatu isolasi memutus jalur arus ke tanah lewat tubuh — pasangan kerja sarung tangan dalam mencegah arus melintasi jantung.',
-    fx(){toast('🥾 Sepatu isolasi terpasang. APD lengkap!','ok',2000);}},
-   {type:'act',aid:'LOTO',done:false,targets:()=>[mk.breaker],
-    desc:'Matikan breaker utama & pasang GEMBOK LOTO (klik breaker).',
-    why:'Lock Out Tag Out: gembok PRIBADI dengan tag namamu. Aturannya keras: hanya pemasang gembok yang boleh melepasnya — tidak ada pengecualian, bahkan untuk atasan.',
-    fx(){mk.breaker.rotation.x=.4;mk.breaker.material.color.setHex(0xb02020);
-      mk.lampPanel.material.emissiveIntensity=0;mk.lampPanel.material.color.setHex(0x553322);
-      toast('🔒 Breaker OFF + gembok & tag terpasang.','ok',2400);}},
-   {type:'act',aid:'TEST',done:false,targets:()=>[mk.tester],
-    desc:'TEST BEFORE TOUCH: verifikasi tegangan nol (klik voltage tester).',
-    why:'Breaker OFF bukan bukti — bisa ada feeding lain atau breaker gagal. "Test before touch": ukur dulu di titik kerja dengan alat yang juga diuji sebelum & sesudah (live-dead-live).',
-    fx(){toast('🔍 0 Volt terverifikasi — panel AMAN dikerjakan.','ok',2600);sfx.big();}},
-  ],()=>{say('🎉 <b>Prosedur keselamatan sempurna!</b> Teknisi kini bekerja di panel yang benar-benar mati, terkunci, dan terbukti nol. Begini caranya semua orang pulang dengan selamat.');
-    setTimeout(()=>showWin('k3'),2000);});
-
-  say('VOLTA di sini 🦺 Hari ini kamu safety officer. Ingat mantra K3: <b>tidak ada pekerjaan yang begitu penting sehingga layak mengorbankan keselamatan</b>. Jalankan 6 langkah persis berurutan — penanda ▼ menunjukkan langkah aktif.');
-  $('#modTitle').textContent='J08 — APD & LOTO Pekerjaan Panel';
-  $('#taskHead').textContent='PROSEDUR KESELAMATAN';}
-
-/* =====================================================================
-   MISI 6 — SOLAR: PLTS ROOFTOP (Jalur 10)
-   ===================================================================== */
-let ms={};
-function buildSolar(){
-  freshScene(0xcfe2f0,0x16242f);
-  cam={theta:-.15,phi:1.1,r:7.5,target:new THREE.Vector3(0,2.2,-1)};
-  const ground=box(16,.1,12,0x6a7263);ground.position.y=-.05;scene.add(ground);
-  /* atap miring */
-  const roof=box(8,.15,5,0x8a5a40);roof.position.set(-1.5,3.2,-2.5);roof.rotation.x=-.28;scene.add(roof);
-  /* 2 panel surya */
-  ms.panels=[];
-  [-3.2,-1.4].forEach(x=>{
-    const p=box(1.5,.06,2.2,0x16263e,{roughness:.25,metalness:.5});
-    p.position.set(x,3.45,-2.5);p.rotation.x=-.28;scene.add(p);ms.panels.push(p);
-    const grid=box(1.4,.005,2.1,0x2a4a78);grid.position.set(x,3.49,-2.5);grid.rotation.x=-.28;scene.add(grid);});
-  scene.add(label('STRING PV 5 kWp',.85).translateX(-2.3).translateY(4.6).translateZ(-2.5));
-  terminal('PV+','fasa',-2.3,2.85,-1.35);
-  terminal('PV-','netral',-1.9,2.85,-1.35);
-  scene.add(label('DC+',.42,'#ff8d8d').translateX(-2.3).translateY(2.6).translateZ(-1.3));
-  scene.add(label('DC−',.42,'#9cc4ff').translateX(-1.9).translateY(2.6).translateZ(-1.3));
-  terminal('FRAME','ground',-3.9,2.85,-1.35);
-  scene.add(label('RANGKA',.45,'#8df0b8').translateX(-3.9).translateY(2.6).translateZ(-1.3));
-
-  /* dinding peralatan */
-  const wall=box(6.5,3.4,.15,0xc8cfc6);wall.position.set(2.6,1.7,-3);scene.add(wall);
-  const Z=-2.86;
-  /* fuse DC */
-  const fdc=box(.45,.6,.18,0x33404e);fdc.position.set(.7,2.5,Z);scene.add(fdc);
-  fdc.add(label('FUSE DC',.6).translateY(.5));
-  terminal('FDC-IN','fasa',.7,2.92,Z+.12);
-  terminal('FDC-OUT','fasa',.7,2.1,Z+.12);
-  /* inverter */
-  const inv=box(.95,1.1,.25,0xdfe5ea);inv.position.set(2.2,2.3,Z);scene.add(inv);
-  inv.add(label('INVERTER 5kW',.75).translateY(.78));
-  ms.lcdC=document.createElement('canvas');ms.lcdC.width=256;ms.lcdC.height=96;
-  ms.lcdTex=new THREE.CanvasTexture(ms.lcdC);
-  const lcd=new THREE.Mesh(new THREE.PlaneGeometry(.6,.22),new THREE.MeshBasicMaterial({map:ms.lcdTex}));
-  lcd.position.set(2.2,2.5,Z+.14);scene.add(lcd);
-  ms.kw=0;ms.on=false;invLCD('0.00 kW','STANDBY');
-  actMesh(inv,'INV');
-  terminal('INV+','fasa',1.85,1.85,Z+.14);
-  terminal('INV-','netral',2.2,1.85,Z+.14);
-  scene.add(label('+',.4,'#ff8d8d').translateX(1.85).translateY(1.66).translateZ(Z+.1));
-  scene.add(label('−',.4,'#9cc4ff').translateX(2.2).translateY(1.66).translateZ(Z+.1));
-  terminal('INV-AC','fasa',2.55,1.85,Z+.14);
-  scene.add(label('AC',.4).translateX(2.57).translateY(1.66).translateZ(Z+.1));
-  /* ground bar */
-  const gb=box(.45,.14,.1,0x86c79a);gb.position.set(.7,1.2,Z);scene.add(gb);
-  gb.add(label('GND BAR',.5,'#8df0b8').translateY(.28));
-  terminal('GNDBAR','ground',.7,1.2,Z+.12);
-  /* AC breaker */
-  const acb=box(.4,.6,.18,COL.cream);acb.position.set(3.6,2.4,Z);scene.add(acb);
-  acb.add(label('AC BREAKER',.6).translateY(.5));
-  terminal('ACB-IN','fasa',3.6,2.8,Z+.12);
-  terminal('ACB-OUT','fasa',3.6,2.0,Z+.12);
-  /* kWh exim */
-  const exim=box(.6,.8,.2,0x2d3a4a);exim.position.set(4.8,2.3,Z);scene.add(exim);
-  exim.add(label('kWh EXIM',.62).translateY(.6));
-  terminal('EXIM','fasa',4.8,1.8,Z+.12);
-
-  terms={};clickables.forEach(c=>{if(c.userData.kind==='terminal')terms[c.userData.id]=c;});
-  moduleTick=(dt,T)=>{if(ms.on){ms.kw=4.2+Math.sin(T*.7)*.4;
-    invLCD(ms.kw.toFixed(2)+' kW','PRODUKSI');}};
-
-  startSeq([
-   {type:'wire',a:'PV+',b:'FDC-IN',color:COL.fasa,done:false,
-    desc:'Sambungkan DC+ string PV ke FUSE DC (kutub positif dulu).',
-    why:'Sisi DC wajib pakai proteksi khusus DC: arus searah tak punya titik nol, sehingga busur api DC tak padam sendiri seperti AC. Fuse AC biasa akan terbakar.',
-    wrong:'DC+ (merah) masuk ke fuse DC dulu sebelum ke inverter.'},
-   {type:'wire',a:'FDC-OUT',b:'INV+',color:COL.fasa,done:false,
-    desc:'Dari fuse DC, sambungkan ke terminal + inverter.',
-    why:'Polaritas adalah segalanya di sini: DC+ harus bertemu terminal +. Banyak inverter rusak permanen karena polaritas terbalik saat komisioning.'},
-   {type:'wire',a:'PV-',b:'INV-',color:COL.netral,done:false,
-    desc:'Sambungkan DC− string PV ke terminal − inverter.',
-    why:'Sebelum mengencangkan, teknisi PLTS selalu cek polaritas dua kali dengan multimeter — kebiasaan kecil yang menyelamatkan inverter puluhan juta.',
-    wrong:'Perhatikan polaritas: DC− (biru) hanya ke terminal − inverter.'},
-   {type:'wire',a:'FRAME',b:'GNDBAR',color:COL.ground,done:false,
-    desc:'Bumikan RANGKA panel ke GND BAR (kuning-hijau).',
-    why:'Rangka aluminium di atap = penangkap petir tak resmi + jalur arus bocor. Pembumian rangka wajib menurut standar — melindungi orang & sistem dari surja.'},
-   {type:'wire',a:'INV-AC',b:'ACB-IN',color:COL.fasa,done:false,
-    desc:'Sisi AC: keluaran inverter ke AC BREAKER.',
-    why:'Breaker AC = titik isolasi sisi jaringan saat pemeliharaan inverter, sekaligus proteksi arus lebih keluaran.'},
-   {type:'wire',a:'ACB-OUT',b:'EXIM',color:COL.fasa,done:false,
-    desc:'Dari breaker, sambungkan ke kWh EXIM (ekspor-impor).',
-    why:'Meter exim mencatat dua arah: siang hari kelebihan produksi DIEKSPOR ke PLN, malam hari rumah IMPOR seperti biasa. Inilah jantung skema PLTS atap.'},
-   {type:'act',aid:'INV',done:false,targets:()=>[inv],
-    desc:'ENERGIZE: klik INVERTER untuk ON. Matahari sedang terik!',
-    why:'Inverter melakukan self-test (riso, grid voltage, frekuensi) sebelum sinkron ke jaringan — kalau wiring benar, dalam hitungan detik mulai produksi.',
-    fx(){ms.on=true;sfx.big();
-      toast('☀️ Inverter sinkron — PLTS produksi ±4 kW!','ok',2800);}},
-  ],()=>{say('🎉 <b>PLTS CV Berkah resmi berproduksi!</b> Setiap matahari terbit, tagihan listrik mereka terpangkas. Energi bersih, wiring bersih.');
-    setTimeout(()=>showWin('solar'),2400);});
-
-  say('VOLTA di sini ☀️ Selamat datang di dunia DC! Dua hukum besinya: <b>(1) polaritas jangan terbalik, (2) proteksi harus khusus DC</b> karena busur api DC tak padam sendiri. Ikuti penanda ▼, mulai dari kutub positif.');
-  $('#modTitle').textContent='J10 — Wiring PLTS Rooftop On-Grid';
-  $('#taskHead').textContent='DC DULU, BARU AC';}
-function invLCD(num,status){
-  const g=ms.lcdC.getContext('2d');
-  g.fillStyle='#101822';g.fillRect(0,0,256,96);
-  g.fillStyle='#5fd4ff';g.font='700 40px Consolas,monospace';
-  g.textAlign='right';g.fillText(num,240,50);
-  g.font='600 20px Consolas,monospace';g.textAlign='left';
-  g.fillStyle=status==='PRODUKSI'?'#46ff8e':'#7d8f84';g.fillText(status,16,82);
-  ms.lcdTex.needsUpdate=true;}
-
-/* =====================================================================
-   MISI 7 — EV: KOMISIONING SPKLU (Jalur 12)
-   ===================================================================== */
-let me={};
-function buildEV(){
-  freshScene(0x9fb6cc,0x101a26);
-  cam={theta:.25,phi:1.18,r:7.5,target:new THREE.Vector3(.5,1.4,-.5)};
-  const ground=box(18,.1,12,0x3f454c);ground.position.y=-.05;scene.add(ground);
-  const lot=box(5,.02,3,0x4c5660);lot.position.set(2.6,.02,.6);scene.add(lot);
-  const mark=box(.12,.025,3,0xd8d8d8);mark.position.set(.4,.03,.6);scene.add(mark);
-
-  /* sumber + MCCB di dinding kecil */
-  const wallc=box(2.6,2.6,.2,0x8a96a2);wallc.position.set(-3.4,1.3,-2.4);scene.add(wallc);
-  wallc.add(label('PANEL SUPLAI',.75).translateY(1.55));
-  terminal('SRC-F','fasa',-4.1,1.9,-2.26);
-  terminal('SRC-N','netral',-3.8,1.9,-2.26);
-  terminal('SRC-G','ground',-3.5,1.9,-2.26);
-  scene.add(label('F',.4,'#ff8d8d').translateX(-4.1).translateY(1.68).translateZ(-2.2));
-  scene.add(label('N',.4,'#9cc4ff').translateX(-3.8).translateY(1.68).translateZ(-2.2));
-  scene.add(label('G',.4,'#8df0b8').translateX(-3.5).translateY(1.68).translateZ(-2.2));
-  const mccb=box(.42,.6,.16,0x223a55);mccb.position.set(-2.8,1.5,-2.28);scene.add(mccb);
-  mccb.add(label('MCCB',.55).translateY(.5));
-  actMesh(mccb,'MCCB');
-  terminal('MCCB-IN','fasa',-2.8,1.92,-2.18);
-  terminal('MCCB-OUT','fasa',-2.8,1.08,-2.18);
-
-  /* unit SPKLU */
-  const evse=box(.9,2.1,.6,0xe8edf2,{roughness:.4});evse.position.set(0,1.05,-1.6);scene.add(evse);
-  const stripe=box(.92,.3,.62,0x18b06a);stripe.position.set(0,1.75,-1.6);scene.add(stripe);
-  evse.add(label('SPKLU 25 kW',.8).translateY(1.35));
-  me.scrC=document.createElement('canvas');me.scrC.width=256;me.scrC.height=160;
-  me.scrTex=new THREE.CanvasTexture(me.scrC);
-  me.screen=new THREE.Mesh(new THREE.PlaneGeometry(.5,.32),new THREE.MeshBasicMaterial({map:me.scrTex}));
-  me.screen.position.set(0,1.35,-1.29);scene.add(me.screen);
-  evScr('OFFLINE','#7d8f84');
-  actMesh(me.screen,'RFID'); 
-  terminal('EVSE-F','fasa',-.25,.35,-1.28);
-  terminal('EVSE-N','netral',0,.35,-1.28);
-  terminal('EVSE-G','ground',.25,.35,-1.28);
-  /* gun + holster */
-  me.gun=box(.12,.3,.12,0x18242f);me.gun.position.set(.55,1.0,-1.28);scene.add(me.gun);
-  actMesh(me.gun,'GUN');
-  scene.add(label('GUN CCS2',.5,'#5fd4ff').translateX(.62).translateY(1.32).translateZ(-1.2));
-
-  /* tester riso */
-  const tbl=box(.7,.06,.5,0x6b4f33);tbl.position.set(-1.5,.8,.3);scene.add(tbl);
-  const tleg=box(.07,.8,.07,0x4a3624);tleg.position.set(-1.5,.4,.3);scene.add(tleg);
-  me.tester=box(.3,.18,.22,0xffd23f);me.tester.position.set(-1.5,.92,.3);scene.add(me.tester);
-  actMesh(me.tester,'RISO');
-  scene.add(label('INSULATION TESTER',.58,'#5fd4ff').translateX(-1.5).translateY(1.22).translateZ(.3));
-
-  /* mobil EV */
-  const body=box(2.2,.55,1.1,0x2a72c8,{roughness:.35});body.position.set(2.8,.62,.6);scene.add(body);
-  const cab=box(1.2,.4,1.0,0x2a72c8,{roughness:.3});cab.position.set(2.7,1.1,.6);scene.add(cab);
-  [[-1,-.45],[1,-.45],[-1,.45],[1,.45]].forEach(w=>{
-    const wh=cyl(.25,.25,.18,0x14181d);wh.rotation.x=Math.PI/2;
-    wh.position.set(2.8+w[0]*.8,.27,.6+w[1]);scene.add(wh);});
-  me.chgLamp=new THREE.Mesh(new THREE.SphereGeometry(.06,12,10),
-    new THREE.MeshStandardMaterial({color:0x224433,emissive:0x000000}));
-  me.chgLamp.position.set(1.95,.85,.25);scene.add(me.chgLamp);
-  scene.add(label('EV PELANGGAN',.7).translateX(2.8).translateY(1.6).translateZ(.6));
-
-  terms={};clickables.forEach(c=>{if(c.userData.kind==='terminal')terms[c.userData.id]=c;});
-  me.charging=false;
-  moduleTick=(dt,T)=>{if(me.charging){
-    const p=.5+Math.sin(T*4)*.5;
-    me.chgLamp.material.emissive.setHex(0x2ee87a);
-    me.chgLamp.material.emissiveIntensity=.4+p;}};
-
-  startSeq([
-   {type:'wire',a:'SRC-F',b:'MCCB-IN',color:COL.fasa,done:false,
-    desc:'Sambungkan FASA sumber ke MCCB.',
-    why:'SPKLU 25 kW menarik arus besar — MCCB (molded case) dipilih karena kapasitas pemutusannya jauh di atas MCB rumah tangga.'},
-   {type:'wire',a:'MCCB-OUT',b:'EVSE-F',color:COL.fasa,done:false,
-    desc:'Dari MCCB, tarik fasa ke terminal F unit SPKLU.',
-    why:'Jalur daya utama charger. Ukuran kabel dihitung dari arus kontinu + faktor koreksi suhu — charger bekerja berjam-jam tanpa henti.'},
-   {type:'wire',a:'SRC-N',b:'EVSE-N',color:COL.netral,done:false,
-    desc:'Sambungkan NETRAL sumber ke terminal N SPKLU.',
-    why:'Elektronika kontrol charger butuh referensi netral yang stabil untuk catu daya internal dan pengukuran.'},
-   {type:'wire',a:'SRC-G',b:'EVSE-G',color:COL.ground,done:false,
-    desc:'Sambungkan GROUNDING ke terminal G SPKLU.',
-    why:'Yang ini bukan opsional: charger MEMERIKSA pembumian saat self-test. Tanpa grounding baik, proteksi arus bocor DC tak berfungsi — unit menolak beroperasi.',
-    wrong:'Kuning-hijau hanya ke terminal G — charger akan menolak tanpa grounding.'},
-   {type:'act',aid:'RISO',done:false,targets:()=>[me.tester],
-    desc:'UJI dulu: insulation test & cek tahanan pembumian (klik TESTER).',
-    why:'Komisioning selalu: uji dulu, energize kemudian. Riso memastikan tak ada isolasi kabel terluka saat penarikan; pembumian diukur < nilai standar.',
-    fx(){toast('🔍 Riso > 1 MΩ ✓ · Pembumian 1,2 Ω ✓','ok',2600);}},
-   {type:'act',aid:'MCCB',done:false,targets:()=>[mccb],
-    desc:'ENERGIZE: ON-kan MCCB.',
-    why:'Setelah lolos uji, barulah listrik masuk. Charger melakukan boot & self-test — layar berubah dari OFFLINE ke SIAP.',
-    fx(){evScr('SIAP\nTAP KARTU','#46ff8e');
-      toast('⚡ SPKLU ONLINE — self-test lolos.','ok',2400);}},
-   {type:'act',aid:'RFID',done:false,targets:()=>[me.screen],
-    desc:'Autentikasi: TAP KARTU pada layar (klik LAYAR).',
-    why:'Alur transaksi SPKLU: autentikasi (kartu/aplikasi) → otorisasi backend → siap charging. Protokol OCPP menghubungkan unit ke sistem pusat.',
-    fx(){evScr('AUTENTIKASI OK\nCOLOK GUN','#5fd4ff');
-      toast('💳 Kartu diterima — silakan colok gun.','ok',2200);}},
-   {type:'act',aid:'GUN',done:false,targets:()=>[me.gun],
-    desc:'Colokkan GUN ke kendaraan (klik GUN).',
-    why:'Saat gun terkunci, EVSE & kendaraan "berjabat tangan" lewat sinyal pilot: menyepakati arus maksimum, cek interlock, baru daya mengalir. Mode 3/4 charging.',
-    fx(){me.charging=true;
-      drawWire(me.gun,me.chgLamp,0x18b06a);
-      evScr('CHARGING\n23,8 kW','#2ee87a');
-      toast('🔋 CHARGING! Mobil pertama mengisi 23,8 kW.','ok',2800);sfx.big();}},
-  ],()=>{say('🎉 <b>SPKLU KM 158 resmi beroperasi!</b> Pelanggan pertama mengisi daya. Dari wiring sampai transaksi — kamu paham seluruh rantainya sekarang.');
-    setTimeout(()=>showWin('ev'),2400);});
-
-  say('VOLTA di sini 🚗⚡ Komisioning SPKLU hari ini! Ingat dua prinsipnya: <b>grounding bukan formalitas</b> (charger memeriksanya!) dan <b>uji dulu, energize kemudian</b>. Ikuti penanda ▼.');
-  $('#modTitle').textContent='J12 — Komisioning SPKLU';
-  $('#taskHead').textContent='WIRING → UJI → TRANSAKSI';}
-function evScr(txt,color){
-  const g=me.scrC.getContext('2d');
-  g.fillStyle='#0c141d';g.fillRect(0,0,256,160);
-  g.fillStyle=color;g.font='700 30px Consolas,monospace';g.textAlign='center';
-  txt.split('\n').forEach((l,i)=>g.fillText(l,128,66+i*40));
-  me.scrTex.needsUpdate=true;}
-
-/* =====================================================================
-   MISI 8 — MOTOR DOL (Jalur 16)
-   ===================================================================== */
-let mm={};
-function buildMotor(){
-  freshScene(0xb0bfcc,0x131c26);
-  cam={theta:-.1,phi:1.2,r:6.5,target:new THREE.Vector3(.4,1.6,-1)};
-  const Z=room(0x55606a,0xb9bfc6);
-
-  const src=box(.9,.7,.16,COL.dark);src.position.set(-3.8,2.9,Z);scene.add(src);
-  src.add(label('SUMBER 220V',.7).translateY(.58));
-  terminal('SRC-F','fasa',-4.0,2.55,Z+.12);
-  terminal('SRC-N','netral',-3.6,2.55,Z+.12);
-
-  const panel=box(2.6,2.4,.25,0x9aa5b0);panel.position.set(-1.2,2.1,Z-.04);scene.add(panel);
-  panel.add(label('PANEL KONTROL MOTOR',.85).translateY(1.5));
-  /* MCB */
-  const mcb=box(.4,.55,.16,COL.cream);mcb.position.set(-2.1,2.7,Z+.12);scene.add(mcb);
-  mcb.add(label('MCB',.5).translateY(.45));
-  terminal('MCB-IN','fasa',-2.1,3.05,Z+.2);
-  terminal('MCB-OUT','fasa',-2.1,2.35,Z+.2);
-  /* Kontaktor */
-  mm.k1=box(.5,.6,.2,0x2b3a4a);mm.k1.position.set(-1.2,2.7,Z+.12);scene.add(mm.k1);
-  mm.k1.add(label('KONTAKTOR K1',.6).translateY(.5));
-  terminal('K1-IN','fasa',-1.2,3.08,Z+.24);
-  terminal('K1-OUT','fasa',-1.2,2.32,Z+.24);
-  /* TOR */
-  const tor=box(.45,.5,.18,0xcc8830);tor.position.set(-.3,2.65,Z+.12);scene.add(tor);
-  tor.add(label('TOR',.5).translateY(.42));
-  terminal('TOR-IN','fasa',-.3,2.98,Z+.22);
-  terminal('TOR-OUT','fasa',-.3,2.32,Z+.22);
-  /* tombol start stop */
-  mm.btnStart=cyl(.09,.09,.08,0x2ec06a);mm.btnStart.rotation.x=Math.PI/2;
-  mm.btnStart.position.set(-1.6,1.4,Z+.18);scene.add(mm.btnStart);
-  actMesh(mm.btnStart,'START');
-  scene.add(label('START',.45,'#7af0a8').translateX(-1.6).translateY(1.16).translateZ(Z+.14));
-  mm.btnStop=cyl(.09,.09,.08,0xd83a3a);mm.btnStop.rotation.x=Math.PI/2;
-  mm.btnStop.position.set(-1.0,1.4,Z+.18);scene.add(mm.btnStop);
-  actMesh(mm.btnStop,'STOP');
-  scene.add(label('STOP',.45,'#ff9d9d').translateX(-1.0).translateY(1.16).translateZ(Z+.14));
-  mm.runLamp=new THREE.Mesh(new THREE.SphereGeometry(.05,12,10),
-    new THREE.MeshStandardMaterial({color:0x224433,emissive:0x000000}));
-  mm.runLamp.position.set(-.4,1.4,Z+.2);scene.add(mm.runLamp);
-
-  /* motor di meja */
-  const bench=box(1.6,.1,1.0,0x6b7682);bench.position.set(2.6,.9,-1.6);scene.add(bench);
-  const bleg=box(.1,.9,.1,0x4a525c);bleg.position.set(2.0,.45,-1.9);scene.add(bleg);
-  const bl2=bleg.clone();bl2.position.set(3.2,.45,-1.9);scene.add(bl2);
-  const bl3=bleg.clone();bl3.position.set(2.0,.45,-1.3);scene.add(bl3);
-  const bl4=bleg.clone();bl4.position.set(3.2,.45,-1.3);scene.add(bl4);
-  const mbody=cyl(.32,.32,.9,0x3a6ea8);mbody.rotation.z=Math.PI/2;
-  mbody.position.set(2.5,1.25,-1.6);scene.add(mbody);
-  mm.fan=cyl(.3,.3,.06,0xd8e0e8,18,{metalness:.5});
-  mm.fan.rotation.z=Math.PI/2;mm.fan.position.set(3.05,1.25,-1.6);scene.add(mm.fan);
-  const blade=box(.5,.05,.04,0x9fb0c0);blade.position.set(0,0,0);mm.fan.add(blade);
-  const blade2=blade.clone();blade2.rotation.x=Math.PI/2;mm.fan.add(blade2);
-  scene.add(label('MOTOR POMPA',.7).translateX(2.6).translateY(1.85).translateZ(-1.6));
-  terminal('MTR-F','fasa',2.2,1.0,-1.05);
-  terminal('MTR-N','netral',2.9,1.0,-1.05);
-
-  terms={};clickables.forEach(c=>{if(c.userData.kind==='terminal')terms[c.userData.id]=c;});
-  mm.run=false;
-  moduleTick=(dt)=>{if(mm.run)mm.fan.rotation.x+=dt*14;};
-
-  startSeq([
-   {type:'wire',a:'SRC-F',b:'MCB-IN',color:COL.fasa,done:false,
-    desc:'Sambungkan FASA sumber ke MCB panel.',
-    why:'MCB melindungi KABEL dari hubung singkat. Ingat pembagian tugasnya: MCB jaga kabel, TOR jaga motor.'},
-   {type:'wire',a:'MCB-OUT',b:'K1-IN',color:COL.fasa,done:false,
-    desc:'Dari MCB, sambungkan ke kontak utama KONTAKTOR K1.',
-    why:'Kontaktor = saklar elektromagnetik: koil kecil 220V menarik kontak besar pemikul arus motor. Inilah jembatan antara "tombol kecil" dan "daya besar".'},
-   {type:'wire',a:'K1-OUT',b:'TOR-IN',color:COL.fasa,done:false,
-    desc:'Keluaran K1 masuk ke THERMAL OVERLOAD RELAY (TOR).',
-    why:'TOR berisi bimetal yang melengkung saat arus motor berlebih lama (pompa macet, bearing aus) — memutus rangkaian sebelum lilitan motor terbakar.'},
-   {type:'wire',a:'TOR-OUT',b:'MTR-F',color:COL.fasa,done:false,
-    desc:'Dari TOR, sambungkan ke terminal FASA motor.',
-    why:'Urutan baku rangkaian daya DOL: sumber → MCB → kontaktor → TOR → motor. Hafalkan — ini fondasi semua panel motor industri.'},
-   {type:'wire',a:'SRC-N',b:'MTR-N',color:COL.netral,done:false,
-    desc:'Lengkapi jalur balik: NETRAL sumber ke motor.',
-    why:'Motor 1 fasa butuh netral sebagai jalur balik. (Motor 3 fasa industri tidak — tiga fasanya saling menjadi jalur balik.)'},
-   {type:'act',aid:'START',done:false,targets:()=>[mm.btnStart],
-    desc:'Tekan tombol START hijau — motor berputar!',
-    why:'Saat START ditekan, koil K1 energize, kontak utama menutup, motor menarik arus start 6–8× nominal lalu turun ke nominal. Itulah ciri khas DOL.',
-    fx(){mm.run=true;mm.k1.material.color.setHex(0x2e5a8a);
-      mm.runLamp.material.emissive.setHex(0x2ee87a);mm.runLamp.material.emissiveIntensity=1;
-      beep(110,.6,'sawtooth',.08);beep(220,.5,'sine',.06,.1);
-      toast('🔄 MOTOR BERPUTAR — arus start → nominal.','ok',2600);}},
-   {type:'act',aid:'STOP',done:false,targets:()=>[mm.btnStop],
-    desc:'Uji pengaman: tekan STOP merah untuk menghentikan motor.',
-    why:'Tombol STOP selalu jenis NC (normally closed) dan diuji saat komisioning: kalau gagal berhenti, panel tak boleh diserahkan. Keselamatan dulu, produksi kemudian.',
-    fx(){mm.run=false;mm.k1.material.color.setHex(0x2b3a4a);
-      mm.runLamp.material.emissiveIntensity=0;
-      toast('⏹ Motor berhenti — fungsi STOP OK.','ok',2400);sfx.big();}},
-  ],()=>{say('🎉 <b>Panel DOL lulus uji!</b> Dari sinilah dunia otomasi dimulai — kontaktor hari ini, ladder PLC besok. Pompa siap melayani produksi.');
-    setTimeout(()=>showWin('motor'),2000);});
-
-  say('VOLTA di sini 🎛️ Kita rangkai starter motor paling legendaris: <b>DOL — Direct On Line</b>. Tiga sekawan yang harus kamu kenal: MCB (jaga kabel), Kontaktor (saklar elektromagnetik), TOR (jaga motor). Ikuti penanda ▼!');
-  $('#modTitle').textContent='J16 — Wiring Motor DOL';
-  $('#taskHead').textContent='RANGKAIAN DAYA DOL';}
-
-/* =====================================================================
    TEKSTUR MATERIAL PROSEDURAL — realisme tanpa dependensi eksternal
    ===================================================================== */
 function texCanvas(fn,px,rx,ry){
@@ -1587,1246 +756,9 @@ function dispText(D,lines,colors){
   D.tex.needsUpdate=true;}
 
 /* =====================================================================
-   MISI 9 — STAR-DELTA (Jalur 02)
-   ===================================================================== */
-let mst={};
-function buildStar(){
-  freshScene(0xb0bfcc,0x131c26);
-  cam={theta:-.1,phi:1.2,r:7,target:new THREE.Vector3(.4,1.7,-1)};
-  const Z=room(0x55606a,0xb9bfc6);
-  const panel=box(3.2,2.5,.25,0x9aa5b0);panel.position.set(-1.0,2.0,Z-.04);scene.add(panel);
-  panel.add(label('PANEL STAR-DELTA 22kW',.9).translateY(1.55));
-  /* timer */
-  mst.timerBox=box(.4,.4,.16,0x33404e);mst.timerBox.position.set(-2.2,2.6,Z+.12);scene.add(mst.timerBox);
-  actMesh(mst.timerBox,'TIMER');
-  scene.add(label('TIMER',.5,'#5fd4ff').translateX(-2.2).translateY(2.95).translateZ(Z+.1));
-  /* kontaktor K-main, K-star, K-delta */
-  mst.kM=box(.42,.52,.18,0x2b3a4a);mst.kM.position.set(-1.4,2.6,Z+.12);scene.add(mst.kM);
-  scene.add(label('K-UTAMA',.45).translateX(-1.4).translateY(2.95).translateZ(Z+.1));
-  mst.kY=box(.42,.52,.18,0x2b3a4a);mst.kY.position.set(-.8,2.6,Z+.12);scene.add(mst.kY);
-  scene.add(label('K-STAR',.45).translateX(-.8).translateY(2.95).translateZ(Z+.1));
-  mst.kD=box(.42,.52,.18,0x2b3a4a);mst.kD.position.set(-.2,2.6,Z+.12);scene.add(mst.kD);
-  actMesh(mst.kD,'TRANS');
-  scene.add(label('K-DELTA',.45,'#5fd4ff').translateX(-.2).translateY(2.95).translateZ(Z+.1));
-  /* display arus */
-  mst.D=makeDisplay(1.1,.5,300,140);mst.D.mesh.position.set(.65,2.6,Z+.13);scene.add(mst.D.mesh);
-  dispText(mst.D,['— A','STANDBY'],['#5fd4ff','#7d8f84']);
-  /* tombol */
-  mst.btnStart=cyl(.09,.09,.08,0x2ec06a);mst.btnStart.rotation.x=Math.PI/2;
-  mst.btnStart.position.set(-1.7,1.35,Z+.18);scene.add(mst.btnStart);
-  actMesh(mst.btnStart,'START');
-  scene.add(label('START',.45,'#7af0a8').translateX(-1.7).translateY(1.1).translateZ(Z+.14));
-  mst.btnStop=cyl(.09,.09,.08,0xd83a3a);mst.btnStop.rotation.x=Math.PI/2;
-  mst.btnStop.position.set(-1.1,1.35,Z+.18);scene.add(mst.btnStop);
-  actMesh(mst.btnStop,'STOP');
-  scene.add(label('STOP',.45,'#ff9d9d').translateX(-1.1).translateY(1.1).translateZ(Z+.14));
-  /* megger di meja */
-  const tbl=box(.7,.06,.5,0x6b4f33);tbl.position.set(3.0,.9,-1.2);scene.add(tbl);
-  const tleg=box(.07,.9,.07,0x4a3624);tleg.position.set(3.0,.45,-1.2);scene.add(tleg);
-  mst.megger=box(.34,.2,.24,0xcc8830);mst.megger.position.set(3.0,1.02,-1.2);scene.add(mst.megger);
-  actMesh(mst.megger,'MEGGER');
-  scene.add(label('MEGGER',.55,'#5fd4ff').translateX(3.0).translateY(1.32).translateZ(-1.2));
-  /* motor */
-  const mb=cyl(.36,.36,1.0,0x3a6ea8);mb.rotation.z=Math.PI/2;mb.position.set(1.4,.6,.6);scene.add(mb);
-  mst.fan=cyl(.32,.32,.06,0xd8e0e8,18,{metalness:.5});
-  mst.fan.rotation.z=Math.PI/2;mst.fan.position.set(2.0,.6,.6);scene.add(mst.fan);
-  const bl=box(.55,.05,.04,0x9fb0c0);mst.fan.add(bl);
-  const bl2=bl.clone();bl2.rotation.x=Math.PI/2;mst.fan.add(bl2);
-  scene.add(label('MOTOR 22 kW Δ380V',.7).translateX(1.6).translateY(1.2).translateZ(.6));
-
-  mst.phase='off';mst.cnt=6;mst.spd=0;
-  moduleTick=(dt)=>{
-    if(mst.phase==='star'){mst.spd=Math.min(1,mst.spd+dt*.18);mst.cnt-=dt;
-      const A=(80*mst.spd<35?80-mst.spd*120:38).toFixed(0);
-      dispText(mst.D,[A+' A','STAR · t='+Math.max(0,mst.cnt).toFixed(1)+'s'],
-        ['#ffd23f',mst.cnt<=0?'#46ff8e':'#7d8f84']);}
-    if(mst.phase==='delta'){mst.spd=Math.min(1.4,mst.spd+dt*.3);
-      dispText(mst.D,['41 A','DELTA · NOMINAL'],['#46ff8e','#46ff8e']);}
-    if(mst.phase!=='off')mst.fan.rotation.x+=dt*12*mst.spd;};
-
-  startSeq([
-   {type:'act',aid:'TIMER',done:false,targets:()=>[mst.timerBox],
-    desc:'Periksa setting TIMER star-delta (klik TIMER).',
-    why:'Timer menentukan kapan pindah star→delta. Umumnya 5–8 detik: cukup bagi motor mendekati kecepatan nominal. Terlalu cepat = lonjakan arus, terlalu lama = motor merana di star.',
-    fx(){toast('⏲️ Timer diset 6 detik ✓','ok',2200);}},
-   {type:'act',aid:'MEGGER',done:false,targets:()=>[mst.megger],
-    desc:'Megger lilitan motor sebelum start pertama (klik MEGGER).',
-    why:'Motor habis overhaul/lama diam bisa lembap. Tahanan isolasi rendah + tegangan penuh = lilitan terbakar di hari pertama. Ukur dulu, selalu.',
-    fx(){toast('🔍 Riso lilitan 250 MΩ — sehat ✓','ok',2200);}},
-   {type:'act',aid:'START',done:false,targets:()=>[mst.btnStart],
-    desc:'Tekan START — motor mengawali di hubungan STAR.',
-    why:'Di star, tiap kumparan hanya menerima 220V (380/√3) → arus start cuma ⅓ dibanding DOL. Pabrik tidak berkedip, breaker tidak protes.',
-    fx(){mst.phase='star';mst.cnt=6;
-      mst.kM.material.color.setHex(0x2e5a8a);mst.kY.material.color.setHex(0x2e8a5a);
-      beep(90,.7,'sawtooth',.07);
-      toast('🔄 START di STAR — arus jinak, motor berakselerasi.','ok',2600);}},
-   {type:'act',aid:'TRANS',done:false,targets:()=>[mst.kD],
-    check:()=>mst.cnt<=0,
-    checkFail:'Motor belum siap! Tunggu hitungan timer mencapai 0 (lihat display) baru transisi ke DELTA.',
-    desc:'Saat timer habis (t=0 di display), klik K-DELTA untuk transisi!',
-    why:'Pada kecepatan mendekati nominal, perpindahan ke delta hanya menimbulkan lonjakan kecil. Transisi prematur = motor masih lambat = lonjakan besar, persis yang ingin kita hindari.',
-    fx(){mst.phase='delta';
-      mst.kY.material.color.setHex(0x2b3a4a);mst.kD.material.color.setHex(0x2e5a8a);
-      toast('⚡ TRANSISI KE DELTA — tegangan penuh, torsi penuh!','ok',2600);sfx.big();}},
-   {type:'act',aid:'STOP',done:false,targets:()=>[mst.btnStop],
-    desc:'Uji pengaman: tekan STOP.',
-    why:'Komisioning ditutup dengan uji fungsi berhenti. Panel belum boleh diserahkan sebelum STOP terbukti bekerja.',
-    fx(){mst.phase='off';mst.spd=0;
-      mst.kM.material.color.setHex(0x2b3a4a);mst.kD.material.color.setHex(0x2b3a4a);
-      dispText(mst.D,['0 A','BERHENTI ✓'],['#7d8f84','#46ff8e']);
-      toast('⏹ Motor berhenti — komisioning selesai.','ok',2400);}},
-  ],()=>{say('🎉 <b>Star-delta lulus komisioning!</b> Kamu baru menjinakkan arus start 7× menjadi sepertiganya — dengan timing yang tepat pula.');
-    setTimeout(()=>showWin('star'),2000);});
-
-  say('VOLTA di sini 🏭 Motor 22 kW terlalu garang untuk DOL. Hari ini kita pakai <b>star-delta</b>: start lembut di bintang, lalu pindah ke delta <b>tepat saat timer habis</b> — perhatikan display, timing-mu akan diuji!');
-  $('#modTitle').textContent='J02 — Komisioning Star-Delta';
-  $('#taskHead').textContent='STAR DULU, DELTA KEMUDIAN';}
-
-/* =====================================================================
-   MISI 10 — NTL INVESTIGASI (Jalur 05)
-   ===================================================================== */
-let mnl={};
-function buildNTL(){
-  freshScene(0x9fb8d0,0x121e2c);
-  cam={theta:.1,phi:1.18,r:9,target:new THREE.Vector3(0,1.6,-.5)};
-  const ground=box(20,.1,12,0x4c5660);ground.position.y=-.05;scene.add(ground);
-  const road=box(20,.02,2.2,0x39424c);road.position.set(0,.02,1.8);scene.add(road);
-
-  /* 4 rumah pelanggan */
-  mnl.houses=[];mnl.meters=[];
-  const hx=[-6,-2,2,6],names=['A','B','C','D'];
-  hx.forEach((x,i)=>{
-    const h=box(2.2,1.7,1.8,[0xc8b89a,0xa8c0b0,0xc0a8b8,0xb0b8c8][i]);
-    h.position.set(x,.9,-1.5);scene.add(h);
-    const roof=box(2.5,.5,2.1,0x7a5a44);roof.position.set(x,1.95,-1.5);scene.add(roof);
-    actMesh(h,'H'+(i+1));mnl.houses.push(h);
-    scene.add(label('PELANGGAN '+names[i],.72).translateX(x).translateY(2.5).translateZ(-1.5));
-    const mtr=box(.3,.42,.12,0x2d3a4a);mtr.position.set(x+.7,1.1,-.58);scene.add(mtr);
-    actMesh(mtr,'M'+(i+1));mnl.meters.push(mtr);});
-
-  /* dashboard kiosk */
-  const kios=box(.15,1.6,1.1,0x2b3a4a);kios.position.set(-8.2,1.1,1.0);scene.add(kios);
-  mnl.D=makeDisplay(1.0,1.3,300,380);
-  mnl.D.mesh.position.set(-8.1,1.25,1.0);mnl.D.mesh.rotation.y=Math.PI/2;scene.add(mnl.D.mesh);
-  const g=mnl.D.g;
-  g.fillStyle='#0c141d';g.fillRect(0,0,300,380);
-  g.fillStyle='#5fd4ff';g.font='700 22px Consolas';g.textAlign='left';
-  g.fillText('DASHBOARD NTL — kWh/bln',12,30);
-  const rows=[['PLG','LALU','KINI','Δ'],['A','452','447','-1%'],['B','308','315','+2%'],['C','726','174','-76%'],['D','158','166','+5%']];
-  rows.forEach((r,i)=>{g.fillStyle=i===0?'#8aa3bd':(r[0]==='C'?'#ff5a5a':'#eaf2fb');
-    g.font=(i===0?'600 18px':'700 22px')+' Consolas';
-    g.fillText(r[0],14,70+i*44);g.fillText(r[1],70,70+i*44);
-    g.fillText(r[2],150,70+i*44);g.fillText(r[3],225,70+i*44);});
-  g.fillStyle='#ffd23f';g.font='600 16px Consolas';
-  g.fillText('ML score anomali: C=0.94',12,300);
-  mnl.D.tex.needsUpdate=true;
-  actMesh(mnl.D.mesh,'DASH'); actMesh(kios,'DASH');
-  scene.add(label('DASHBOARD ANALITIK',.75,'#5fd4ff').translateX(-8.2).translateY(2.2).translateZ(1.0));
-
-  /* jumper bypass tersembunyi di meter C */
-  mnl.jumper=new THREE.Mesh(new THREE.TorusGeometry(.14,.03,8,20),
-    new THREE.MeshStandardMaterial({color:0xd83a3a,emissive:0xd83a3a,emissiveIntensity:.5}));
-  mnl.jumper.position.set(2.7,1.1,-.5);mnl.jumper.visible=false;
-  mnl.jumper.userData={kind:'act',aid:'JUMP'};scene.add(mnl.jumper);
-
-  /* kamera & radio di tangan (meja kecil) */
-  const tbl=box(.7,.06,.5,0x6b4f33);tbl.position.set(8.4,.8,1.2);scene.add(tbl);
-  const tleg=box(.07,.8,.07,0x4a3624);tleg.position.set(8.4,.4,1.2);scene.add(tleg);
-  mnl.cam=box(.26,.18,.16,0x18242f);mnl.cam.position.set(8.25,.92,1.2);scene.add(mnl.cam);
-  actMesh(mnl.cam,'FOTO');
-  scene.add(label('KAMERA',.5,'#5fd4ff').translateX(8.25).translateY(1.2).translateZ(1.2));
-  mnl.radio=box(.14,.28,.09,0x141a20,{emissive:0x06303d,emissiveIntensity:.5});
-  mnl.radio.position.set(8.6,.95,1.2);scene.add(mnl.radio);
-  actMesh(mnl.radio,'LAPOR');
-  scene.add(label('RADIO',.5,'#5fd4ff').translateX(8.6).translateY(1.25).translateZ(1.2));
-
-  startSeq([
-   {type:'act',aid:'DASH',done:false,targets:()=>[mnl.D.mesh],
-    desc:'Buka DASHBOARD analitik — pelajari pola konsumsi 4 pelanggan.',
-    why:'Analis bekerja dari data dulu, lapangan kemudian. Cari yang turun drastis tanpa alasan: pelanggan pindah? renovasi? atau... sesuatu yang lain.',
-    fx(){toast('📊 Data terbaca. Satu pelanggan turun -76%...','info',2800);}},
-   {type:'act',aid:'H3',done:false,targets:()=>[mnl.houses[2]],
-    desc:'Identifikasi pelanggan paling anomali, lalu klik RUMAH-nya.',
-    why:'Pelanggan C: konsumsi anjlok 726→174 kWh (-76%), padahal skor aktivitas normal & ML menandai 0,94. A, B, D fluktuasi wajar ±5%. Data sudah menunjuk — saatnya verifikasi.',
-    fx(){toast('🏠 Pelanggan C — aktivitas rumah tampak normal. Mencurigakan.','info',2600);}},
-   {type:'act',aid:'M3',done:false,targets:()=>[mnl.meters[2]],
-    desc:'Periksa METER pelanggan C dari dekat (klik meter).',
-    why:'Verifikasi lapangan: cek fisik meter, segel, dan sekeliling APP. Model ML hanya berhipotesis — mata terlatihmu yang memutuskan.',
-    fx(){mnl.jumper.visible=true;clickables.push(mnl.jumper);
-      toast('🔍 Ada kabel mencurigakan melingkar di belakang meter...','info',2800);}},
-   {type:'act',aid:'JUMP',done:false,targets:()=>[mnl.jumper],
-    desc:'Periksa kabel merah itu (klik kabel).',
-    why:'Jumper bypass: fasa dilangsungkan melewati meter sehingga sebagian besar pemakaian tak tercatat. Modus klasik — dan persis pola yang membuat konsumsi "resmi" anjlok 76%.',
-    fx(){toast('🚨 TERKONFIRMASI: jumper bypass meter!','bad',2800);}},
-   {type:'act',aid:'FOTO',done:false,targets:()=>[mnl.cam],
-    desc:'Dokumentasikan temuan (klik KAMERA).',
-    why:'Tanpa bukti, temuan = opini. Foto kondisi asli SEBELUM apapun disentuh: posisi jumper, segel, nomor meter. Bukti kuat = tagihan susulan yang tak terbantah.',
-    fx(){spark(worldPos(mnl.jumper),0xffffff);
-      toast('📸 Bukti terdokumentasi: 4 foto + video.','ok',2400);}},
-   {type:'act',aid:'LAPOR',done:false,targets:()=>[mnl.radio],
-    desc:'Laporkan ke tim P2TL (klik RADIO). Jangan bertindak sendiri!',
-    why:'Analis menemukan; penertiban tetap wewenang tim P2TL resmi (dengan berita acara, saksi, bila perlu APH). Konfrontasi sendirian = bahaya & cacat hukum.',
-    fx(){toast('📻 Tim P2TL menuju lokasi — target terverifikasi.','ok',2800);}},
-  ],()=>{say('🎉 <b>Investigasi sukses!</b> Dari skor model ML sampai bukti lapangan — beginilah analitik memangkas susut. Satu jumper ini saja menyelamatkan ±550 kWh/bulan.');
-    setTimeout(()=>showWin('ntl'),2200);});
-
-  say('VOLTA di sini 📊 Misi favoritku: <b>berburu susut non-teknis</b>. Model ML sudah memberi sinyal — tapi ingat prinsip analis: <b>data menunjuk, lapangan membuktikan</b>. Mulai dari dashboard di sebelah kiri.');
-  $('#modTitle').textContent='J05 — Investigasi NTL';
-  $('#taskHead').textContent='DATA → VERIFIKASI → BUKTI';}
-
-/* =====================================================================
-   MISI 11 — AUDIT ENERGI (Jalur 06)
-   ===================================================================== */
-let mad={};
-function buildAudit(){
-  freshScene(0xb8c6d4,0x141d28);
-  cam={theta:.1,phi:1.2,r:8.5,target:new THREE.Vector3(0,1.6,-.8)};
-  const Z=room(0x55606a,0xb9c4bd,16,11);
-
-  /* clipboard auditor */
-  mad.clip=box(.45,.6,.05,0xe8e4d8);mad.clip.position.set(-5.6,1.5,-1.0);
-  mad.clip.rotation.y=.6;scene.add(mad.clip);
-  actMesh(mad.clip,'WALK');
-  scene.add(label('CLIPBOARD AUDIT',.65,'#5fd4ff').translateX(-5.6).translateY(2.0).translateZ(-1.0));
-
-  /* lampu menyala siang */
-  mad.lamps=[];
-  [-3.4,-2.2,-1.0].forEach(x=>{
-    const fit=cyl(.07,.1,.16,0x444444);fit.position.set(x,3.6,-1.5);scene.add(fit);
-    const b=new THREE.Mesh(new THREE.SphereGeometry(.13,16,12),
-      new THREE.MeshStandardMaterial({color:0xfff4c2,emissive:0xffd97a,emissiveIntensity:1}));
-    b.position.set(x,3.42,-1.5);scene.add(b);actMesh(b,'LAMP');mad.lamps.push(b);});
-  scene.add(label('LAMPU NYALA SIANG?',.7,'#ffd23f').translateX(-2.2).translateY(3.95).translateZ(-1.5));
-
-  /* kompresor dengan kebocoran */
-  const komp=box(1.3,1.0,.8,0x4a6a8a);komp.position.set(1.0,.55,-2.2);scene.add(komp);
-  const tank=cyl(.32,.32,1.2,0x6a8aa8);tank.rotation.z=Math.PI/2;tank.position.set(1.0,1.35,-2.2);scene.add(tank);
-  actMesh(komp,'KOMP'); actMesh(tank,'KOMP');
-  scene.add(label('KOMPRESOR UDARA',.7).translateX(1.0).translateY(2.0).translateZ(-2.2));
-
-  /* motor tua */
-  const mb=cyl(.3,.3,.8,0x6a6a5a);mb.rotation.z=Math.PI/2;mb.position.set(3.8,.55,-2.0);scene.add(mb);
-  actMesh(mb,'MTR');
-  scene.add(label('MOTOR LAMA (IE1)',.65).translateX(3.8).translateY(1.1).translateZ(-2.0));
-
-  /* AC unit */
-  const ac=box(1.0,.4,.3,0xe8edf2);ac.position.set(5.6,3.0,Z+.2);scene.add(ac);
-  actMesh(ac,'AC');
-  scene.add(label('AC · SET 18°C ❄️',.65,'#9cc4ff').translateX(5.6).translateY(3.45).translateZ(Z+.2));
-
-  startSeq([
-   {type:'act',aid:'WALK',done:false,targets:()=>[mad.clip],
-    desc:'Ambil CLIPBOARD — mulai walkthrough audit (klik clipboard).',
-    why:'Audit level 1 dimulai dengan walkthrough sistematis: berjalan dengan rute tetap, mencatat semua yang menyala, bocor, panas, atau berisik. Mata terlatih melihat uang menguap.',
-    fx(){toast('📋 Walkthrough dimulai — area produksi.','info',2200);}},
-   {type:'act',aid:'LAMP',done:false,targets:()=>[mad.lamps[1]],
-    desc:'Temuan #1: lampu menyala di siang bolong (klik lampu).',
-    why:'Solusi termurah seluruh dunia audit: matikan yang tak perlu. Akar masalahnya kontrol (tak ada sensor/zonasi) dan perilaku. 3 lampu × 12 jam sia-sia × 365 hari = nyata di tagihan.',
-    fx(){mad.lamps.forEach(l=>{l.material.emissiveIntensity=0;});
-      toast('💡 Dicatat: pencahayaan tanpa kontrol — rekomendasi sensor & zonasi.','ok',2600);}},
-   {type:'act',aid:'KOMP',done:false,targets:()=>[komp],
-    desc:'Temuan #2: dengar desisan di KOMPRESOR (klik kompresor).',
-    why:'Kebocoran udara tekan adalah musuh tak terlihat: lubang 3 mm pada 7 bar ≈ jutaan rupiah setahun, dan kompresor terus bekerja mengisi kebocoran. Cek dengan ultrasonic leak detector.',
-    fx(){toast('💨 Terdeteksi 2 titik bocor — tagging untuk perbaikan.','ok',2600);}},
-   {type:'act',aid:'MTR',done:false,targets:()=>[mb],
-    desc:'Temuan #3: ukur MOTOR lama dengan power meter (klik motor).',
-    why:'Motor IE1 tua berbeban parsial = efisiensi jeblok. Pada jam operasi panjang, upgrade ke IE3 + VFD untuk beban variabel sering balik modal < 2 tahun.',
-    fx(){toast('⚙️ Terukur: cosφ 0,71 · beban 45% — kandidat VFD.','ok',2600);}},
-   {type:'act',aid:'AC',done:false,targets:()=>[ac],
-    desc:'Temuan #4: AC diset 18°C! (klik unit AC).',
-    why:'Setiap 1°C lebih dingin dari kebutuhan ≈ +6% konsumsi pendinginan. 18→25°C pada area non-proses = penghematan dua digit tanpa investasi sepeser pun.',
-    fx(){toast('❄️ Setpoint dinaikkan ke 25°C + jadwal otomatis.','ok',2600);}},
-   {type:'act',aid:'WALK2',done:false,targets:()=>[mad.clip],
-    desc:'Kembali ke CLIPBOARD — susun laporan & potensi penghematan.',
-    why:'Laporan audit yang baik memisahkan rekomendasi: no-cost (perilaku/setpoint), low-cost (sensor, perbaikan bocor), investasi (VFD, retrofit) — masing-masing dengan payback.',
-    fx(){toast('📋 LAPORAN: potensi hemat ±18% (no-cost 7% + investasi 11%).','ok',3000);sfx.big();}},
-  ],()=>{say('🎉 <b>Audit selesai — potensi 18%!</b> Empat temuan, empat solusi, dari gratis sampai investasi ber-payback. Begitulah auditor mengubah jalan kaki menjadi uang.');
-    setTimeout(()=>showWin('audit'),2200);});
-  mad.clip2=mad.clip; mad.clip.userData={kind:'act',aid:'WALK'};
-  /* clipboard dipakai 2x: ganti aid setelah langkah pertama */
-  const origFx=seq.steps[0].fx;
-  seq.steps[0].fx=()=>{origFx();mad.clip.userData.aid='WALK2';};
-
-  say('VOLTA di sini 📋 Hari ini kita jalan kaki menghasilkan uang: <b>walkthrough audit energi</b>. Empat pemborosan bersembunyi di pabrik ini — temukan semuanya. Mulai dari clipboard di kiri.');
-  $('#modTitle').textContent='J06 — Walkthrough Audit Energi';
-  $('#taskHead').textContent='EMPAT TEMUAN TERSEMBUNYI';}
-
-/* =====================================================================
-   MISI 12 — PLTU SINKRONISASI (Jalur 07)
-   ===================================================================== */
-let mpu={};
-function buildPLTU(){
-  freshScene(0x8aa0b8,0x10181f);
-  cam={theta:-.15,phi:1.18,r:9,target:new THREE.Vector3(0,1.8,-.8)};
-  const floor=box(20,.1,12,0x39424c);floor.position.y=-.05;scene.add(floor);
-  const wall=box(18,4.6,.2,0x4c5862);wall.position.set(0,2.3,-3.6);scene.add(wall);
-
-  /* tangki pelumas */
-  mpu.oil=cyl(.5,.5,1.2,0x8a6a3a);mpu.oil.position.set(-6.2,.65,-1.8);scene.add(mpu.oil);
-  actMesh(mpu.oil,'OIL');
-  scene.add(label('LUBE OIL',.65,'#5fd4ff').translateX(-6.2).translateY(1.55).translateZ(-1.8));
-  /* turbin + generator */
-  mpu.turb=cyl(.7,.9,2.6,0x9aa7b4);mpu.turb.rotation.z=Math.PI/2;
-  mpu.turb.position.set(-2.6,1.2,-1.8);scene.add(mpu.turb);
-  actMesh(mpu.turb,'START');
-  scene.add(label('TURBIN UAP',.8).translateX(-2.6).translateY(2.4).translateZ(-1.8));
-  const gen=cyl(.8,.8,1.8,0x5a7a9a);gen.rotation.z=Math.PI/2;gen.position.set(.4,1.2,-1.8);scene.add(gen);
-  scene.add(label('GENERATOR 11kV',.75).translateX(.4).translateY(2.4).translateZ(-1.8));
-  mpu.shaft=cyl(.12,.12,.7,0xd8e0e8,12,{metalness:.7});
-  mpu.shaft.rotation.z=Math.PI/2;mpu.shaft.position.set(-1.05,1.2,-1.8);scene.add(mpu.shaft);
-  /* AVR / eksitasi */
-  mpu.avr=box(.5,.7,.3,0x2b3a4a);mpu.avr.position.set(2.0,1.0,-1.8);scene.add(mpu.avr);
-  actMesh(mpu.avr,'EKS');
-  scene.add(label('AVR/EKSITASI',.6,'#5fd4ff').translateX(2.0).translateY(1.6).translateZ(-1.8));
-  /* panel synchroscope + breaker + governor */
-  const panel=box(2.6,2.2,.3,0x2b3845);panel.position.set(5.2,1.6,-2.6);scene.add(panel);
-  panel.add(label('PANEL SINKRON',.8).translateY(1.4));
-  mpu.D=makeDisplay(1.1,1.1,260,260);
-  mpu.D.mesh.position.set(4.7,1.9,-2.43);scene.add(mpu.D.mesh);
-  mpu.brk=box(.34,.5,.16,0x18242f);mpu.brk.position.set(5.9,1.9,-2.42);scene.add(mpu.brk);
-  actMesh(mpu.brk,'SYNC');
-  scene.add(label('BREAKER GEN',.5,'#5fd4ff').translateX(5.9).translateY(2.28).translateZ(-2.4));
-  mpu.gov=box(.34,.2,.16,0xcc8830);mpu.gov.position.set(5.9,1.2,-2.42);scene.add(mpu.gov);
-  actMesh(mpu.gov,'GOV');
-  scene.add(label('GOVERNOR',.5,'#5fd4ff').translateX(5.9).translateY(.95).translateZ(-2.4));
-  mpu.stat=makeDisplay(1.5,.4,360,96);
-  mpu.stat.mesh.position.set(5.2,.55,-2.42);scene.add(mpu.stat.mesh);
-  dispText(mpu.stat,['0 RPM · 0 kV · OFFLINE'],['#7d8f84']);
-
-  mpu.rpm=0;mpu.eks=false;mpu.ang=Math.PI;mpu.sync=false;mpu.mw=0;mpu.started=false;
-  function drawScope(){
-    const g=mpu.D.g,cx=130,cy=130,r=100;
-    g.fillStyle='#0c141d';g.fillRect(0,0,260,260);
-    g.strokeStyle='#2a3a4c';g.lineWidth=10;
-    g.beginPath();g.arc(cx,cy,r,0,Math.PI*2);g.stroke();
-    g.fillStyle='#46ff8e';g.beginPath();g.arc(cx,cy-r,9,0,Math.PI*2);g.fill();
-    g.fillStyle='#8aa3bd';g.font='600 16px Consolas';g.textAlign='center';
-    g.fillText('SYNCHROSCOPE',cx,250);
-    if(mpu.eks&&!mpu.sync){
-      g.strokeStyle='#ffd23f';g.lineWidth=6;
-      g.beginPath();g.moveTo(cx,cy);
-      g.lineTo(cx+ (r-14)*Math.sin(mpu.ang), cy-(r-14)*Math.cos(mpu.ang));g.stroke();}
-    if(mpu.sync){g.fillStyle='#46ff8e';g.font='700 26px Consolas';g.fillText('SINKRON ✓',cx,cy+8);}
-    mpu.D.tex.needsUpdate=true;}
-  drawScope();
-  moduleTick=(dt)=>{
-    if(mpu.started&&mpu.rpm<3000)mpu.rpm=Math.min(3000,mpu.rpm+dt*900);
-    if(mpu.started)mpu.shaft.rotation.x+=dt*mpu.rpm*.004;
-    if(mpu.eks&&!mpu.sync)mpu.ang+=dt*1.1;
-    if(mpu.sync&&mpu.mw<5)mpu.mwShow=true;
-    drawScope();
-    dispText(mpu.stat,[Math.round(mpu.rpm)+' RPM · '+(mpu.eks?'11 kV':'0 kV')+' · '+(mpu.sync?mpu.mw.toFixed(1)+' MW':'OFFLINE')],
-      [mpu.sync?'#46ff8e':'#ffd23f']);};
-
-  startSeq([
-   {type:'act',aid:'OIL',done:false,targets:()=>[mpu.oil],
-    desc:'Cek sistem PELUMAS turbin (klik tangki lube oil).',
-    why:'Bearing turbin mengambang di lapisan film oli setipis rambut. Tanpa tekanan pelumas: logam bertemu logam pada 3000 RPM — kerusakan dalam hitungan detik.',
-    fx(){toast('🛢️ Tekanan & suhu pelumas normal ✓','ok',2200);}},
-   {type:'act',aid:'START',done:false,targets:()=>[mpu.turb],
-    desc:'START turbin — naikkan putaran ke 3000 RPM (klik turbin).',
-    why:'3000 RPM = 50 Hz pada generator 2 kutub. Putaran adalah frekuensi; menjaga RPM = menjaga detak jantung sistem.',
-    fx(){mpu.started=true;beep(70,1.2,'sawtooth',.06);
-      toast('🌀 Turbin berakselerasi menuju 3000 RPM...','ok',2600);}},
-   {type:'act',aid:'EKS',done:false,targets:()=>[mpu.avr],
-    desc:'Aktifkan EKSITASI — bangkitkan tegangan 11 kV (klik AVR).',
-    why:'Arus DC di rotor menciptakan medan magnet; stator memotongnya menjadi tegangan. AVR menjaga 11 kV stabil. Lihat: jarum synchroscope mulai berputar!',
-    fx(){mpu.eks=true;
-      toast('⚡ Tegangan 11 kV — synchroscope hidup. Amati jarumnya!','ok',2800);}},
-   {type:'act',aid:'SYNC',done:false,targets:()=>[mpu.brk],
-    check:()=>Math.cos(mpu.ang)>0.93,
-    checkFail:'DI LUAR FASE! Tutup breaker HANYA saat jarum tepat di posisi 12 (atas).',
-    desc:'Momen kebenaran: klik BREAKER tepat saat jarum di posisi 12!',
-    why:'Posisi 12 = sudut fase generator & jaringan berhimpit. Menutup di luar itu = dua sistem "bertabrakan": arus kejut & torsi yang bisa memuntir poros. Sabar... dan tepat.',
-    fx(){mpu.sync=true;mpu.mw=0;
-      toast('🎯 BREAKER TERTUTUP — generator paralel ke jaringan!','ok',2800);sfx.big();}},
-   {type:'act',aid:'GOV',done:false,targets:()=>[mpu.gov],
-    desc:'Naikkan beban via GOVERNOR ke 5 MW (klik governor).',
-    why:'Setelah sinkron, generator "mengikuti" jaringan. Governor menambah uap → menambah MW yang disumbangkan unit ke sistem. Naikkan bertahap, jangan dihentak.',
-    fx(){mpu.mw=5;
-      toast('📈 Beban naik bertahap — unit 2 menyumbang 5 MW.','ok',2600);}},
-  ],()=>{say('🎉 <b>Unit 2 kembali ke sistem!</b> Kamu baru melewati ritual paling menegangkan di pembangkit — sinkronisasi — dengan timing sempurna.');
-    setTimeout(()=>showWin('pltu'),2200);});
-
-  say('VOLTA di sini 🌱 Selamat datang di control room. Hari ini ujian timing terbesar seorang operator: <b>sinkronisasi generator</b>. Kuncinya satu kalimat: <b>breaker hanya ditutup saat jarum synchroscope tepat di posisi 12</b>. Kita mulai dari pelumas.');
-  $('#modTitle').textContent='J07 — Start-Up & Sinkronisasi Generator';
-  $('#taskHead').textContent='MENUJU PARALEL SISTEM';}
-
-/* =====================================================================
-   MISI 13 — SALES KAPASITOR (Jalur 09)
-   ===================================================================== */
-let msa={};
-function buildSales(){
-  freshScene(0xc6d2dc,0x18222c);
-  cam={theta:0,phi:1.2,r:6.5,target:new THREE.Vector3(0,1.5,-1)};
-  const Z=room(0x6b5a45,0xd8d2c4);
-  /* meja meeting */
-  const desk=box(3.2,.08,1.4,0x6b4f33);desk.position.set(0,1.0,-.6);scene.add(desk);
-  [[-1.4,-1.1],[1.4,-1.1],[-1.4,-.1],[1.4,-.1]].forEach(p=>{
-    const l=box(.08,1,.08,0x4a3624);l.position.set(p[0],.5,p[1]+0.5);scene.add(l);});
-  /* tagihan di meja */
-  msa.bill=box(.5,.02,.7,0xf0ead8);msa.bill.position.set(-.9,1.06,-.6);scene.add(msa.bill);
-  actMesh(msa.bill,'BILL');
-  scene.add(label('TAGIHAN LISTRIK',.6,'#5fd4ff').translateX(-.9).translateY(1.35).translateZ(-.6));
-  /* panel meter di dinding */
-  const pm=box(1.0,1.0,.2,0x2d3a4a);pm.position.set(-3.2,2.2,Z);scene.add(pm);
-  msa.D=makeDisplay(.8,.5,260,160);msa.D.mesh.position.set(-3.2,2.25,Z+.12);scene.add(msa.D.mesh);
-  dispText(msa.D,['cosφ 0,78','400 kW · 513 kVA'],['#ff5a5a','#eaf2fb']);
-  actMesh(msa.D.mesh,'METER'); actMesh(pm,'METER');
-  scene.add(label('PANEL METER',.7,'#5fd4ff').translateX(-3.2).translateY(2.95).translateZ(Z));
-  /* tiga opsi kapasitor bank */
-  msa.opts=[];
-  [['100 kVAr','OPT100',2.0],['200 kVAr','OPT200',3.2],['300 kVAr','OPT300',4.4]].forEach(o=>{
-    const b=box(.85,1.3,.6,0x8a96a2);b.position.set(o[2],0.75,-2.2);scene.add(b);
-    actMesh(b,o[1]);msa.opts.push(b);
-    scene.add(label(o[0],.62).translateX(o[2]).translateY(1.7).translateZ(-2.2));});
-  scene.add(label('PILIH BANK KAPASITOR',.75,'#ffd23f').translateX(3.2).translateY(2.2).translateZ(-2.2));
-  /* papan proposal */
-  msa.prop=box(.9,.65,.05,0xe8e4d8);msa.prop.position.set(.9,1.45,Z+.1);scene.add(msa.prop);
-  actMesh(msa.prop,'PROP');
-  scene.add(label('PROPOSAL',.6,'#5fd4ff').translateX(.9).translateY(1.95).translateZ(Z+.1));
-
-  startSeq([
-   {type:'act',aid:'BILL',done:false,targets:()=>[msa.bill],
-    desc:'Bedah TAGIHAN pelanggan (klik tagihan di meja).',
-    why:'Sales engineer membaca tagihan seperti dokter membaca lab: di sana tertulis denda kelebihan kVArh Rp 8,4 juta/bulan. Itulah "rasa sakit" yang akan kamu sembuhkan.',
-    fx(){toast('🧾 Ditemukan: denda kVArh Rp 8,4 jt/bulan, 12 bulan beruntun.','info',2800);}},
-   {type:'act',aid:'METER',done:false,targets:()=>[msa.D.mesh],
-    desc:'Verifikasi di PANEL METER: cosφ & beban aktual.',
-    why:'Jangan menjual dari asumsi. Meter menunjukkan cosφ 0,78 dengan beban 400 kW — beban induktif (motor-motor produksi) menyeret faktor daya ke bawah.',
-    fx(){toast('📟 Terverifikasi: 400 kW · cosφ 0,78 · target ≥0,95.','info',2800);}},
-   {type:'act',aid:'OPT200',done:false,targets:()=>[msa.opts[1]],
-    desc:'Hitung: Q = P×(tanφ₁−tanφ₂) = 400×(0,802−0,329) ≈ 190 kVAr. Pilih bank yang tepat!',
-    why:'400 kW dari cosφ 0,78 ke 0,95 butuh ±190 kVAr → bank 200 kVAr (12 step × ~16,7 kVAr) pas. 100 = denda jalan terus; 300 = overcompensation, leading & risiko resonansi.',
-    fx(){toast('✅ 200 kVAr — perhitungan tepat, tidak over tidak under.','ok',2800);}},
-   {type:'act',aid:'PROP',done:false,targets:()=>[msa.prop],
-    desc:'Tutup dengan PROPOSAL ber-ROI (klik papan proposal).',
-    why:'Proposal terbaik menghitung dirinya sendiri: investasi ±Rp 110 jt vs denda hilang Rp 8,4 jt/bln → payback ±13 bulan. Setelah itu? Penghematan murni bertahun-tahun.',
-    fx(){toast('🤝 DEAL! Payback 13 bulan — pelanggan tanda tangan.','ok',3000);sfx.big();}},
-  ],()=>{say('🎉 <b>Closing!</b> Kamu tidak menjual kapasitor — kamu menjual hilangnya denda Rp 100 juta setahun. Itulah technical selling: data → hitungan → solusi.');
-    setTimeout(()=>showWin('sales'),2200);});
-
-  say('VOLTA di sini 🤝 Hari ini kita bicara bahasa yang dipahami semua direktur: <b>uang</b>. Pelanggan kena denda kVArh tiap bulan. Baca datanya, hitung dengan rumus Q = P(tanφ₁−tanφ₂), dan biarkan angka yang menjual.');
-  $('#modTitle').textContent='J09 — Solusi Kapasitor Bank';
-  $('#taskHead').textContent='DATA → HITUNG → CLOSING';}
-
-/* =====================================================================
-   MISI 14 — CARBON SCOPE 1-2-3 (Jalur 11)
-   ===================================================================== */
-let mcn={};
-function buildCarbon(){
-  freshScene(0xb8d0c0,0x121d18);
-  cam={theta:.1,phi:1.18,r:9,target:new THREE.Vector3(0,1.6,-.8)};
-  const ground=box(20,.1,12,0x55605a);ground.position.y=-.05;scene.add(ground);
-  const fab=box(7,3,4,0xb8c0b4);fab.position.set(-2,1.5,-3.5);scene.add(fab);
-  fab.add(label('PT MAJU PLASTIK',.95).translateY(1.95));
-
-  /* genset (scope 1) */
-  mcn.gen=box(1.4,1.0,.9,0x8a6a3a);mcn.gen.position.set(-6.0,.55,-.8);scene.add(mcn.gen);
-  const exh=cyl(.07,.07,.8,0x444444);exh.position.set(-6.4,1.4,-.8);scene.add(exh);
-  actMesh(mcn.gen,'S1');
-  scene.add(label('GENSET DIESEL',.65).translateX(-6.0).translateY(1.45).translateZ(-.8));
-  /* meter PLN (scope 2) */
-  mcn.mtr=box(.4,.55,.16,0x2d3a4a);mcn.mtr.position.set(-2.0,1.3,-1.45);scene.add(mcn.mtr);
-  actMesh(mcn.mtr,'S2');
-  scene.add(label('METER PLN',.6).translateX(-2.0).translateY(1.75).translateZ(-1.4));
-  /* truk pemasok (scope 3) */
-  const tbody=box(2.4,.9,1.0,0xc8c8c8);tbody.position.set(4.2,.85,.4);scene.add(tbody);
-  const tcab=box(.8,.7,.95,0xd83a3a);tcab.position.set(2.7,.75,.4);scene.add(tcab);
-  [[-.7,-.55],[.7,-.55],[-.7,.55],[.7,.55],[2.7-3.5,-.55],[2.7-3.5,.55]].forEach(()=>{});
-  [[3.4,-.1],[4.9,-.1],[3.4,.9],[4.9,.9],[2.6,-.1],[2.6,.9]].forEach(w=>{
-    const wh=cyl(.22,.22,.16,0x14181d);wh.rotation.x=Math.PI/2;
-    wh.position.set(w[0],.28,w[1]);scene.add(wh);});
-  actMesh(tbody,'S3'); actMesh(tcab,'S3');
-  scene.add(label('TRUK PEMASOK',.65).translateX(3.6).translateY(1.7).translateZ(.4));
-  /* papan kalkulasi */
-  mcn.D=makeDisplay(1.4,.9,320,220);
-  mcn.D.mesh.position.set(7.0,1.7,-1.5);mcn.D.mesh.rotation.y=-.4;scene.add(mcn.D.mesh);
-  dispText(mcn.D,['INVENTARISASI GHG','— tCO2e'],['#5fd4ff','#7d8f84']);
-  const pole=cyl(.04,.04,1.3,0x666666);pole.position.set(7.0,.65,-1.5);scene.add(pole);
-  actMesh(mcn.D.mesh,'CALC');
-  /* panel PLTS rencana */
-  mcn.pv=box(1.6,.06,1.0,0x16263e,{roughness:.25});mcn.pv.position.set(-2,3.1,-2.6);
-  mcn.pv.rotation.x=-.3;scene.add(mcn.pv);
-  actMesh(mcn.pv,'RED');
-  scene.add(label('RENCANA PLTS ATAP',.65,'#8df0b8').translateX(-2).translateY(3.6).translateZ(-2.4));
-
-  startSeq([
-   {type:'act',aid:'S1',done:false,targets:()=>[mcn.gen],
-    desc:'SCOPE 1 — identifikasi emisi LANGSUNG. Klik sumbernya!',
-    why:'Scope 1 = pembakaran di aset milik sendiri: genset diesel ini membakar solar di lokasi → CO₂ keluar dari knalpot perusahaan sendiri. (Boiler & mobil dinas juga masuk sini.)',
-    fx(){toast('🏭 Genset → SCOPE 1: 96 tCO₂e/tahun (solar 36.000 L).','ok',2800);}},
-   {type:'act',aid:'S2',done:false,targets:()=>[mcn.mtr],
-    desc:'SCOPE 2 — emisi dari LISTRIK YANG DIBELI. Klik sumbernya!',
-    why:'Pabrik tak membakar apapun untuk listrik PLN — pembangkitnya yang membakar. Emisinya "menempel" lewat faktor emisi grid: Jawa ±0,77 kg CO₂e/kWh.',
-    fx(){toast('🔌 Listrik PLN 1,3 GWh → SCOPE 2: 1.001 tCO₂e/tahun.','ok',2800);}},
-   {type:'act',aid:'S3',done:false,targets:()=>[tbody],
-    desc:'SCOPE 3 — emisi RANTAI NILAI. Klik sumbernya!',
-    why:'Truk pemasok bukan milik pabrik, tapi beroperasi demi pabrik — itulah Scope 3: hulu (bahan baku, logistik masuk) & hilir (distribusi, pemakaian produk). Biasanya porsi terbesar.',
-    fx(){toast('🚚 Logistik & pemasok → SCOPE 3: ±143 tCO₂e/tahun (estimasi).','ok',2800);}},
-   {type:'act',aid:'CALC',done:false,targets:()=>[mcn.D.mesh],
-    desc:'Hitung BASELINE total (klik papan kalkulasi).',
-    why:'Baseline = titik nol perjalanan net zero. Tanpa angka awal, "turun 30%" tak bermakna. Tahun baseline & metodologi harus konsisten untuk pelaporan tahun-tahun berikutnya.',
-    fx(){dispText(mcn.D,['1.240 tCO2e/thn','S1:96 S2:1001 S3:143'],['#ffd23f','#eaf2fb']);
-      toast('🧮 Baseline 2026: 1.240 tCO₂e — Scope 2 dominan 81%!','ok',3000);}},
-   {type:'act',aid:'RED',done:false,targets:()=>[mcn.pv],
-    desc:'Pilih QUICK-WIN reduksi: klik rencana PLTS atap.',
-    why:'Data menunjuk: Scope 2 = 81% total. Strategi paling berdampak: efisiensi + PLTS atap (pangkas pembelian listrik grid) — sebelum bicara offset, kurangi dulu yang nyata.',
-    fx(){toast('☀️ PLTS 500 kWp → potensi −540 tCO₂e/thn (−44%)!','ok',3000);sfx.big();}},
-  ],()=>{say('🎉 <b>Baseline berdiri: 1.240 tCO₂e!</b> Scope terklasifikasi benar, strategi reduksi berbasis data. Kontrak ekspor Eropa? Aman.');
-    setTimeout(()=>showWin('carbon'),2200);});
-
-  say('VOLTA di sini 🌍 Misi karbon pertamamu. Hafalkan triloginya: <b>Scope 1 = bakar sendiri, Scope 2 = listrik dibeli, Scope 3 = rantai nilai</b>. Klik sumber emisi sesuai urutan scope — jangan tertukar!');
-  $('#modTitle').textContent='J11 — Inventarisasi GHG Scope 1-2-3';
-  $('#taskHead').textContent='SCOPE 1 → 2 → 3 → BASELINE';}
-
-/* =====================================================================
-   MISI 15 — PLTSa / WtE (Jalur 13)
-   ===================================================================== */
-let mwt={};
-function buildWtE(){
-  freshScene(0xa8b8a8,0x101a14);
-  cam={theta:.2,phi:1.2,r:11,target:new THREE.Vector3(0,2,-1)};
-  const ground=box(26,.1,14,0x4a524c);ground.position.y=-.05;scene.add(ground);
-
-  /* jembatan timbang */
-  mwt.scale=box(2.6,.12,1.6,0x6a7a6a);mwt.scale.position.set(-8.5,.08,1.2);scene.add(mwt.scale);
-  actMesh(mwt.scale,'TIMBANG');
-  scene.add(label('JEMBATAN TIMBANG',.7,'#5fd4ff').translateX(-8.5).translateY(.7).translateZ(1.2));
-  /* bunker + crane */
-  const bunker=box(2.6,1.8,2.2,0x5a665e);bunker.position.set(-5.0,.9,-1.6);scene.add(bunker);
-  const trash=box(2.2,.5,1.8,0x7a6a4a);trash.position.set(-5.0,1.5,-1.6);scene.add(trash);
-  scene.add(label('BUNKER SAMPAH',.7).translateX(-5.0).translateY(2.3).translateZ(-1.6));
-  const ctow=box(.2,3.2,.2,0x8a8a8a);ctow.position.set(-3.2,1.6,-1.6);scene.add(ctow);
-  mwt.crane=box(1.8,.15,.15,0xcc8830);mwt.crane.position.set(-4.0,3.1,-1.6);scene.add(mwt.crane);
-  const grab=box(.35,.4,.35,0x666666);grab.position.set(-4.8,2.6,-1.6);scene.add(grab);
-  actMesh(mwt.crane,'CRANE'); actMesh(grab,'CRANE');
-  scene.add(label('CRANE',.6,'#5fd4ff').translateX(-4.0).translateY(3.5).translateZ(-1.6));
-  /* insinerator + display suhu */
-  mwt.furn=box(2.6,2.6,2.2,0x8a5a3a);mwt.furn.position.set(-.4,1.3,-1.8);scene.add(mwt.furn);
-  actMesh(mwt.furn,'BURN');
-  scene.add(label('INSINERATOR',.8).translateX(-.4).translateY(2.95).translateZ(-1.8));
-  mwt.D=makeDisplay(1.3,.55,300,130);
-  mwt.D.mesh.position.set(-.4,1.6,-.68);scene.add(mwt.D.mesh);
-  dispText(mwt.D,['120 °C','STANDBY'],['#7d8f84','#7d8f84']);
-  /* boiler-turbin-generator */
-  mwt.turb=cyl(.5,.6,1.8,0x9aa7b4);mwt.turb.rotation.z=Math.PI/2;
-  mwt.turb.position.set(2.8,1.1,-1.8);scene.add(mwt.turb);
-  actMesh(mwt.turb,'STEAM');
-  scene.add(label('TURBIN-GEN 1,2 MW',.7,'#5fd4ff').translateX(2.8).translateY(1.95).translateZ(-1.8));
-  /* scrubber + cerobong */
-  mwt.scrub=box(.9,2.2,.9,0x7a8a9a);mwt.scrub.position.set(5.4,1.1,-1.8);scene.add(mwt.scrub);
-  actMesh(mwt.scrub,'SCRUB');
-  const stack=cyl(.22,.3,3.4,0xb8b0a8);stack.position.set(6.6,1.7,-1.8);scene.add(stack);
-  scene.add(label('SCRUBBER+FILTER',.65,'#5fd4ff').translateX(5.4).translateY(2.5).translateZ(-1.8));
-
-  mwt.temp=120;mwt.burn=false;
-  moduleTick=(dt)=>{if(mwt.burn&&mwt.temp<880){mwt.temp+=dt*140;
-    dispText(mwt.D,[Math.round(mwt.temp)+' °C',mwt.temp>=850?'≥850 AMAN ✓':'PEMANASAN'],
-      [mwt.temp>=850?'#46ff8e':'#ffd23f',mwt.temp>=850?'#46ff8e':'#7d8f84']);}};
-
-  startSeq([
-   {type:'act',aid:'TIMBANG',done:false,targets:()=>[mwt.scale],
-    desc:'Timbang truk sampah masuk (klik jembatan timbang).',
-    why:'Mass balance dimulai di sini: tiap kg yang masuk harus terlacak menjadi listrik, abu, atau emisi. Tanpa timbangan, tak ada akuntabilitas operasi.',
-    fx(){toast('⚖️ Tercatat: 8,2 ton sampah kota.','ok',2200);}},
-   {type:'act',aid:'CRANE',done:false,targets:()=>[mwt.crane],
-    desc:'Operasikan CRANE — umpan sampah ke hopper (klik crane).',
-    why:'Operator crane juga "koki": mengaduk sampah di bunker agar kadar air merata. Sampah basah tak merata = suhu pembakaran naik-turun liar.',
-    fx(){toast('🏗️ Sampah teraduk & terumpan ke hopper.','ok',2200);}},
-   {type:'act',aid:'BURN',done:false,targets:()=>[mwt.furn],
-    desc:'Nyalakan INSINERATOR — kawal suhu naik melewati 850°C.',
-    why:'Angka keramat: ≥850°C selama ≥2 detik menguraikan dioksin & furan. Di bawah itu, racun lolos ke udara kota. Burner bantu menjaga suhu saat sampah terlalu basah.',
-    fx(){mwt.burn=true;mwt.furn.material.emissive=new THREE.Color(0x662200);
-      mwt.furn.material.emissiveIntensity=.5;
-      toast('🔥 Pembakaran dimulai — suhu menanjak...','ok',2600);}},
-   {type:'act',aid:'STEAM',done:false,targets:()=>[mwt.turb],
-    check:()=>mwt.temp>=850,
-    checkFail:'Suhu belum 850°C! Menyalurkan uap sekarang = pembakaran tak sempurna. Tunggu display hijau.',
-    desc:'Setelah suhu ≥850°C: alirkan uap ke TURBIN (klik turbin).',
-    why:'Panas → boiler → uap → turbin → 1,2 MW listrik. Dari gunungan masalah kota menjadi energi — tapi hanya jika suhunya benar.',
-    fx(){toast('⚡ Turbin berputar — 1,2 MW mengalir ke jaringan!','ok',2600);sfx.big();}},
-   {type:'act',aid:'SCRUB',done:false,targets:()=>[mwt.scrub],
-    desc:'Verifikasi sistem kontrol emisi (klik SCRUBBER).',
-    why:'Scrubber menetralkan gas asam (HCl, SOx), filter menangkap partikulat & logam berat. CEMS memantau cerobong real-time — PLTSa modern hidup-mati oleh data emisinya.',
-    fx(){toast('🌫️ Emisi cerobong: memenuhi baku mutu ✓','ok',2600);}},
-  ],()=>{say('🎉 <b>Shift sempurna!</b> 8 ton masalah kota → 1,2 MW listrik, dengan dioksin terurai & emisi terjaga. Begitulah sampah pensiun dengan terhormat.');
-    setTimeout(()=>showWin('wte'),2200);});
-
-  say('VOLTA di sini ♻️ Selamat datang di PLTSa. Satu angka yang menentukan apakah fasilitas ini pahlawan atau masalah: <b>850°C</b>. Kawal suhu itu — dan jangan alirkan uap sebelum tercapai!');
-  $('#modTitle').textContent='J13 — Operasi PLTSa';
-  $('#taskHead').textContent='SAMPAH → 850°C → LISTRIK';}
-
-/* =====================================================================
-   MISI 16 — GREEN HYDROGEN (Jalur 14)
-   ===================================================================== */
-let mh2={};
-function buildH2(){
-  freshScene(0xa8c4d8,0x0e1a22);
-  cam={theta:-.1,phi:1.18,r:9,target:new THREE.Vector3(0,1.7,-.8)};
-  const ground=box(20,.1,12,0x46505a);ground.position.y=-.05;scene.add(ground);
-
-  /* PLTS sumber */
-  mh2.pv=box(2.4,.06,1.6,0x16263e,{roughness:.25});mh2.pv.position.set(-6.4,1.4,-1.4);
-  mh2.pv.rotation.x=-.3;scene.add(mh2.pv);
-  const pvleg=box(.1,1.2,.1,0x8a8a8a);pvleg.position.set(-6.4,.6,-1.4);scene.add(pvleg);
-  actMesh(mh2.pv,'RE');
-  scene.add(label('PLTS 1 MW',.7,'#5fd4ff').translateX(-6.4).translateY(2.1).translateZ(-1.2));
-  /* leak detector */
-  mh2.leak=box(.22,.3,.12,0xffd23f);mh2.leak.position.set(-3.2,1.7,-2.6);scene.add(mh2.leak);
-  actMesh(mh2.leak,'LEAK');
-  scene.add(label('H2 LEAK DETECTOR',.6,'#5fd4ff').translateX(-3.2).translateY(2.15).translateZ(-2.5));
-  /* elektroliser */
-  mh2.elc=box(2.2,1.8,1.4,0xd8e0e8);mh2.elc.position.set(-.6,.95,-1.8);scene.add(mh2.elc);
-  actMesh(mh2.elc,'ELC');
-  scene.add(label('ELEKTROLISER PEM',.8).translateX(-.6).translateY(2.2).translateZ(-1.8));
-  mh2.bubble=new THREE.Mesh(new THREE.SphereGeometry(.12,12,10),
-    new THREE.MeshStandardMaterial({color:0x9fd8ff,emissive:0x000000,transparent:true,opacity:.85}));
-  mh2.bubble.position.set(-.6,1.95,-1.1);scene.add(mh2.bubble);
-  /* purity display */
-  mh2.D=makeDisplay(1.0,.5,260,130);
-  mh2.D.mesh.position.set(-.6,1.2,-1.06);scene.add(mh2.D.mesh);
-  dispText(mh2.D,['— %','OFFLINE'],['#7d8f84','#7d8f84']);
-  actMesh(mh2.D.mesh,'PURE');
-  /* kompresor & storage */
-  mh2.comp=box(.9,.8,.7,0x4a6a8a);mh2.comp.position.set(2.2,.45,-1.8);scene.add(mh2.comp);
-  actMesh(mh2.comp,'COMP');
-  scene.add(label('KOMPRESOR 350 bar',.6,'#5fd4ff').translateX(2.2).translateY(1.15).translateZ(-1.8));
-  mh2.tankMat=new THREE.MeshStandardMaterial({color:0x9aa7b4,roughness:.4,emissive:0x000000});
-  mh2.tank=new THREE.Mesh(new THREE.CylinderGeometry(.55,.55,2.4,20),mh2.tankMat);
-  mh2.tank.rotation.z=Math.PI/2;mh2.tank.position.set(5.2,1.0,-1.8);scene.add(mh2.tank);
-  scene.add(label('STORAGE H2',.7).translateX(5.2).translateY(1.95).translateZ(-1.8));
-
-  mh2.on=false;
-  moduleTick=(dt,T)=>{if(mh2.on){
-    mh2.bubble.position.y=1.95+Math.sin(T*5)*.12;
-    mh2.bubble.material.emissive.setHex(0x6fc8ff);
-    mh2.bubble.material.emissiveIntensity=.4+Math.sin(T*5)*.3;}};
-
-  startSeq([
-   {type:'act',aid:'RE',done:false,targets:()=>[mh2.pv],
-    desc:'Verifikasi listrik dari PLTS (klik panel surya).',
-    why:'Definisi "hijau"-nya hidrogen ada di sumber listriknya. Elektroliser yang sama dengan listrik batubara menghasilkan hidrogen ABU-ABU — lebih kotor dari membakar gasnya langsung.',
-    fx(){toast('☀️ Suplai terverifikasi: 100% PLTS, 940 kW tersedia.','ok',2600);}},
-   {type:'act',aid:'LEAK',done:false,targets:()=>[mh2.leak],
-    desc:'SAFETY DULU: cek leak detector SEBELUM start (klik detektor).',
-    why:'H₂ tak berwarna, tak berbau, dan terbakar pada konsentrasi 4–75% — rentang terluas dari semua gas. Detektor terkalibrasi adalah hidungmu; tanpa hijau di sini, tak ada start.',
-    fx(){toast('🟢 Area clear: 0 ppm H₂ — aman untuk start.','ok',2600);}},
-   {type:'act',aid:'ELC',done:false,targets:()=>[mh2.elc],
-    desc:'START elektroliser PEM (klik unit).',
-    why:'Di dalam stack: air murni + listrik → H₂ di katoda, O₂ di anoda, dipisahkan membran. 1 kg H₂ butuh ±50 kWh — listrik adalah bahan bakunya, bukan sekadar penggerak.',
-    fx(){mh2.on=true;beep(180,.6,'sine',.08);
-      toast('💧 Elektrolisis berjalan: 17 Nm³/jam H₂.','ok',2600);}},
-   {type:'act',aid:'PURE',done:false,targets:()=>[mh2.D.mesh],
-    desc:'Verifikasi PURITY gas (klik display).',
-    why:'Fuel cell kendaraan menuntut 99,97% (ISO 14687) — pengotor CO meracuni katalis platinum. Purifier & dryer bekerja setelah stack; angka inilah sertifikat kualitas produkmu.',
-    fx(){dispText(mh2.D,['99,97 %','FUEL-CELL GRADE ✓'],['#46ff8e','#46ff8e']);
-      toast('🔬 Purity 99,97% — memenuhi grade fuel cell.','ok',2600);}},
-   {type:'act',aid:'COMP',done:false,targets:()=>[mh2.comp],
-    desc:'Kompresi ke STORAGE 350 bar (klik kompresor).',
-    why:'H₂ ringan luar biasa — tanpa kompresi, energinya "encer". 350 bar untuk bus/truk, 700 bar untuk mobil. Kompresi memakan 10-15% energi: bagian dari matematika LCOH.',
-    fx(){mh2.tankMat.emissive.setHex(0x2a6a4a);mh2.tankMat.emissiveIntensity=.5;
-      toast('🛢️ Storage terisi: 12 kg H₂ @ 350 bar. Produksi perdana!','ok',3000);sfx.big();}},
-  ],()=>{say('🎉 <b>Hidrogen hijau perdana!</b> Dari foton matahari → elektron → molekul H₂ fuel-cell grade. Kamu baru menyentuh masa depan energi — dengan urutan safety yang benar.');
-    setTimeout(()=>showWin('h2'),2200);});
-
-  say('VOLTA di sini 💧 Produksi perdana hidrogen hijau! Dua hukumnya: <b>(1) hijau ditentukan sumber listrik, (2) safety check SEBELUM start</b> — H₂ tak terlihat dan tak tercium. Mulai dari panel surya.');
-  $('#modTitle').textContent='J14 — Start-Up Green Hydrogen';
-  $('#taskHead').textContent='HIJAU · AMAN · MURNI';}
-
-/* =====================================================================
-   MISI 17 — BESS (Jalur 15)
-   ===================================================================== */
-let mbs={};
-function buildBESS(){
-  freshScene(0x9fb0c4,0x101822);
-  cam={theta:.15,phi:1.18,r:8.5,target:new THREE.Vector3(.5,1.6,-1)};
-  const ground=box(20,.1,12,0x434b54);ground.position.y=-.05;scene.add(ground);
-
-  /* container rack */
-  const cont=box(3.2,2.4,1.6,0xe8edf2);cont.position.set(-3.6,1.2,-2.0);scene.add(cont);
-  const stripe=box(3.22,.4,1.62,0x18b06a);stripe.position.set(-3.6,2.1,-2.0);scene.add(stripe);
-  cont.add(label('BESS 1 MWh · RACK LFP',.95).translateY(1.5));
-  terminal('RK+','fasa',-2.6,1.4,-1.18);
-  terminal('RK-','netral',-2.6,1.0,-1.18);
-  terminal('RKG','ground',-2.6,.6,-1.18);
-  scene.add(label('DC+',.4,'#ff8d8d').translateX(-2.3).translateY(1.4).translateZ(-1.15));
-  scene.add(label('DC−',.4,'#9cc4ff').translateX(-2.3).translateY(1.0).translateZ(-1.15));
-  scene.add(label('PE',.4,'#8df0b8').translateX(-2.3).translateY(.6).translateZ(-1.15));
-  /* layar BMS */
-  mbs.B=makeDisplay(1.1,.7,280,180);
-  mbs.B.mesh.position.set(-4.4,1.4,-1.18);scene.add(mbs.B.mesh);
-  dispText(mbs.B,['BMS','SoC 62% · 312 sel'],['#5fd4ff','#7d8f84']);
-  actMesh(mbs.B.mesh,'BMS');
-  scene.add(label('LAYAR BMS',.55,'#5fd4ff').translateX(-4.4).translateY(1.95).translateZ(-1.15));
-  /* PCS */
-  mbs.pcs=box(1.2,1.7,.8,0x8a96a2);mbs.pcs.position.set(0,0.9,-2.0);scene.add(mbs.pcs);
-  mbs.pcs.add(label('PCS 500 kW',.7).translateY(1.15));
-  actMesh(mbs.pcs,'PCSON');
-  terminal('PCS+','fasa',-.4,1.3,-1.58);
-  terminal('PCS-','netral',-.4,.9,-1.58);
-  terminal('PCS-AC','fasa',.4,1.1,-1.58);
-  scene.add(label('AC',.4).translateX(.42).translateY(.9).translateZ(-1.55));
-  terminal('GND','ground',-.4,.45,-1.58);
-  /* trafo */
-  const trf=box(1.1,1.2,.9,0x6a7a8a);trf.position.set(2.6,.65,-2.0);scene.add(trf);
-  [-.3,0,.3].forEach(dx=>{const fin=box(.05,1.0,.95,0x5a6a7a);
-    fin.position.set(2.6+dx,.65,-2.0);scene.add(fin);});
-  trf.add(label('TRAFO 0,4/20kV',.65).translateY(.85));
-  terminal('TRF','fasa',2.2,1.0,-1.5);
-  /* tiang grid */
-  const pole=cyl(.08,.1,4.6,0x6f7a84);pole.position.set(4.8,2.3,-2.0);scene.add(pole);
-  scene.add(label('KE JARINGAN 20kV',.7).translateX(4.8).translateY(4.8).translateZ(-2.0));
-  /* layar mode */
-  mbs.M=makeDisplay(1.2,.6,300,150);
-  mbs.M.mesh.position.set(1.0,2.3,-2.0);scene.add(mbs.M.mesh);
-  dispText(mbs.M,['MODE: —','peak shaving OFF'],['#7d8f84','#7d8f84']);
-  actMesh(mbs.M.mesh,'MODE');
-  scene.add(label('PANEL EMS',.55,'#5fd4ff').translateX(1.0).translateY(2.75).translateZ(-2.0));
-
-  terms={};clickables.forEach(c=>{if(c.userData.kind==='terminal')terms[c.userData.id]=c;});
-
-  startSeq([
-   {type:'wire',a:'RK+',b:'PCS+',color:COL.fasa,done:false,
-    desc:'Sambungkan DC+ rack ke terminal + PCS.',
-    why:'Tegangan rack LFP ±700-900 VDC — kelas tegangan yang menuntut hormat. Polaritas terbalik di sini bukan sekadar rusak: bisa busur api DC besar.',
-    wrong:'DC+ (merah) hanya ke terminal + PCS.'},
-   {type:'wire',a:'RK-',b:'PCS-',color:COL.netral,done:false,
-    desc:'Sambungkan DC− rack ke terminal − PCS.',
-    why:'Sebelum mengencangkan: cek polaritas dengan multimeter & pastikan rack breaker OFF — baterai tidak bisa "dimatikan", energinya selalu ada.'},
-   {type:'wire',a:'RKG',b:'GND',color:COL.ground,done:false,
-    desc:'Grounding: PE rack ke bar pembumian PCS.',
-    why:'Sistem monitoring isolasi (IMD) BESS bergantung pada referensi bumi yang baik untuk mendeteksi kebocoran DC sedini mungkin.'},
-   {type:'wire',a:'PCS-AC',b:'TRF',color:COL.fasa,done:false,
-    desc:'Sisi AC: keluaran PCS ke TRAFO step-up.',
-    why:'PCS bekerja di 400 V; trafo menaikkan ke 20 kV jaringan. Rantai lengkap: sel → rack → PCS (DC↔AC dua arah) → trafo → grid.'},
-   {type:'act',aid:'BMS',done:false,targets:()=>[mbs.B.mesh],
-    desc:'Verifikasi kesehatan baterai via layar BMS.',
-    why:'BMS adalah malaikat penjaga: memantau tegangan & suhu tiap sel, menyeimbangkan (balancing), dan memutus bila ada anomali. Satu sel bermasalah bisa menjalar — thermal runaway.',
-    fx(){dispText(mbs.B,['SoC 62% ✓','ΔV sel 8mV · 27°C'],['#46ff8e','#eaf2fb']);
-      toast('🔋 312 sel sehat — deviasi 8 mV, suhu merata.','ok',2600);}},
-   {type:'act',aid:'PCSON',done:false,targets:()=>[mbs.pcs],
-    desc:'Energize PCS — sinkron ke jaringan.',
-    why:'PCS = inverter dua arah: malam mengisi (AC→DC) saat tarif murah, sore melepas (DC→AC) memangkas puncak. Saat ON, ia sinkron dulu seperti generator mini.',
-    fx(){toast('⚡ PCS sinkron — siap charge/discharge.','ok',2400);}},
-   {type:'act',aid:'MODE',done:false,targets:()=>[mbs.M.mesh],
-    desc:'Aktifkan MODE PEAK SHAVING di panel EMS.',
-    why:'EMS membaca profil beban pabrik: setiap beban melewati ambang (mis. 800 kW), BESS melepas daya menahan puncak. Tagihan beban puncak terpangkas — baterai membayar dirinya sendiri.',
-    fx(){dispText(mbs.M,['PEAK SHAVING ON','ambang 800 kW ✓'],['#46ff8e','#46ff8e']);
-      toast('📉 Mode aktif — puncak sore siap dipangkas!','ok',2800);sfx.big();}},
-  ],()=>{say('🎉 <b>BESS beroperasi!</b> 1 MWh energi yang patuh perintah: mengisi saat murah, melepas saat mahal. Selamat datang di era fleksibilitas grid.');
-    setTimeout(()=>showWin('bess'),2200);});
-
-  say('VOLTA di sini 🔋 Komisioning BESS 1 MWh. Ingat sifat uniknya: <b>baterai tidak pernah benar-benar mati</b> — energinya selalu ada, jadi polaritas & grounding bukan basa-basi. Mulai dari sisi DC.');
-  $('#modTitle').textContent='J15 — Komisioning BESS';
-  $('#taskHead').textContent='DC → PCS → GRID → MODE';}
-
-/* =====================================================================
-   MISI 18 — PHB & RCD (Jalur 01 · Misi 2) — bertekstur realistis
-   ===================================================================== */
-let mph={};
-function buildPHB(){
-  freshScene(0xa8c0d4,0x141e2a);
-  cam={theta:0,phi:1.18,r:6,target:new THREE.Vector3(0,2,-1)};
-  const floor=boxT(12,.1,9,TEX.concrete());floor.position.y=-.05;scene.add(floor);
-  const wall=boxT(11,4.8,.15,TEX.plaster());wall.position.set(0,2.4,-3);scene.add(wall);
-  const skirt=boxT(11,.22,.18,TEX.wood());skirt.position.set(0,.11,-2.96);scene.add(skirt);
-  const Z=-2.86;
-
-  /* masuk dari kWh */
-  const inb=boxT(.8,.6,.18,TEX.metal(),{metalness:.4});inb.position.set(-3.8,3.0,Z);scene.add(inb);
-  inb.add(label('DARI kWh METER',.72).translateY(.5));
-  terminal('IN-F','fasa',-3.95,2.62,Z+.12);
-  terminal('IN-N','netral',-3.6,2.62,Z+.12);
-  /* enclosure PHB */
-  const enc=boxT(3.6,2.2,.3,TEX.metal(),{metalness:.35,roughness:.5});
-  enc.position.set(-.4,2.4,Z-.05);scene.add(enc);
-  enc.add(label('PANEL HUBUNG BAGI (PHB)',.95).translateY(1.4));
-  /* MCB utama */
-  const mu=box(.42,.6,.16,COL.cream);mu.position.set(-1.7,2.7,Z+.14);scene.add(mu);
-  mu.add(label('MCB UTAMA 16A',.55).translateY(.48));
-  terminal('MU-IN','fasa',-1.7,3.12,Z+.22);
-  terminal('MU-OUT','fasa',-1.7,2.28,Z+.22);
-  /* RCD */
-  mph.rcd=box(.6,.65,.18,0xdfe5ea);mph.rcd.position.set(-.7,2.7,Z+.14);scene.add(mph.rcd);
-  mph.rcd.add(label('RCD 30mA',.58).translateY(.5));
-  mph.lever=box(.13,.2,.08,0x2255aa);mph.lever.position.set(-.82,2.7,Z+.26);
-  mph.lever.rotation.x=-.3;scene.add(mph.lever);
-  mph.test=cyl(.05,.05,.06,0xd8b020);mph.test.rotation.x=Math.PI/2;
-  mph.test.position.set(-.55,2.62,Z+.26);scene.add(mph.test);
-  actMesh(mph.test,'TEST'); actMesh(mph.rcd,'RESET');
-  scene.add(label('T',.32).translateX(-.55).translateY(2.46).translateZ(Z+.22));
-  terminal('RCD-IN','fasa',-.7,3.14,Z+.22);
-  terminal('RCD-OUT','fasa',-.7,2.26,Z+.22);
-  /* grup 1 & 2 */
-  const g1=box(.4,.55,.16,COL.cream);g1.position.set(.4,2.7,Z+.14);scene.add(g1);
-  g1.add(label('GRUP 1 · LAMPU',.5).translateY(.45));
-  terminal('G1-IN','fasa',.4,3.1,Z+.22);
-  const g2=box(.4,.55,.16,COL.cream);g2.position.set(1.0,2.7,Z+.14);scene.add(g2);
-  g2.add(label('GRUP 2 · KOTAK KONTAK',.5).translateY(.45));
-  terminal('G2-IN','fasa',1.0,3.1,Z+.22);
-  /* busbar netral */
-  const nb=box(.7,.12,.1,0x4a6ad8);nb.position.set(.7,2.05,Z+.14);scene.add(nb);
-  nb.add(label('BUSBAR NETRAL',.5,'#9cc4ff').translateY(-.22));
-  terminal('NBAR','netral',.7,2.05,Z+.24);
-  /* lampu indikator grup (efek uji) */
-  mph.ind=new THREE.Mesh(new THREE.SphereGeometry(.05,12,10),
-    new THREE.MeshStandardMaterial({color:0x224433,emissive:0x000000}));
-  mph.ind.position.set(1.0,2.32,Z+.24);scene.add(mph.ind);
-
-  terms={};clickables.forEach(c=>{if(c.userData.kind==='terminal')terms[c.userData.id]=c;});
-  mph.energized=false;
-
-  startSeq([
-   {type:'wire',a:'IN-F',b:'MU-IN',color:COL.fasa,done:false,
-    desc:'Fasa dari kWh meter masuk ke MCB UTAMA.',
-    why:'MCB utama adalah pemutus seluruh rumah & cadangan terakhir bila MCB grup gagal. Ratingnya dikoordinasikan: utama 16A > grup 10A/6A agar yang trip duluan selalu yang terdekat dengan gangguan (selektivitas).'},
-   {type:'wire',a:'MU-OUT',b:'RCD-IN',color:COL.fasa,done:false,
-    desc:'Dari MCB utama, fasa masuk ke RCD 30 mA.',
-    why:'Posisi RCD di hulu grup membuat SEMUA sirkit terlindungi arus bocor. MCB menjaga dari arus LEBIH; RCD menjaga dari arus BOCOR — dua bahaya berbeda, dua penjaga berbeda.'},
-   {type:'wire',a:'RCD-OUT',b:'G1-IN',color:COL.fasa,done:false,
-    desc:'Keluaran RCD dicabang ke GRUP 1 (penerangan).',
-    why:'Pemisahan grup = pemisahan nasib: korsleting di stop kontak dapur tidak akan menggelapkan lampu tangga. Saat malam gangguan terjadi, kamu masih bisa melihat jalan ke panel.'},
-   {type:'wire',a:'RCD-OUT',b:'G2-IN',color:COL.fasa,done:false,
-    desc:'Cabang kedua keluaran RCD ke GRUP 2 (kotak kontak).',
-    why:'Grup kotak kontak diberi rating & kabel lebih besar (2,5 mm²) karena melayani beban colok yang tak terduga — setrika, dispenser, charger — sementara grup lampu cukup 1,5 mm².'},
-   {type:'wire',a:'IN-N',b:'NBAR',color:COL.netral,done:false,
-    desc:'Netral masuk ke BUSBAR NETRAL.',
-    why:'Semua netral grup berkumpul di satu busbar yang melewati RCD. Justru dari perbandingan arus fasa vs netral inilah RCD "merasakan" kebocoran: selisih 30 mA saja = trip.'},
-   {type:'act',aid:'TEST',done:false,targets:()=>[mph.test],
-    desc:'ENERGIZE lalu UJI: tekan tombol TEST kuning pada RCD!',
-    why:'Tombol TEST menyuntik arus bocor buatan melewati sensor. RCD sehat = trip seketika (<40 ms — lebih cepat dari satu kedipan jantung). RCD yang tak pernah diuji bisa macet diam-diam selama bertahun-tahun.',
-    fx(){mph.lever.rotation.x=.4;mph.ind.material.emissive.setHex(0x000000);
-      sfx.bad();toast('⚡ KLIK! RCD TRIP dalam 28 ms — proteksi BEKERJA ✓','ok',2800);}},
-   {type:'act',aid:'RESET',done:false,targets:()=>[mph.rcd],
-    desc:'Kembalikan tuas RCD ke posisi ON (klik RCD).',
-    why:'Setelah uji (atau trip sungguhan), reset mengembalikan suplai. Di dunia nyata: bila RCD trip berulang tanpa tombol test, JANGAN dipaksa — ada kebocoran nyata yang harus dicari.',
-    fx(){mph.lever.rotation.x=-.3;mph.ind.material.emissive.setHex(0x2ee87a);
-      mph.ind.material.emissiveIntensity=1;
-      toast('🔋 RCD ON — panel beroperasi, rumah terlindungi.','ok',2600);sfx.big();}},
-  ],()=>{say('🎉 <b>PHB modern berdiri!</b> Dua grup terpisah + penjaga 30 mA yang terbukti sigap. Rumah ini kini punya sistem saraf kelistrikan yang sesungguhnya.');
-    setTimeout(()=>showWin('phb'),2200);});
-
-  say('VOLTA di sini 🗄️ Naik kelas: <b>Panel Hubung Bagi</b>. Hari ini kamu berkenalan dengan perangkat penyelamat nyawa paling undervalued di rumah: <b>RCD 30 mA</b>. Rangkai dulu, lalu kita BUKTIKAN dia bekerja.');
-  $('#modTitle').textContent='J01·M2 — Panel Hubung Bagi & RCD';
-  $('#taskHead').textContent='BAGI GRUP · LINDUNGI NYAWA';}
-
-/* =====================================================================
-   MISI 19 — PENORMALAN GI (Jalur 04 · Misi 2) — bertekstur
-   ===================================================================== */
-let mno={};
-function buildNormal(){
-  freshScene(0xf0b878,0x1a1410); /* langit senja */
-  cam={theta:.2,phi:1.15,r:11,target:new THREE.Vector3(0,2.6,-1)};
-  const ground=boxT(26,.1,18,TEX.gravel());ground.position.y=-.05;scene.add(ground);
-  const pad=boxT(12,.06,8,TEX.concrete());pad.position.set(0,.03,-1);scene.add(pad);
-
-  [-8,8].forEach(x=>{
-    const t1=boxT(.25,7,.25,TEX.metal(),{metalness:.5});t1.position.set(x-.6,3.5,-3);scene.add(t1);
-    const t2=t1.clone();t2.position.x=x+.6;scene.add(t2);
-    const cross=boxT(2.4,.2,.2,TEX.metal(),{metalness:.5});cross.position.set(x,6.6,-3);scene.add(cross);});
-  const bus=cyl(.05,.05,16,0xd8c8a8,18,{metalness:.6,roughness:.3});
-  bus.rotation.z=Math.PI/2;bus.position.set(0,5.6,-3);scene.add(bus);
-  scene.add(label('BUSBAR 150 kV',.9).translateY(6.1).translateZ(-3));
-
-  /* area kerja + tag clearance */
-  mno.area=boxT(2.2,.04,2.2,TEX.hazard());mno.area.position.set(2.4,.07,-1.0);scene.add(mno.area);
-  mno.tag=box(.5,.35,.04,0xffd23f);mno.tag.position.set(2.4,1.0,-.4);scene.add(mno.tag);
-  const tp=cyl(.025,.025,.9,0x666666);tp.position.set(2.4,.45,-.4);scene.add(tp);
-  mno.tag.add(label('TAG PEKERJAAN',.5,'#b02020').translateY(.36));
-  actMesh(mno.tag,'CLEAR'); actMesh(mno.area,'CLEAR');
-  /* panel kontrol */
-  const ctrl=boxT(.9,1.5,.5,TEX.metal(),{metalness:.4});ctrl.position.set(-5.2,.75,1.6);scene.add(ctrl);
-  ctrl.add(label('PANEL KONTROL',.7,'#5fd4ff').translateY(1.05));
-  actMesh(ctrl,'IZIN');
-  /* PMS + PMT (mulai pada posisi TERBUKA, earth MASUK) */
-  function pms2(x,name,key,open){
-    const base=boxT(.9,.18,.5,TEX.metal(),{metalness:.4});base.position.set(x,2.0,-3);scene.add(base);
-    const p1=cyl(.06,.08,1.9,0xc9b08a);p1.position.set(x-.3,1.05,-3);scene.add(p1);
-    const p2=p1.clone();p2.position.x=x+.3;scene.add(p2);
-    const arm=box(.7,.07,.07,0xd8e0e8,{metalness:.6});arm.position.set(x,2.12,-3);
-    if(open)arm.rotation.y=.9;scene.add(arm);
-    actMesh(arm,key);actMesh(base,key);
-    scene.add(label(name,.62,'#5fd4ff').translateX(x).translateY(2.55).translateZ(-3));
-    return arm;}
-  mno.pmsBus=pms2(-2.4,'PMS BUS','PMSB',true);
-  const pmtBody=cyl(.4,.45,1.6,0x9aa7b4,20,{metalness:.3});pmtBody.position.set(0,1.6,-3);scene.add(pmtBody);
-  const bu1=cyl(.09,.12,1.1,0xc9b08a);bu1.position.set(-.22,2.9,-3);scene.add(bu1);
-  const bu2=bu1.clone();bu2.position.x=.22;scene.add(bu2);
-  actMesh(pmtBody,'PMT');
-  mno.pmtInd=new THREE.Mesh(new THREE.SphereGeometry(.07,14,12),
-    new THREE.MeshStandardMaterial({color:0x36e07a,emissive:0x36e07a,emissiveIntensity:1}));
-  mno.pmtInd.position.set(0,1.0,-2.6);scene.add(mno.pmtInd);
-  scene.add(label('PMT (CB 150kV)',.72,'#5fd4ff').translateY(3.8).translateZ(-3));
-  mno.pmsLine=pms2(2.4,'PMS LINE','PMSL',true);
-  mno.earth=box(.45,.12,.12,0xffd23f);mno.earth.position.set(2.4,.65,-2.5);scene.add(mno.earth);
-  actMesh(mno.earth,'EARTH');
-  scene.add(label('PMS TANAH (MASUK)',.55,'#5fd4ff').translateX(2.4).translateY(.32).translateZ(-2.4));
-  const span=cyl(.025,.025,7,0x3c4754);span.rotation.z=Math.PI/2;span.position.set(5.5,5.0,-3);scene.add(span);
-  scene.add(label('→ ARAH SUKAMANDI',.7).translateX(6.4).translateY(4.5).translateZ(-3));
-
-  startSeq([
-   {type:'act',aid:'CLEAR',done:false,targets:()=>[mno.tag],
-    desc:'Pastikan CLEARANCE: tim turun, alat lengkap, grounding lokal dilepas — cabut TAG (klik tag).',
-    why:'Inilah gerbang mutlak penormalan: pengawas pekerjaan menyatakan area BEBAS — orang & alat dihitung satu per satu. Memberi tegangan saat satu orang masih di tower = tak terampunkan.',
-    fx(){mno.tag.material.color.setHex(0x8a9aa8);
-      toast('✅ Clearance diterima: "Pekerjaan selesai, semua personel & grounding bebas."','ok',3000);}},
-   {type:'act',aid:'IZIN',done:false,targets:()=>[ctrl],
-    desc:'Minta IZIN PENORMALAN ke dispatcher (klik panel kontrol).',
-    why:'Dispatcher menyiapkan sistem menerima kembali sirkit: cek aliran daya, proteksi, dan kesiapan GI lawan. Penormalan tanpa koordinasi bisa mengejutkan sistem yang sudah setimbang.',
-    fx(){toast('📻 "Izin penormalan bay Sukamandi — DISETUJUI dispatcher."','ok',2800);}},
-   {type:'act',aid:'EARTH',done:false,targets:()=>[mno.earth],
-    desc:'CABUT PMS TANAH terlebih dahulu (klik tuas kuning).',
-    why:'Yang terakhir dipasang, pertama dilepas. Menutup PMS/PMT dengan pentanahan masih masuk = hubung singkat tiga fasa ke tanah yang disengaja — ledakan, bukan penormalan.',
-    fx(){mno.earth.rotation.z=.5;mno.earth.position.y=.5;
-      toast('⏚ PMS tanah DICABUT — sirkit siap menerima tegangan.','ok',2400);}},
-   {type:'act',aid:'PMSB',done:false,targets:()=>[mno.pmsBus],
-    desc:'TUTUP PMS BUS (klik lengan pemisah sisi busbar).',
-    why:'Aman menutup PMS sekarang KARENA PMT masih terbuka — tak ada arus yang akan mengalir melalui kontak PMS saat bertemu. Logika yang sama dengan pembebasan, dibalik.',
-    fx(){mno.pmsBus.rotation.y=0;toast('PMS BUS tertutup (tanpa beban ✓)','ok',2200);}},
-   {type:'act',aid:'PMSL',done:false,targets:()=>[mno.pmsLine],
-    desc:'TUTUP PMS LINE (klik lengan pemisah sisi penghantar).',
-    why:'Jalur kini tersambung penuh secara mekanis dari busbar ke penghantar — tapi belum setetes pun arus mengalir. Semua menunggu satu perangkat yang memang dirancang untuk momen ini.',
-    fx(){mno.pmsLine.rotation.y=0;toast('PMS LINE tertutup — jalur lengkap, menunggu PMT.','ok',2200);}},
-   {type:'act',aid:'PMT',done:false,targets:()=>[pmtBody],
-    desc:'PAMUNGKAS: tutup PMT — 150 kV kembali mengalir!',
-    why:'PMT menutup TERAKHIR karena saat kontaknya bertemu, arus charging & beban menerjang seketika — hanya ruang pemadam busur PMT yang dirancang menelan momen itu. PMS akan meleleh.',
-    fx(){mno.pmtInd.material.color.setHex(0xff3b3b);mno.pmtInd.material.emissive.setHex(0xff3b3b);
-      spark(new THREE.Vector3(0,2.9,-3),0x9fd8ff);
-      toast('⚡ PMT TERTUTUP — penghantar Sukamandi BERTEGANGAN!','ok',2800);sfx.big();}},
-   {type:'act',aid:'IZIN2',done:false,targets:()=>[ctrl],
-    desc:'Lapor NORMAL ke dispatcher (klik panel kontrol).',
-    why:'Lingkaran ditutup di tempat ia dibuka: dispatcher mencatat sirkit kembali beroperasi, beban dialirkan, dan log switching hari ini lengkap dari pembebasan sampai penormalan.',
-    fx(){toast('📻 "Bay Sukamandi NORMAL, beban mengalir 86 MW." — Log ditutup.','ok',3000);}},
-  ],()=>{say('🎉 <b>Siklus lengkap!</b> Pagi membebaskan, senja menormalkan. Kamu kini menguasai DUA arah switching — dan satu prinsip abadi: <b>PMT pertama membuka, terakhir menutup</b>.');
-    setTimeout(()=>showWin('normal'),2200);});
-  /* dua aksi pada panel kontrol: ganti aid setelah dipakai */
-  const s2=seq.steps[1],of=s2.fx;s2.fx=()=>{of();ctrl.userData.aid='IZIN2';};
-
-  say('VOLTA di sini 🔄 Senja di switchyard — pekerjaan selesai, saatnya <b>PENORMALAN</b>. Hafalkan cerminnya: yang terakhir dibuka, pertama ditutup... dengan satu pengecualian sakral: <b>PMT selalu menutup paling akhir</b>.');
-  $('#modTitle').textContent='J04·M2 — Penormalan Bay GI 150 kV';
-  $('#taskHead').textContent='CERMIN PEMBEBASAN';}
-
-/* =====================================================================
-   MISI 20 — KOMISIONING PLTS (Jalur 10 · Misi 2) — bertekstur
-   ===================================================================== */
-let mri={};
-function buildRiso(){
-  freshScene(0xcfe2f0,0x16242f);
-  cam={theta:-.15,phi:1.1,r:7.5,target:new THREE.Vector3(0,2.2,-1)};
-  const ground=boxT(16,.1,12,TEX.concrete());ground.position.y=-.05;scene.add(ground);
-  const roof=boxT(8,.15,5,TEX.wood());roof.position.set(-1.5,3.2,-2.5);roof.rotation.x=-.28;scene.add(roof);
-  [-3.2,-1.4].forEach(x=>{
-    const p=box(1.5,.06,2.2,0x16263e,{roughness:.22,metalness:.55});
-    p.position.set(x,3.45,-2.5);p.rotation.x=-.28;scene.add(p);});
-  scene.add(label('STRING PV 5 kWp — HIDUP!',.85,'#ffd23f').translateX(-2.3).translateY(4.6).translateZ(-2.5));
-  /* meja alat ukur */
-  const tbl=boxT(2.4,.08,.9,TEX.wood());tbl.position.set(2.4,1.0,.4);scene.add(tbl);
-  [[-1,.3],[1,.3],[-1,-.3],[1,-.3]].forEach(o=>{
-    const l=boxT(.08,1,.08,TEX.wood());l.position.set(2.4+o[0],.5,.4+o[1]*.9);scene.add(l);});
-  mri.mm=box(.3,.16,.4,0xd8b020);mri.mm.position.set(1.6,1.1,.4);scene.add(mri.mm);
-  actMesh(mri.mm,'VOC');
-  scene.add(label('MULTIMETER DC',.55,'#5fd4ff').translateX(1.6).translateY(1.4).translateZ(.4));
-  mri.probe=box(.22,.14,.3,0xd83a3a);mri.probe.position.set(2.4,1.1,.4);scene.add(mri.probe);
-  actMesh(mri.probe,'POL');
-  scene.add(label('CEK POLARITAS',.55,'#5fd4ff').translateX(2.4).translateY(1.4).translateZ(.4));
-  mri.meg=box(.34,.2,.3,0xcc6020);mri.meg.position.set(3.2,1.12,.4);scene.add(mri.meg);
-  actMesh(mri.meg,'RISO');
-  scene.add(label('INSULATION TESTER',.55,'#5fd4ff').translateX(3.2).translateY(1.4).translateZ(.4));
-  /* inverter + display */
-  const wall=boxT(5,3.2,.15,TEX.plaster());wall.position.set(2.6,1.6,-3);scene.add(wall);
-  const inv=boxT(.95,1.1,.25,TEX.metal(),{metalness:.4});inv.position.set(2.2,2.1,-2.86);scene.add(inv);
-  inv.add(label('INVERTER 5kW',.75).translateY(.78));
-  mri.D=makeDisplay(.7,.3,260,110);
-  mri.D.mesh.position.set(2.2,2.32,-2.71);scene.add(mri.D.mesh);
-  dispText(mri.D,['STANDBY'],['#7d8f84']);
-  actMesh(mri.D.mesh,'GRID'); actMesh(inv,'SYNC');
-
-  mri.on=false;
-  moduleTick=(dt,T)=>{if(mri.on)dispText(mri.D,[(4.1+Math.sin(T*.8)*.3).toFixed(2)+' kW'],['#46ff8e']);};
-
-  startSeq([
-   {type:'act',aid:'VOC',done:false,targets:()=>[mri.mm],
-    desc:'Ukur Voc string dengan MULTIMETER DC (klik multimeter).',
-    why:'Terukur 412 VDC — aman di bawah input maks inverter 600 V. Tapi ingat: Voc NAIK saat dingin (~-0,3%/°C). Perhitungan sizing selalu memakai suhu terdingin lokasi, bukan siang terik.',
-    fx(){toast('📏 Voc string: 412 VDC < 600 V maks inverter ✓','ok',2800);}},
-   {type:'act',aid:'POL',done:false,targets:()=>[mri.probe],
-    desc:'Verifikasi POLARITAS kedua kutub (klik probe merah).',
-    why:'Probe merah ke konektor +, hitam ke −: pembacaan POSITIF = polaritas benar. Negatif = string terbalik. Tiga detik pemeriksaan ini lebih murah dari inverter pengganti.',
-    fx(){toast('🔴⚫ Pembacaan +412 V — polaritas BENAR ✓','ok',2600);}},
-   {type:'act',aid:'RISO',done:false,targets:()=>[mri.meg],
-    desc:'Uji tahanan ISOLASI array (klik insulation tester).',
-    why:'Kabel PV bisa terluka diam-diam saat penarikan: tertekuk di rel, tergores klem. Riso 1,2 MΩ (>1 MΩ standar) = isolasi sehat; nilai rendah = bocor ke rangka, bahaya & rugi produksi.',
-    fx(){toast('🔍 Riso array: 1,2 MΩ — isolasi sehat ✓','ok',2600);}},
-   {type:'act',aid:'GRID',done:false,targets:()=>[mri.D.mesh],
-    desc:'Set parameter GRID di inverter (klik display).',
-    why:'230 V / 50 Hz / anti-islanding AKTIF: saat PLN padam, inverter wajib berhenti dalam 2 detik — melindungi petugas yang mengira jaringan mati. Ini syarat mutlak interkoneksi.',
-    fx(){dispText(mri.D,['GRID SET ✓'],['#5fd4ff']);
-      toast('⚙️ 230V·50Hz·anti-islanding ON — sesuai ketentuan PLN.','ok',2800);}},
-   {type:'act',aid:'SYNC',done:false,targets:()=>[inv],
-    desc:'Semua uji LOLOS — sinkronkan inverter (klik inverter)!',
-    why:'Self-test internal mengulang semua yang barusan kamu ukur (riso, grid, polaritas) — lalu sinkron. Dokumen hasil uji hari ini menjadi lampiran pengajuan meter exim ke PLN.',
-    fx(){mri.on=true;
-      toast('☀️ SINKRON — produksi 4,1 kW. Komisioning LOLOS!','ok',2800);sfx.big();}},
-  ],()=>{say('🎉 <b>Komisioning lengkap!</b> Voc ✓ polaritas ✓ isolasi ✓ grid ✓ — empat tanda tangan keselamatan sebelum satu watt pun mengalir. Begitulah profesional menyalakan PLTS.');
-    setTimeout(()=>showWin('riso'),2200);});
-
-  say('VOLTA di sini 🔬 Wiring rapi ≠ wiring benar — hari ini kita BUKTIKAN dengan alat ukur. Empat pengujian menanti, dan ingat selalu: <b>selama matahari bersinar, string ini hidup</b>.');
-  $('#modTitle').textContent='J10·M2 — Komisioning & Pengujian PLTS';
-  $('#taskHead').textContent='UKUR · BUKTIKAN · SINKRON';}
-
-/* =====================================================================
-   MISI 21 — LADDER PLC (Jalur 16 · Misi 2) — bertekstur
-   ===================================================================== */
-let mpl={};
-function buildPLC(){
-  freshScene(0xb0bfcc,0x131c26);
-  cam={theta:0,phi:1.18,r:6.2,target:new THREE.Vector3(0,1.9,-1)};
-  const floor=boxT(12,.1,9,TEX.concrete());floor.position.y=-.05;scene.add(floor);
-  const wall=boxT(11,4.8,.15,TEX.plaster());wall.position.set(0,2.4,-3);scene.add(wall);
-  /* layar ladder besar */
-  const frame=boxT(3.6,2.3,.18,TEX.metal(),{metalness:.4});frame.position.set(-.9,2.5,-2.9);scene.add(frame);
-  mpl.L=makeDisplay(3.3,2.0,660,400);
-  mpl.L.mesh.position.set(-.9,2.5,-2.79);scene.add(mpl.L.mesh);
-  frame.add(label('PLC TRAINER — LADDER EDITOR',.95).translateY(1.45));
-  /* slot elemen (toolbox) */
-  mpl.slots=[];
-  [['-| |- START','NOSTART',-2.3],['-|/|- STOP','NCSTOP',-1.4],['-| |- K1 HOLD','HOLD',-.5],['-( )- COIL K1','COIL',.4],['⬇ DOWNLOAD','DL',1.4]].forEach(o=>{
-    const b=box(.8,.34,.14,0x2b3a4a);b.position.set(o[2],1.15,-2.86);scene.add(b);
-    actMesh(b,o[1]);mpl.slots.push(b);
-    scene.add(label(o[0],.5,'#5fd4ff').translateX(o[2]).translateY(1.45).translateZ(-2.8));});
-  /* tombol fisik & lampu run */
-  mpl.btnStart=cyl(.1,.1,.09,0x2ec06a);mpl.btnStart.rotation.x=Math.PI/2;
-  mpl.btnStart.position.set(2.6,1.9,-2.84);scene.add(mpl.btnStart);
-  actMesh(mpl.btnStart,'TSTART');
-  scene.add(label('START',.5,'#7af0a8').translateX(2.6).translateY(2.18).translateZ(-2.8));
-  mpl.btnStop=cyl(.1,.1,.09,0xd83a3a);mpl.btnStop.rotation.x=Math.PI/2;
-  mpl.btnStop.position.set(3.3,1.9,-2.84);scene.add(mpl.btnStop);
-  actMesh(mpl.btnStop,'TSTOP');
-  scene.add(label('STOP',.5,'#ff9d9d').translateX(3.3).translateY(2.18).translateZ(-2.8));
-  mpl.run=new THREE.Mesh(new THREE.SphereGeometry(.07,14,12),
-    new THREE.MeshStandardMaterial({color:0x224433,emissive:0x000000}));
-  mpl.run.position.set(2.95,2.5,-2.84);scene.add(mpl.run);
-  scene.add(label('RUN',.45).translateX(2.95).translateY(2.72).translateZ(-2.8));
-
-  mpl.st={start:false,stop:false,hold:false,coil:false,dl:false,power:false};
-  function drawLadder(){
-    const g=mpl.L.g,W=660,H=400;
-    g.fillStyle='#0c141d';g.fillRect(0,0,W,H);
-    g.strokeStyle='#5fd4ff';g.lineWidth=5;
-    g.beginPath();g.moveTo(40,30);g.lineTo(40,H-30);g.stroke();
-    g.beginPath();g.moveTo(W-40,30);g.lineTo(W-40,H-30);g.stroke();
-    const on=mpl.st.power, wc=on?'#46ff8e':'#8aa3bd';
-    const Y=140;
-    g.strokeStyle=wc;g.lineWidth=4;g.font='600 22px Consolas';g.textAlign='center';
-    function seg(x1,x2,y){g.beginPath();g.moveTo(x1,y);g.lineTo(x2,y);g.stroke();}
-    if(mpl.st.start){seg(40,170,Y);
-      g.strokeRect(170,Y-22,44,44);g.fillStyle=wc;g.fillText('I0.0',192,Y-32);
-      g.fillStyle='#8aa3bd';g.fillText('START',192,Y+44);
-      seg(214,300,Y);}
-    if(mpl.st.stop){g.strokeRect(300,Y-22,44,44);
-      g.beginPath();g.moveTo(300,Y+22);g.lineTo(344,Y-22);g.stroke();
-      g.fillStyle=wc;g.fillText('I0.1',322,Y-32);
-      g.fillStyle='#8aa3bd';g.fillText('STOP',322,Y+44);
-      seg(344,480,Y);}
-    if(mpl.st.coil){g.beginPath();g.arc(505,Y,24,0,Math.PI*2);g.stroke();
-      g.fillStyle=wc;g.fillText('Q0.0',505,Y-34);
-      g.fillStyle='#8aa3bd';g.fillText('K1',505,Y+46);
-      seg(529,W-40,Y);}
-    if(mpl.st.hold){const Y2=240;
-      seg(40,170,Y2);g.strokeRect(170,Y2-22,44,44);
-      g.fillStyle=wc;g.fillText('Q0.0',192,Y2-32);
-      g.fillStyle='#8aa3bd';g.fillText('HOLD',192,Y2+44);
-      seg(214,260,Y2);
-      g.beginPath();g.moveTo(260,Y2);g.lineTo(260,Y);g.stroke();}
-    g.fillStyle=mpl.st.dl?'#46ff8e':'#7d8f84';g.font='600 18px Consolas';g.textAlign='left';
-    g.fillText(mpl.st.dl?'● ONLINE · PROGRAM DI PLC':'○ OFFLINE · EDIT MODE',50,H-44);
-    if(on){g.fillStyle='#46ff8e';g.textAlign='right';g.fillText('Q0.0 = TRUE ⚡',W-50,H-44);}
-    mpl.L.tex.needsUpdate=true;}
-  drawLadder();
-
-  startSeq([
-   {type:'act',aid:'NOSTART',done:false,targets:()=>[mpl.slots[0]],
-    desc:'Pasang kontak NO "START" di awal rung (klik slot -| |-).',
-    why:'Kontak Normally Open I0.0: terbuka saat tombol diam, menutup saat ditekan — gerbang masuk "izin jalan". Di ladder, arus logika mengalir dari rel kiri ke kanan seperti fasa ke netral.',
-    fx(){mpl.st.start=true;drawLadder();
-      toast('✓ Kontak NO START (I0.0) terpasang.','ok',2200);}},
-   {type:'act',aid:'NCSTOP',done:false,targets:()=>[mpl.slots[1]],
-    desc:'Seri-kan kontak NC "STOP" (klik slot -|/|-).',
-    why:'Normally Closed I0.1: TERTUTUP saat tombol diam (logika lewat), TERBUKA saat ditekan (putus). Bonus tersembunyi: kabel tombol putus = rangkaian berhenti sendiri. Fail-safe by design.',
-    fx(){mpl.st.stop=true;drawLadder();
-      toast('✓ Kontak NC STOP (I0.1) terpasang — fail-safe.','ok',2200);}},
-   {type:'act',aid:'COIL',done:false,targets:()=>[mpl.slots[3]],
-    desc:'Akhiri rung dengan COIL K1 (klik slot -( )-).',
-    why:'Coil Q0.0 = keluaran: saat logika rung "mengalir", coil energize → output fisik PLC menarik kontaktor motor. Inilah titik temu dunia logika dan dunia tembaga.',
-    fx(){mpl.st.coil=true;drawLadder();
-      toast('✓ Coil K1 (Q0.0) terpasang — rung utama lengkap.','ok',2200);}},
-   {type:'act',aid:'HOLD',done:false,targets:()=>[mpl.slots[2]],
-    desc:'Rahasianya: tambahkan kontak HOLDING Q0.0 paralel START.',
-    why:'Tanpa ini, motor mati begitu jarimu lepas dari START. Kontak bantu K1 paralel tombol = begitu coil hidup, ia "memegang dirinya sendiri" lewat jalur kedua. Self-latching — pola paling fundamental seluruh otomasi.',
-    fx(){mpl.st.hold=true;drawLadder();
-      toast('✓ Holding contact terpasang — rangkaian mengunci diri.','ok',2400);}},
-   {type:'act',aid:'DL',done:false,targets:()=>[mpl.slots[4]],
-    desc:'DOWNLOAD program ke PLC (klik ⬇).',
-    why:'Compile → transfer → RUN mode. Logika yang tadinya gambar kini hidup men-scan input-output ribuan kali per detik. Di industri nyata: download ke PLC berjalan perlu prosedur MOC!',
-    fx(){mpl.st.dl=true;drawLadder();
-      toast('⬇ Program di PLC — mode RUN. Saatnya uji!','ok',2400);}},
-   {type:'act',aid:'TSTART',done:false,targets:()=>[mpl.btnStart],
-    desc:'UJI: tekan tombol fisik START!',
-    why:'Tekan-lepas: I0.0 menutup sekejap, Q0.0 energize, holding mengunci — dan tetap hidup setelah jarimu pergi. Persis perilaku panel kontaktor kemarin, kini tanpa satu kabel kontrol pun.',
-    fx(){mpl.st.power=true;drawLadder();
-      mpl.run.material.emissive.setHex(0x2ee87a);mpl.run.material.emissiveIntensity=1;
-      toast('⚡ Q0.0 TRUE — output mengunci. Self-holding bekerja!','ok',2600);sfx.big();}},
-   {type:'act',aid:'TSTOP',done:false,targets:()=>[mpl.btnStop],
-    desc:'UJI: tekan STOP — pastikan logika berhenti.',
-    why:'NC terbuka → aliran logika putus → coil drop → holding ikut lepas. Sistem kembali menunggu START berikutnya. Start-stop-latch: tiga kata yang akan kamu pakai seumur karier otomasi.',
-    fx(){mpl.st.power=false;drawLadder();
-      mpl.run.material.emissiveIntensity=0;
-      toast('⏹ Q0.0 FALSE — berhenti sempurna. Ladder LULUS uji!','ok',2600);}},
-  ],()=>{say('🎉 <b>Anak tangga pertamamu hidup!</b> Kemarin kabel & kontaktor, hari ini I0.0—I0.1—Q0.0. Logika yang sama, dunia yang baru. Selamat datang di otomasi modern.');
-    setTimeout(()=>showWin('plc'),2200);});
-
-  say('VOLTA di sini 📟 Hari bersejarah: <b>ladder diagram pertamamu</b>. Kita pindahkan rangkaian start-stop kemarin ke dalam PLC — susun elemennya di layar besar, download, lalu buktikan di tombol fisik!');
-  $('#modTitle').textContent='J16·M2 — Ladder PLC Start-Stop';
-  $('#taskHead').textContent='SUSUN · DOWNLOAD · UJI';}
-
-/* registrasi builder misi-2 */
-MISSIONS.phb.build=buildPHB;
-MISSIONS.normal.build=buildNormal;
-MISSIONS.riso.build=buildRiso;
-MISSIONS.plc.build=buildPLC;
-
-/* registrasi builder tahap 2 */
-MISSIONS.star.build=buildStar;
-MISSIONS.ntl.build=buildNTL;
-MISSIONS.audit.build=buildAudit;
-MISSIONS.pltu.build=buildPLTU;
-MISSIONS.sales.build=buildSales;
-MISSIONS.carbon.build=buildCarbon;
-MISSIONS.wte.build=buildWtE;
-MISSIONS.h2.build=buildH2;
-MISSIONS.bess.build=buildBESS;
-
-/* daftarkan builder ke data misi */
-MISSIONS.rumah.build=buildRumah;
-MISSIONS.app.build=buildApp;
-MISSIONS.gardu.build=buildGardu;
-MISSIONS.transmisi.build=buildTransmisi;
-MISSIONS.k3.build=buildK3;
-MISSIONS.solar.build=buildSolar;
-MISSIONS.ev.build=buildEV;
-MISSIONS.motor.build=buildMotor;
-
-/* =====================================================================
    JEMBATAN KE DUNIA NYATA — checklist eksekusi lapangan per misi
    ===================================================================== */
-const REAL={
- rumah:[
-  'Pakai kabel NYM 3×2,5 mm² untuk stop kontak & 2×1,5 mm² untuk penerangan, di dalam pipa conduit',
-  'Sambungan hanya boleh di dalam tee-dus dengan lasdop/konektor — tidak pernah di tengah pipa',
-  'Sebelum energize: megger tahanan isolasi ≥ 0,5 MΩ dan ukur tahanan pembumian (target ≤ 5 Ω)',
-  'Instalasi baru wajib SLO (Sertifikat Laik Operasi) dari lembaga inspeksi sebelum disambung PLN'],
- app:[
-  'Bekerja atas Perintah Kerja resmi, material kWh meter & segel keluar dari gudang tercatat',
-  'Selalu cek diagram di tutup terminal meter — tiap merek bisa berbeda, jangan hafalan buta',
-  'Setelah energize: uji putaran/impuls dengan beban, pasang segel metrologi, foto dokumentasi',
-  'Catat nomor meter, stand awal & ID pelanggan ke sistem sebelum meninggalkan lokasi'],
- gardu:[
-  'Gunakan komunikasi baku dengan dispatcher: sebut identitas gardu & peralatan, lalu read-back perintah',
-  'Pembuktian tegangan nol pakai voltage detector 20 kV yang diuji sebelum & sesudah pemakaian',
-  'Setiap langkah manuver dicatat di formulir manuver + working permit dengan cap waktu',
-  'Pastikan sertifikat kompetensi (serkom) & hasil uji APD (sarung tangan 20 kV) masih berlaku'],
- transmisi:[
-  'Switching GI nyata dipandu SCADA + verifikasi visual lokal; interlocking PMT–PMS membantu, tapi jangan diandalkan buta',
-  'Komunikasi tiga pihak terekam: dispatcher — operator GI — pengawas pekerjaan',
-  'Tim pemeliharaan memasang grounding lokal tambahan tepat di titik kerja (di tower/konduktor)',
-  'Pelajari single line diagram bay sebelum eksekusi — konfigurasi tiap GI berbeda (1,5 breaker, double busbar, dll.)'],
- k3:[
-  'Satu gembok satu orang satu kunci; pekerjaan tim memakai hasp multi-gembok + lock box',
-  'Pilih APD berdasarkan kategori arc flash hasil studi (kal/cm²), bukan sekadar "lengkap"',
-  'Uji voltage tester dengan metode live-dead-live: cek di sumber hidup → titik kerja → sumber hidup lagi',
-  'Toolbox meeting & izin kerja terdokumentasi — audit K3 menelusuri kertas, bukan ingatan'],
- solar:[
-  'Panel tak bisa "dimatikan" selama ada cahaya — ukur Voc & polaritas tiap string dengan multimeter DC sebelum menyentuh',
-  'Gunakan konektor MC4 satu merek + crimping tool khusus; sambungan beda merek = titik panas',
-  'Komisioning: uji riso array, kurva I-V bila ada alatnya, set parameter grid inverter sesuai PLN (230 V / 50 Hz)',
-  'PLTS atap on-grid wajib izin & perjanjian ekspor-impor dengan PLN sebelum operasi paralel'],
- ev:[
-  'Ikuti checklist komisioning pabrikan + uji proteksi arus bocor DC (RCD tipe B) dengan alat uji EVSE',
-  'Verifikasi koneksi OCPP ke backend & lakukan uji transaksi end-to-end sebelum serah terima',
-  'Ukur tahanan pembumian & loop impedance — charger modern menolak start bila pembumian buruk',
-  'Siapkan SOP gangguan: fungsi emergency stop & prosedur pelepasan gun saat listrik padam'],
- motor:[
-  'Setting arus TOR = arus nominal motor di nameplate (bukan diputar maksimum!)',
-  'Sebelum start pertama: megger lilitan motor & jog test untuk cek arah putaran',
-  'Kencangkan semua terminal dengan torsi sesuai spesifikasi — terminal kendor = panas = kebakaran panel',
-  'Motor ≥ 7,5 kW umumnya tidak lagi DOL: gunakan star-delta, soft starter, atau VFD'],
- star:[
-  'Jangan tertukar urutan terminal U1-V1-W1 / U2-V2-W2 — salah susun = hubung singkat saat masuk delta',
-  'Motor harus delta-rated pada tegangan jaringan (nameplate Δ380V untuk grid 380V)',
-  'Ukur arus ketiga fasa saat star, transisi, dan delta — ketidakseimbangan >5% perlu investigasi',
-  'Setel timer berdasarkan waktu akselerasi aktual motor berbeban, bukan angka default panel'],
- ntl:[
-  'Penertiban hanya oleh tim P2TL resmi dengan berita acara, saksi, dan bila perlu pendampingan APH',
-  'Dokumentasikan kondisi ASLI sebelum apapun disentuh: foto, video, koordinat, nomor segel',
-  'Model analitik (seperti MAGNETO) menghasilkan target list — keputusan final selalu dari verifikasi lapangan',
-  'Hitung tagihan susulan sesuai ketentuan yang berlaku, bukan estimasi pribadi'],
- audit:[
-  'Ukur baseline minimal satu siklus produksi penuh dengan power logger sebelum menyimpulkan',
-  'Pisahkan rekomendasi: no-cost (perilaku/setpoint) → low-cost (sensor, perbaikan) → investasi (VFD, retrofit)',
-  'Setiap rekomendasi wajib disertai simple payback — bahasa yang dipahami manajemen',
-  'ISO 50001 adalah siklus Plan-Do-Check-Act berkelanjutan, bukan laporan sekali jadi'],
- pltu:[
-  'Sinkronisasi nyata memakai auto-synchronizer + sync-check relay (ANSI 25); manual hanya backup terlatih',
-  'Syarat paralel diperiksa eksplisit: selisih tegangan, slip frekuensi kecil, urutan fasa benar',
-  'First sync setelah overhaul disaksikan komisioning engineer & direkam parameternya',
-  'Ikuti SOP vendor turbin & P&ID unit — tiap pembangkit punya urutan start-up spesifik'],
- sales:[
-  'Validasi dengan data 12 bulan tagihan + pengukuran sendiri (power quality logger) sebelum sizing',
-  'Jaringan dengan banyak VFD/rectifier butuh detuned reactor — kapasitor polos bisa resonansi',
-  'Tawarkan kontrak kinerja: garansi cosφ tercapai, bukan sekadar garansi barang',
-  'After-sales & monitoring = pintu masuk proyek berikutnya di pelanggan yang sama'],
- carbon:[
-  'Gunakan faktor emisi resmi (Kementerian ESDM / IPCC) dengan tahun publikasi yang konsisten',
-  'Ikuti GHG Protocol untuk batasan organisasi & operasional sebelum menghitung',
-  'Prioritaskan data primer (meteran, faktur BBM) di atas estimasi sekunder',
-  'Pelaporan resmi (CDP, ESG, buyer) membutuhkan verifikasi pihak ketiga'],
- wte:[
-  'Regulasi insinerasi: suhu ≥850°C dengan waktu tinggal gas ≥2 detik — pantau & rekam terus-menerus',
-  'CEMS (Continuous Emission Monitoring System) online ke regulator untuk parameter cerobong',
-  'Fly ash & bottom ash dikelola sebagai limbah sesuai ketentuan (uji karakteristik, manifest)',
-  'Mass balance harian: ton masuk vs kWh keluar vs abu — KPI utama operasi PLTSa'],
- h2:[
-  'Area produksi H₂ diklasifikasi zona ATEX — semua peralatan listrik harus explosion-proof sesuai zonanya',
-  'Ventilasi di TITIK TERTINGGI ruangan: H₂ 14× lebih ringan dari udara, berkumpul di atas',
-  'Leak detector dikalibrasi berkala; purging dengan N₂ wajib sebelum maintenance sistem',
-  'Material pipa & seal khusus H₂ (hydrogen embrittlement merusak baja biasa)'],
- bess:[
-  'Komisioning mengikuti grid code: uji anti-islanding, ride-through, dan respon frekuensi',
-  'Manajemen termal & jarak antar rack sesuai desain — suhu adalah musuh utama umur sel',
-  'SOP kebakaran khusus lithium: deteksi off-gas dini, jangan semprot air langsung ke sel, siapkan akses damkar',
-  'Kalibrasi SoC berkala & pantau SoH (state of health) — degradasi menentukan ekonomi proyek'],
- phb:[
-  'RCD diuji dengan tombol TEST tiap bulan DAN dengan RCD tester terkalibrasi saat instalasi (ukur waktu & arus trip aktual)',
-  'Netral tiap grup TIDAK boleh digabung sembarangan — netral harus melewati RCD yang sama dengan fasanya',
-  'Koordinasi rating: MCB utama > jumlah pertimbangan grup, dengan kurva selektif',
-  'Label setiap grup di pintu panel — penyelamat waktu saat gangguan tengah malam'],
- normal:[
-  'Clearance tertulis dari pengawas pekerjaan (bukan lisan) sebelum langkah penormalan apa pun',
-  'Hitung kembali personel & grounding lokal dengan checklist — yang terpasang harus sama dengan yang dilepas',
-  'Sebelum menutup PMT penghantar antar-GI: pastikan kondisi sinkron atau sirkit mati di sisi lawan (synchro-check)',
-  'Catat waktu setiap langkah di log switching — jejak audit operasi GI'],
- riso:[
-  'Ukur Voc SETIAP string sebelum paralel ke combiner — string beda panjang/orientasi tak boleh diparalel langsung',
-  'Riso diukur pada tegangan uji sesuai standar (umumnya 1000 VDC) antara konduktor dan rangka/bumi',
-  'Hitung Voc desain pada suhu terdingin lokasi: Voc_stc × (1 + |koef| × ΔT)',
-  'Dokumentasi hasil uji menjadi lampiran wajib pengajuan meter exim & SLO PLTS'],
- plc:[
-  'Di plant berjalan, download program mengikuti prosedur MOC (management of change) + backup program lama',
-  'Alamat I/O didokumentasikan dalam I/O list — tanpa itu, troubleshooting = menebak',
-  'Emergency stop TIDAK boleh hanya lewat PLC — wajib jalur hardwired terpisah (kategori safety)',
-  'Simulasi/forcing I/O hanya saat komisioning dengan izin — forcing yang tertinggal adalah bom waktu'],
-};
+const REAL={}; /* entri diisi oleh missions/jalurNN.js */
 
 /* =====================================================================
    WIN / ROUTER / LOOP / START
@@ -2894,6 +826,8 @@ if(typeof THREE==='undefined'){
     '<div style="position:fixed;inset:0;z-index:99;background:#0b1420;color:#ffd23f;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-family:monospace">⚠️ Library 3D (Three.js) gagal dimuat.<br>Periksa koneksi internet lalu muat ulang.</div>');
 }else{
   initGL();
+  /* prefetch semua modul misi saat idle agar briefing terbuka instan */
+  setTimeout(()=>{TRACKS.forEach(t=>loadFile(t.file).catch(()=>{}));},2500);
 }
 </script>
 </body>
