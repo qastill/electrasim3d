@@ -55,6 +55,7 @@
     font-size:12px;text-align:left;gap:8px}
   .mBtn:hover{border-color:var(--yellow)}
   .mBtn .st{font-size:11px;color:var(--yellow);font-family:var(--mono);flex:none}
+  .mBtn .mNum{color:var(--cyan);font-family:var(--mono);font-size:10.5px;margin-right:2px}
   .mBtn .pl{color:var(--yellow);font-family:var(--mono);font-size:10px;letter-spacing:.1em;flex:none}
   .tcard.locked{opacity:.45;filter:saturate(.4)}
   .tcard.locked .lockTag{font-family:var(--mono);font-size:10px;color:var(--dim);border:1px dashed var(--line);
@@ -116,6 +117,12 @@
   /* ---------- TUTOR ---------- */
   #tutor{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;width:min(680px,95vw);
     background:var(--panel);border:1px solid var(--line);pointer-events:auto;display:flex}
+  #tutorMin{position:absolute;top:-25px;right:-1px;background:var(--panel);border:1px solid var(--line);
+    border-bottom:none;color:var(--cyan);font-family:var(--mono);font-size:10px;padding:4px 12px;
+    cursor:pointer;letter-spacing:.1em}
+  #tutorMin:hover{color:var(--yellow)}
+  #tutor.min{width:auto}
+  #tutor.min #tutorBody{display:none}
   #avatar{width:72px;flex:none;background:#0a1623;border-right:1px solid var(--line);
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:8px 4px}
   #avFace{width:42px;height:42px;border:2px solid var(--cyan);border-radius:50%;display:flex;
@@ -185,7 +192,7 @@
       <h1>Electra<em>Sim</em> VR 3D</h1>
     </div>
   </div>
-  <p class="sub">Simulator 3D berbasis misi untuk <b>16 jalur spesialisasi</b> ketenagalistrikan, dipandu <b>VOLTA</b> — AI instructor yang menjelaskan langkah & alasannya, dan bisa ditanya kapan saja. <b>Tahap 3: 21 misi · grafis material realistis · 4 jalur sudah punya 2 materi!</b> Selesaikan misi, kumpulkan bintang, kuasai kompetensi.</p>
+  <p class="sub">Simulator 3D berbasis misi untuk <b>16 jalur spesialisasi</b> ketenagalistrikan, dipandu <b>VOLTA</b> — AI instructor yang menjelaskan langkah & alasannya, dan bisa ditanya kapan saja. <b>Tahap 4: 32 misi · semua 16 jalur kini punya 2 misi!</b> Selesaikan misi, kumpulkan bintang, kuasai kompetensi.</p>
   <div class="grid16" id="trackGrid"></div>
   <div class="hintTxt">🖱️ drag = lihat sekeliling · scroll/pinch = zoom · klik kanan/shift-drag = geser · ikuti penanda kuning ▼</div>
 </div></div>
@@ -226,6 +233,7 @@
   </div>
   <div id="toast"></div>
   <div id="tutor">
+    <button id="tutorMin">▾ SEMBUNYIKAN</button>
     <div id="avatar"><div id="avFace">⚡</div><div class="nm">VOLTA</div></div>
     <div id="tutorBody">
       <div id="tutorTxt"></div>
@@ -259,7 +267,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 /* =====================================================================
-   ElectraSim VR 3D v3 — 16 jalur · 8 misi tahap 1 · AI tutor VOLTA
+   ElectraSim VR 3D v4 — 16 jalur · 32 misi (2 per jalur) · AI tutor VOLTA
    ===================================================================== */
 window.onerror=function(msg,src,line){
   const b=document.getElementById('errBar');
@@ -283,23 +291,23 @@ function saveStars(){ try{ window.localStorage.setItem('esim_stars',JSON.stringi
    ===================================================================== */
 const TRACKS=[
  {code:'S1 · JALUR 01',icon:'🏗️',name:'Instalasi Bangunan',desc:'MEP design gedung & rumah: wiring dasar sampai smart building.',missions:['rumah','phb']},
- {code:'S2 · JALUR 02',icon:'🏭',name:'Industri & Manufaktur',desc:'Motor, drive, reliability & maintenance pabrik.',missions:['star']},
+ {code:'S2 · JALUR 02',icon:'🏭',name:'Industri & Manufaktur',desc:'Motor, drive, reliability & maintenance pabrik.',missions:['star','trip']},
  {code:'S3 · JALUR 03',icon:'⚡',name:'Distribusi',desc:'Jantung PLN: jaringan 20kV, gardu, APP, SCADA.',missions:['app','gardu']},
  {code:'S4 · JALUR 04',icon:'🗼',name:'Transmisi',desc:'Saluran 150/500 kV, GI/GITET, switching & proteksi.',missions:['transmisi','normal']},
- {code:'S5 · JALUR 05',icon:'📊',name:'Energy Analyst & Data Science',desc:'Python, SQL, ML untuk utility & NTL detection.',missions:['ntl']},
- {code:'S6 · JALUR 06',icon:'📋',name:'Energy Auditor',desc:'Audit energi industri, ISO 50001.',missions:['audit']},
- {code:'S7 · JALUR 07',icon:'🌱',name:'Pembangkitan & Renewable',desc:'PLTU, PLTG, PLTA, hybrid system.',missions:['pltu']},
- {code:'S8 · JALUR 08',icon:'🦺',name:'K3 Listrik',desc:'Safety officer: APD, LOTO, izin kerja, JSA.',missions:['k3']},
- {code:'S9 · JALUR 09',icon:'🤝',name:'Sales & Technical Marketing',desc:'Technical sales vendor electrical.',missions:['sales']},
+ {code:'S5 · JALUR 05',icon:'📊',name:'Energy Analyst & Data Science',desc:'Python, SQL, ML untuk utility & NTL detection.',missions:['ntl','beban']},
+ {code:'S6 · JALUR 06',icon:'📋',name:'Energy Auditor',desc:'Audit energi industri, ISO 50001.',missions:['audit','logger']},
+ {code:'S7 · JALUR 07',icon:'🌱',name:'Pembangkitan & Renewable',desc:'PLTU, PLTG, PLTA, hybrid system.',missions:['pltu','gov']},
+ {code:'S8 · JALUR 08',icon:'🦺',name:'K3 Listrik',desc:'Safety officer: APD, LOTO, izin kerja, JSA.',missions:['k3','rescue']},
+ {code:'S9 · JALUR 09',icon:'🤝',name:'Sales & Technical Marketing',desc:'Technical sales vendor electrical.',missions:['sales','survey']},
  {code:'S10 · JALUR 10',icon:'☀️',name:'PV & Solar Engineer',desc:'PLTS rooftop, ground-mount, utility-scale.',missions:['solar','riso']},
- {code:'S11 · JALUR 11',icon:'🌍',name:'Sustainability & Carbon',desc:'GHG accounting & strategi net zero.',missions:['carbon']},
- {code:'S12 · JALUR 12',icon:'🚗',name:'EV & EV Charging',desc:'SPKLU design, BMS, ekosistem EV.',missions:['ev']},
- {code:'S13 · JALUR 13',icon:'♻️',name:'Waste to Energy',desc:'Insinerator, gasifikasi, PLTSa.',missions:['wte']},
- {code:'S14 · JALUR 14',icon:'💧',name:'Hydrogen Energy',desc:'Green hydrogen, elektrolisis, fuel cell.',missions:['h2']},
- {code:'S15 · JALUR 15',icon:'🔋',name:'Baterai & BESS',desc:'BESS, BMS, integrasi grid, peak shaving.',missions:['bess']},
+ {code:'S11 · JALUR 11',icon:'🌍',name:'Sustainability & Carbon',desc:'GHG accounting & strategi net zero.',missions:['carbon','reduksi']},
+ {code:'S12 · JALUR 12',icon:'🚗',name:'EV & EV Charging',desc:'SPKLU design, BMS, ekosistem EV.',missions:['ev','evfix']},
+ {code:'S13 · JALUR 13',icon:'♻️',name:'Waste to Energy',desc:'Insinerator, gasifikasi, PLTSa.',missions:['wte','abu']},
+ {code:'S14 · JALUR 14',icon:'💧',name:'Hydrogen Energy',desc:'Green hydrogen, elektrolisis, fuel cell.',missions:['h2','fcell']},
+ {code:'S15 · JALUR 15',icon:'🔋',name:'Baterai & BESS',desc:'BESS, BMS, integrasi grid, peak shaving.',missions:['bess','thermal']},
  {code:'S16 · JALUR 16',icon:'🎛️',name:'Kontrol & Otomasi',desc:'PLC, HMI, SCADA, panel kontrol motor.',missions:['motor','plc']},
 ];
-const NEXTCHAIN=['rumah','phb','app','gardu','transmisi','normal','k3','solar','riso','ev','motor','plc','star','pltu','bess','h2','wte','ntl','audit','carbon','sales'];
+const NEXTCHAIN=['rumah','phb','app','gardu','transmisi','normal','k3','rescue','solar','riso','ev','evfix','motor','plc','star','trip','pltu','gov','bess','thermal','h2','fcell','wte','abu','ntl','beban','audit','logger','carbon','reduksi','sales','survey'];
 
 /* =====================================================================
    DATA MISI — briefing, learn, next (build() didaftarkan di bawah)
@@ -452,6 +460,83 @@ const MISSIONS={
   obj:['Susun rung: kontak NO Start → NC Stop → coil K1','Tambahkan kontak holding (self-latching) paralel Start','Download program & uji fungsi pada tombol fisik'],
   learn:['Ladder = jelmaan rangkaian relay: rel kiri (fasa) → kontak-kontak → coil → rel kanan (netral)','Self-holding: kontak bantu K1 paralel tombol Start "mengunci" coil setelah tombol dilepas','Tombol STOP selalu kontak NC: kabel putus = rangkaian berhenti = fail-safe by design','Logika yang sama, medium berbeda: kabel kemarin, ladder hari ini, function block esok'],
   next:['Tambah timer (TON) untuk star-delta versi PLC','Pelajari input/output addressing & wiring sensor ke PLC','Naik ke HMI: tombol virtual & monitoring real-time']},
+ trip:{lvl:'JALUR 02 · INDUSTRI & MANUFAKTUR · MISI 2',icon:'🔧',title:'Troubleshooting Motor Trip',strict:false,
+  loc:'📍 Pabrik tekstil · Blower line 2 berhenti, 07:40',
+  story:'Produksi berhenti: TOR motor blower trip. Supervisor menunggu, tiap menit berhenti = kerugian. Tapi teknisi andal tidak langsung menekan RESET — ia mencari tahu dulu KENAPA trip terjadi, karena overload selalu punya alasan.',
+  goal:'Akar masalah ditemukan & diperbaiki, TOR di-reset dengan sah, motor kembali berputar dengan arus seimbang.',
+  obj:['Konfirmasi penyebab trip di TOR & periksa fisik motor','Temukan & perbaiki terminal kendor, verifikasi isolasi','Reset, restart, dan buktikan arus 3 fasa seimbang'],
+  learn:['TOR trip = gejala; akarnya bisa terminal kendor, unbalance, beban macet, atau bearing aus','Terminal kendor → resistansi kontak naik → panas → arus tak seimbang → trip berulang','Reset tanpa investigasi = mengundang trip berikutnya (atau kebakaran panel)','Selisih arus antar fasa >5% pada motor 3 fasa wajib diinvestigasi'],
+  next:['Pelajari pengukuran vibrasi untuk deteksi bearing','Dalami thermography panel: melihat panas sebelum jadi gangguan','Susun program preventive maintenance panel motor']},
+ beban:{lvl:'JALUR 05 · ENERGY ANALYST · MISI 2',icon:'📈',title:'Analisis Profil Beban Trafo',strict:false,
+  loc:'📍 Control room UP3 · Monitoring 3 gardu distribusi',
+  story:'Keluhan tegangan drop berdatangan dari perumahan Cendana tiap malam. Di layar SCADA ada tiga trafo distribusi. Tugasmu: baca kurva beban harian, temukan trafo yang menjerit, dan susun rekomendasi berbasis angka — bukan perasaan.',
+  goal:'Trafo overload teridentifikasi dari profil beban, terverifikasi pengukuran, dan rekomendasi teknis tersusun.',
+  obj:['Baca kurva beban harian 3 trafo di dashboard','Identifikasi trafo overload & verifikasi pengukuran detail','Hitung pembebanan & susun rekomendasi'],
+  learn:['Profil beban harian bercerita: puncak 18–21 = beban rumah tangga malam','Trafo dibebani >80% terus-menerus memperpendek umur isolasi; >100% = darurat','Drop tegangan ujung jaringan = gejala khas trafo/penyulang kelebihan beban','Solusi bertingkat: pecah beban → uprating trafo → sisip gardu baru'],
+  next:['Pelajari perhitungan losses trafo (beban vs inti)','Dalami forecasting beban dengan data AMI','Eksplorasi optimasi penempatan gardu dengan analisis spasial']},
+ logger:{lvl:'JALUR 06 · ENERGY AUDITOR · MISI 2',icon:'🔌',title:'Pemasangan Power Logger',strict:false,
+  loc:'📍 PT Maju Plastik · Panel utama produksi',
+  story:'Walkthrough memberi dugaan; sekarang saatnya BUKTI. Kamu kembali ke pabrik membawa power logger 3 fasa — alat yang merekam tegangan, arus, daya & cosφ tiap 15 menit selama seminggu penuh. Baseline inilah fondasi rekomendasi audit yang kredibel.',
+  goal:'Logger terpasang aman di panel, merekam 7 hari penuh, dan profil beban berhasil dibaca.',
+  obj:['Persiapan keselamatan sebelum membuka panel','Pasang CT clamp & probe tegangan dengan benar','Konfigurasi, rekam, lalu baca profil beban'],
+  learn:['Baseline minimal satu siklus produksi penuh — snapshot sesaat itu menipu','CT clamp punya ARAH (panah ke beban); terbalik = pembacaan daya negatif','Interval 15 menit = standar analisis beban, selaras pengukuran demand PLN','Dari profil mingguan terlihat: beban dasar malam, puncak shift, dan anomali akhir pekan'],
+  next:['Pelajari analisis power quality: harmonisa, sag, flicker','Hitung baseline regression (kWh vs produksi) untuk M&V','Susun laporan audit lengkap mengacu ISO 50002']},
+ gov:{lvl:'JALUR 07 · PEMBANGKITAN · MISI 2',icon:'🎚️',title:'Kontrol Frekuensi & Pembebanan',strict:true,
+  loc:'📍 PLTU unit 2 · Shift malam, beban sistem naik',
+  story:'Pukul 19:05 — beban sistem melonjak, frekuensi jaringan merosot ke 49,80 Hz. Dispatcher meminta unit 2 menaikkan pembebanan. Frekuensi adalah detak jantung sistem: terlalu rendah, pembangkit lain ikut tumbang. Responmu menentukan.',
+  goal:'Frekuensi kembali 50,00 Hz: governor dinaikkan bertahap, tegangan dijaga AVR, kondisi dilaporkan.',
+  obj:['Amati penurunan frekuensi & konfirmasi permintaan dispatcher','Naikkan governor bertahap sambil menjaga tegangan','Stabilkan 50 Hz & catat di logsheet'],
+  learn:['Frekuensi turun = pembangkitan < beban; naik = sebaliknya. Sesederhana (dan segenting) itu','Governor mengatur MW/frekuensi; AVR mengatur tegangan/MVAr — dua kenop berbeda','Menaikkan beban dihentak = thermal stress turbin; bertahap sesuai ramp rate','Di bawah 49,5 Hz skema UFLS melepas beban otomatis — kamu garis pertahanan sebelum itu'],
+  next:['Pelajari speed droop & cara pembangkit berbagi beban','Dalami AGC: kontrol frekuensi otomatis dari pusat','Eksplorasi inertia sistem & tantangan grid tinggi-renewable']},
+ rescue:{lvl:'JALUR 08 · K3 LISTRIK · MISI 2',icon:'🚨',title:'Pertolongan Korban Sengatan Listrik',strict:true,
+  loc:'📍 Workshop industri · Insiden listrik, korban di lantai',
+  story:'Teriakan dari workshop: seorang pekerja tergeletak — tangannya masih menempel pada kabel ekstension terkelupas. Naluri pertamamu pasti berlari menolong. TAHAN. Penolong yang menyentuh korban yang masih teraliri akan menjadi korban kedua. Urutan adalah segalanya.',
+  goal:'Korban tertolong tanpa korban kedua: sumber diputus, bantuan dipanggil, pertolongan pertama benar, insiden dilaporkan.',
+  obj:['Putus sumber listrik SEBELUM menyentuh apapun','Pisahkan korban dengan alat isolasi & panggil bantuan','Cek respons korban, lakukan pertolongan, laporkan insiden'],
+  learn:['Aturan emas: JANGAN sentuh korban yang masih kontak listrik — putus sumber dulu','Bila sumber tak terjangkau: gunakan benda isolasi KERING (kayu, plastik) untuk memisahkan','Henti jantung akibat listrik sering reversible — CPR segera melipatgandakan peluang hidup','Setiap insiden wajib dilaporkan & diinvestigasi: near-miss hari ini = fatality besok bila diabaikan'],
+  next:['Ikuti pelatihan CPR/BLS bersertifikat — simulasi bukan pengganti','Pelajari efek arus pada tubuh: 1 mA terasa, 30 mA fibrilasi','Susun prosedur tanggap darurat listrik untuk fasilitasmu']},
+ survey:{lvl:'JALUR 09 · SALES & TECHNICAL MARKETING · MISI 2',icon:'📐',title:'Site Survey & Proposal PLTS',strict:false,
+  loc:'📍 PT Rasa Abadi (pabrik makanan) · Survey atap',
+  story:'Lead baru: pabrik makanan bertagihan Rp 38 juta/bulan ingin tahu apakah PLTS atap masuk akal. Sales biasa langsung kirim brosur; kamu naik ke atap. Survey yang teliti hari ini = proposal yang tak terbantahkan minggu depan.',
+  goal:'Data survey lengkap (tagihan, atap, beban siang) → sizing tepat → proposal ROI yang menutup deal.',
+  obj:['Bedah tagihan & pola konsumsi pelanggan','Ukur area atap efektif & cek beban siang aktual','Sizing kWp, hitung produksi, presentasikan ROI'],
+  learn:['PLTS atap paling ekonomis saat produksi siang TERSERAP beban sendiri, bukan diekspor','Area efektif ≠ luas atap: kurangi bayangan, jalur perawatan & arah hadap buruk','Rule of thumb Indonesia: 1 kWp ≈ 6–7 m² atap ≈ 1.300 kWh/tahun','ROI PLTS industri umumnya 4–6 tahun — selebihnya listrik "murah" 20+ tahun'],
+  next:['Pelajari simulasi produksi dengan PVsyst/PVWatts','Dalami skema pembiayaan: capex vs leasing vs PPA','Latih handling objection: "bagaimana kalau mendung terus?"']},
+ reduksi:{lvl:'JALUR 11 · SUSTAINABILITY & CARBON · MISI 2',icon:'📉',title:'Roadmap Reduksi Menuju Net Zero',strict:false,
+  loc:'📍 PT Maju Plastik · Rapat strategi dekarbonisasi',
+  story:'Baseline 1.240 tCO₂e sudah di tangan — kini direksi berpesan: "turunkan, tapi jangan bangkrutkan kami." Di hadapanmu empat kartu strategi. Urutannya bukan selera: ada hierarki mitigasi yang membuat tiap rupiah per ton CO₂e paling efisien.',
+  goal:'Empat strategi tersusun dalam hierarki yang benar: efisiensi → energi terbarukan → REC → offset, lalu roadmap final.',
+  obj:['Mulai dari efisiensi (biaya per ton termurah, bahkan negatif)','Lanjut PLTS atap & REC untuk listrik sisa','Offset hanya untuk residual, lalu kunci roadmap bertarget'],
+  learn:['Hierarki mitigasi: KURANGI dulu (efisiensi), ganti sumber (renewable), klaim hijau (REC), offset TERAKHIR','Efisiensi punya biaya per ton negatif — hemat energi = hemat uang = turun emisi','REC membeli atribut hijau listrik; offset membayar penyerapan di tempat lain — keduanya bukan pengganti reduksi nyata','Roadmap kredibel punya target tahunan terukur, bukan sekadar "net zero 2050"'],
+  next:['Pelajari Science Based Targets initiative (SBTi)','Susun marginal abatement cost curve (MACC) proyekmu','Dalami pasar karbon Indonesia: IDXCarbon & pajak karbon']},
+ evfix:{lvl:'JALUR 12 · EV & EV CHARGING · MISI 2',icon:'🛠️',title:'Troubleshooting SPKLU Error',strict:false,
+  loc:'📍 SPKLU Rest Area KM 158 · Laporan gangguan',
+  story:'Laporan masuk: SPKLU yang kamu komisioning menolak mengisi — layar menampilkan ERROR E-07: GROUND FAULT. Pelanggan menumpuk, media sosial menyala. Teknisi panik mengganti suku cadang; teknisi terlatih membaca kode error dan MENGUKUR.',
+  goal:'Akar gangguan ditemukan lewat pengukuran, diperbaiki, dan SPKLU kembali melayani charging dengan aman.',
+  obj:['Baca & pahami kode error unit','Isolasi unit, ukur pembumian, temukan akar masalah','Perbaiki, energize ulang, dan uji charging'],
+  learn:['Kode error = mesin memberi tahu di mana sakitnya — baca manual, jangan menebak','Charger memantau pembumian terus-menerus: resistansi naik = proteksi arus bocor tak andal = unit mengunci diri','Klem & koneksi pembumian luar ruangan rawan korosi/kendor — inspeksi berkala adalah obatnya','Selalu isolasi (MCCB OFF) sebelum membuka kompartemen — beri waktu kapasitor internal discharge'],
+  next:['Pelajari diagnosa jarak jauh via OCPP error log','Dalami RCD tipe B & alat uji EVSE khusus','Susun jadwal preventive maintenance SPKLU']},
+ abu:{lvl:'JALUR 13 · WASTE TO ENERGY · MISI 2',icon:'🧪',title:'Mass Balance & Pengelolaan Abu',strict:false,
+  loc:'📍 PLTSa · Area penanganan abu, akhir shift',
+  story:'Listrik sudah mengalir, tapi pekerjaan PLTSa belum selesai: 8 ton sampah pagi tadi kini menjadi abu — dan abu punya aturan mainnya sendiri. Bottom ash relatif jinak; fly ash dari filter adalah limbah B3 yang setiap gramnya harus tercatat sampai ke "kuburannya".',
+  goal:'Abu terkelola sesuai aturan: tertimbang, fly ash terkemas B3 + manifest, dan mass balance harian seimbang.',
+  obj:['Timbang & catat bottom ash','Kemas fly ash sebagai limbah B3 + uji karakteristik','Manifest elektronik & tutup mass balance harian'],
+  learn:['Bottom ash (±20% massa) bisa dimanfaatkan setelah uji; fly ash (±3%) = B3 karena logam berat & dioksin terkonsentrasi','Uji TCLP menentukan apakah abu melepaskan kontaminan — dasar klasifikasi pengelolaan','Manifest elektronik (festronik) melacak B3 dari penghasil sampai pengolah berizin — rantai putus = pidana','Mass balance harian: input = listrik + abu + emisi + air. Selisih besar = ada yang tak tercatat'],
+  next:['Pelajari pemanfaatan bottom ash untuk bahan konstruksi','Dalami regulasi limbah B3 (PP 22/2021)','Hitung neraca energi: MJ sampah → kWh netto']},
+ fcell:{lvl:'JALUR 14 · HYDROGEN ENERGY · MISI 2',icon:'🚌',title:'Refueling H₂ & Fuel Cell Bus',strict:true,
+  loc:'📍 Stasiun pengisian H₂ · Bus fuel cell perdana',
+  story:'Hidrogen yang kamu produksi kini ditunggu pelanggannya: bus fuel cell kota. Mengisi H₂ 350 bar bukan seperti mengisi bensin — gas bertekanan ekstrem dengan rentang bakar 4–75% menuntut ritual yang tak boleh dilompati satu langkah pun.',
+  goal:'Bus terisi penuh dengan aman: bonding terpasang, bebas bocor, dispensing sesuai protokol, fuel cell hidup.',
+  obj:['Bonding/grounding kendaraan sebelum apapun','Leak check konektor, baru sambungkan nozzle','Dispensing terkontrol & start fuel cell'],
+  learn:['Percikan listrik statis cukup untuk menyulut H₂ — kabel bonding adalah langkah pertama, selalu','Leak check konektor SEBELUM dispensing: detector pada setiap sambungan bertekanan','Protokol pengisian (SAE J2601) mengatur laju & suhu — terlalu cepat = tangki overheat','Fuel cell membalik elektrolisis: H₂ + O₂ → listrik + air murni; knalpotnya meneteskan air'],
+  next:['Pelajari beda pengisian 350 bar (bus) vs 700 bar (mobil)','Dalami keselamatan tangki komposit tipe IV','Hitung TCO bus fuel cell vs bus listrik baterai']},
+ thermal:{lvl:'JALUR 15 · BATERAI & BESS · MISI 2',icon:'🌡️',title:'Respon Alarm Termal BESS',strict:true,
+  loc:'📍 Kawasan industri · BESS container, alarm 14:20',
+  story:'EMS berbunyi: suhu modul 7 di rack 2 merayap naik — 41°C dan menanjak, justru saat BESS sedang discharge penuh memangkas puncak. Thermal runaway tidak terjadi tiba-tiba; ia selalu mengirim sinyal lebih dulu. Operator yang baik mendengarnya.',
+  goal:'Suhu terkendali tanpa drama: alarm dianalisis, pendingin di-boost, daya diturunkan, rack diisolasi pada urutan yang benar.',
+  obj:['Analisis alarm di BMS — modul & tren suhu','Boost HVAC & turunkan daya (derate) lebih dulu','Isolasi rack hanya setelah arus turun, lalu catat & lapor'],
+  learn:['Thermal runaway punya tangga: panas → venting → api. Intervensi dini = tangga tak pernah dinaiki','Urutan benar: turunkan ARUS dulu (derate), baru buka pemutus rack — memutus DC berbeban penuh = busur api','Satu sel panas memanaskan tetangganya — isolasi dini mencegah penjalaran antar modul','SoC tinggi + suhu tinggi = kombinasi terbahaya; EMS modern auto-derate, operator memverifikasi'],
+  next:['Pelajari deteksi off-gas: sinyal paling dini thermal runaway','Dalami desain fire suppression BESS (aerosol, water mist)','Analisis post-mortem data BMS untuk akar penyebab termal']},
 };
 
 /* =====================================================================
@@ -465,8 +550,8 @@ function renderMenu(){
     d.className='tcard '+(t.missions.length?'active':'locked');
     let inner=`<div class="lvl">${t.code}</div><h2>${t.icon} ${t.name}</h2><p>${t.desc}</p>`;
     if(t.missions.length){
-      t.missions.forEach(mk=>{const m=MISSIONS[mk];
-        inner+=`<button class="mBtn" data-m="${mk}"><span>▶ ${m.title}</span><span class="st">${starsOf(mk)}</span></button>`;});
+      t.missions.forEach((mk,i)=>{const m=MISSIONS[mk];
+        inner+=`<button class="mBtn" data-m="${mk}"><span><b class="mNum">M${i+1}</b> ${m.title}</span><span class="st">${starsOf(mk)}</span></button>`;});
       if(t.missions.length<2)
         inner+=`<div class="lockTag">🔜 MISI 2 — TAHAP BERIKUTNYA</div>`;
     }else{
@@ -650,9 +735,14 @@ function renderTasks(items,curIdx){
 $('#taskToggle').onclick=()=>{const l=$('#taskList');
   const hid=l.style.display==='none'; l.style.display=hid?'':'none';
   $('#taskToggle').textContent=hid?'tutup':'buka';};
+$('#tutorMin').onclick=()=>{const t=$('#tutor');t.classList.toggle('min');
+  $('#tutorMin').textContent=t.classList.contains('min')?'▴ VOLTA':'▾ SEMBUNYIKAN';};
 let typeTO=null;
 function say(html){
   clearTimeout(typeTO);
+  /* pesan baru → buka kembali panel tutor bila sedang disembunyikan */
+  const tu=$('#tutor');
+  if(tu.classList.contains('min')){tu.classList.remove('min');$('#tutorMin').textContent='▾ SEMBUNYIKAN';}
   const el=$('#tutorTxt'), av=$('#avatar');
   el.innerHTML=''; av.classList.add('talk');
   const tmp=document.createElement('div'); tmp.innerHTML=html;
@@ -2690,6 +2780,883 @@ function buildPLC(){
   $('#modTitle').textContent='J16·M2 — Ladder PLC Start-Stop';
   $('#taskHead').textContent='SUSUN · DOWNLOAD · UJI';}
 
+/* =====================================================================
+   MISI 22 — TROUBLESHOOTING MOTOR TRIP (Jalur 02 · Misi 2)
+   ===================================================================== */
+let mtp={};
+function buildTrip(){
+  freshScene(0xb0bfcc,0x131c26);
+  cam={theta:-.1,phi:1.2,r:7,target:new THREE.Vector3(.4,1.6,-1)};
+  const Z=room(0x55606a,0xb9bfc6);
+  const panel=boxT(2.6,2.2,.25,TEX.metal(),{metalness:.35});panel.position.set(-1.6,1.9,Z-.04);scene.add(panel);
+  panel.add(label('PANEL MOTOR BLOWER L2',.85).translateY(1.4));
+  /* TOR dengan indikator trip + tombol reset */
+  mtp.tor=box(.45,.5,.18,0xcc8830);mtp.tor.position.set(-2.3,2.3,Z+.12);scene.add(mtp.tor);
+  actMesh(mtp.tor,'TORCHK');
+  scene.add(label('TOR',.5,'#5fd4ff').translateX(-2.3).translateY(2.72).translateZ(Z+.1));
+  mtp.trip=new THREE.Mesh(new THREE.SphereGeometry(.05,12,10),
+    new THREE.MeshStandardMaterial({color:0xff3b3b,emissive:0xff3b3b,emissiveIntensity:1}));
+  mtp.trip.position.set(-2.3,2.62,Z+.22);scene.add(mtp.trip);
+  mtp.rst=cyl(.05,.05,.06,0x2255aa);mtp.rst.rotation.x=Math.PI/2;
+  mtp.rst.position.set(-2.3,2.05,Z+.24);scene.add(mtp.rst);
+  actMesh(mtp.rst,'RESET');
+  scene.add(label('RESET',.36).translateX(-2.3).translateY(1.9).translateZ(Z+.2));
+  /* tombol start + display arus */
+  mtp.btn=cyl(.09,.09,.08,0x2ec06a);mtp.btn.rotation.x=Math.PI/2;
+  mtp.btn.position.set(-1.5,1.35,Z+.18);scene.add(mtp.btn);
+  actMesh(mtp.btn,'START');
+  scene.add(label('START',.45,'#7af0a8').translateX(-1.5).translateY(1.1).translateZ(Z+.14));
+  mtp.D=makeDisplay(1.1,.5,300,140);mtp.D.mesh.position.set(-.9,2.3,Z+.13);scene.add(mtp.D.mesh);
+  dispText(mtp.D,['TRIP ⚠','overload 51 menit lalu'],['#ff5a5a','#7d8f84']);
+  /* motor + terminal box */
+  const mb=cyl(.34,.34,.95,0x3a6ea8);mb.rotation.z=Math.PI/2;mb.position.set(1.8,.6,-1.2);scene.add(mb);
+  mtp.fan=cyl(.3,.3,.06,0xd8e0e8,18,{metalness:.5});
+  mtp.fan.rotation.z=Math.PI/2;mtp.fan.position.set(2.38,.6,-1.2);scene.add(mtp.fan);
+  const bl=box(.5,.05,.04,0x9fb0c0);mtp.fan.add(bl);
+  const bl2=bl.clone();bl2.rotation.x=Math.PI/2;mtp.fan.add(bl2);
+  scene.add(label('MOTOR BLOWER 7,5 kW',.7).translateX(1.8).translateY(1.25).translateZ(-1.2));
+  mtp.tbox=box(.34,.26,.3,0x2b3a4a);mtp.tbox.position.set(1.5,1.0,-1.2);scene.add(mtp.tbox);
+  actMesh(mtp.tbox,'TBOX');
+  scene.add(label('TERMINAL BOX',.5,'#5fd4ff').translateX(1.4).translateY(.78).translateZ(-.9));
+  /* meja alat: obeng, megger, tang ampere */
+  const tbl=boxT(2.0,.07,.6,TEX.wood());tbl.position.set(4.0,.95,-.6);scene.add(tbl);
+  const tleg=boxT(.08,.95,.08,TEX.wood());tleg.position.set(4.0,.47,-.6);scene.add(tleg);
+  mtp.drv=box(.08,.34,.08,0xd83a3a);mtp.drv.rotation.z=.8;mtp.drv.position.set(3.3,1.06,-.6);scene.add(mtp.drv);
+  actMesh(mtp.drv,'OBENG');
+  scene.add(label('OBENG TORSI',.5,'#5fd4ff').translateX(3.3).translateY(1.32).translateZ(-.6));
+  mtp.meg=box(.32,.2,.24,0xcc8830);mtp.meg.position.set(4.0,1.08,-.6);scene.add(mtp.meg);
+  actMesh(mtp.meg,'MEGGER');
+  scene.add(label('MEGGER',.5,'#5fd4ff').translateX(4.0).translateY(1.36).translateZ(-.6));
+  mtp.amp=box(.18,.3,.1,0xd8b020);mtp.amp.position.set(4.7,1.1,-.6);scene.add(mtp.amp);
+  actMesh(mtp.amp,'AMP');
+  scene.add(label('TANG AMPERE',.5,'#5fd4ff').translateX(4.7).translateY(1.38).translateZ(-.6));
+
+  mtp.run=false;
+  moduleTick=(dt)=>{if(mtp.run)mtp.fan.rotation.x+=dt*12;};
+
+  startSeq([
+   {type:'act',aid:'TORCHK',done:false,targets:()=>[mtp.tor],
+    desc:'JANGAN langsung reset! Periksa dulu TOR: apa yang membuatnya trip (klik TOR).',
+    why:'TOR menyimpan cerita: indikator menunjuk trip kelas overload, bukan hubung singkat. Artinya arus berlebih MENAHUN, bukan ledakan sesaat — dan itu selalu punya akar masalah.',
+    fx(){toast('🔎 TOR: trip overload, arus tercatat tinggi di fasa T.','info',2800);}},
+   {type:'act',aid:'TBOX',done:false,targets:()=>[mtp.tbox],
+    desc:'Telusuri ke motor: buka & periksa TERMINAL BOX (klik kotak terminal).',
+    why:'Arus tinggi di satu fasa sering lahir di sambungan: terminal kendor menaikkan resistansi kontak → panas → isolasi memburuk. Mata & hidung teknisi: cari kehitaman dan bau hangus.',
+    fx(){toast('🔥 Ditemukan: terminal fasa T kendor & menghitam!','bad',2800);}},
+   {type:'act',aid:'OBENG',done:false,targets:()=>[mtp.drv],
+    desc:'Perbaiki: bersihkan & kencangkan terminal dengan OBENG TORSI.',
+    why:'Kontak dibersihkan dari oksidasi lalu dikencangkan dengan torsi sesuai spesifikasi — terlalu kendor panas lagi, terlalu kencang merusak ulir. Obeng torsi bukan gaya-gayaan.',
+    fx(){toast('🔧 Terminal dibersihkan & dikencangkan 2,5 Nm ✓','ok',2400);}},
+   {type:'act',aid:'MEGGER',done:false,targets:()=>[mtp.meg],
+    desc:'Sebelum restart: MEGGER lilitan motor (klik megger).',
+    why:'Panas berkepanjangan bisa melukai isolasi lilitan. Riso 180 MΩ = lilitan selamat. Kalau rendah, restart hanya akan membakar motor — dan reputasi teknisinya.',
+    fx(){toast('🔍 Riso lilitan 180 MΩ — isolasi selamat ✓','ok',2400);}},
+   {type:'act',aid:'RESET',done:false,targets:()=>[mtp.rst],
+    desc:'Sekarang barulah sah: RESET TOR (klik tombol biru).',
+    why:'Reset setelah akar masalah dibereskan = pemulihan; reset sebelum itu = perjudian. TOR yang trip berulang juga menua — bimetalnya lelah.',
+    fx(){mtp.trip.material.color.setHex(0x36e07a);mtp.trip.material.emissive.setHex(0x36e07a);
+      dispText(mtp.D,['READY','siap restart'],['#46ff8e','#7d8f84']);
+      toast('✅ TOR di-reset — panel siap.','ok',2200);}},
+   {type:'act',aid:'START',done:false,targets:()=>[mtp.btn],
+    desc:'Restart motor: tekan START.',
+    why:'Momen pembuktian diagnosa. Telinga ikut bekerja: dengungan halus = sehat; geraman kasar = masih ada masalah mekanis.',
+    fx(){mtp.run=true;beep(110,.6,'sawtooth',.08);
+      dispText(mtp.D,['RUN','—'],['#46ff8e','#7d8f84']);
+      toast('🔄 Motor berputar mulus.','ok',2400);}},
+   {type:'act',aid:'AMP',done:false,targets:()=>[mtp.amp],
+    desc:'Bukti akhir: ukur arus 3 fasa dengan TANG AMPERE.',
+    why:'12,1 · 12,3 · 12,2 A — selisih <2%, seimbang sempurna. Sebelum perbaikan fasa T pasti menonjol. Angka inilah penutup laporan troubleshooting yang profesional.',
+    fx(){dispText(mtp.D,['12,2 A','R·S·T seimbang ✓'],['#46ff8e','#46ff8e']);
+      toast('📏 Arus R-S-T: 12,1 / 12,3 / 12,2 A — SEIMBANG ✓','ok',3000);sfx.big();}},
+  ],()=>{say('🎉 <b>Troubleshooting tuntas!</b> Dari gejala (trip) → akar (terminal kendor) → bukti (arus seimbang). Reset tanpa investigasi? Itu bukan gaya kita.');
+    setTimeout(()=>showWin('trip'),2200);});
+
+  say('VOLTA di sini 🔧 Motor blower trip dan semua orang menyuruhmu buru-buru. Justru di sinilah bedanya teknisi andal: <b>cari akar masalahnya dulu, reset belakangan</b>. Mulai dari TOR di panel.');
+  $('#modTitle').textContent='J02·M2 — Troubleshooting Motor Trip';
+  $('#taskHead').textContent='DIAGNOSA SEBELUM RESET';}
+
+/* =====================================================================
+   MISI 23 — PROFIL BEBAN TRAFO (Jalur 05 · Misi 2)
+   ===================================================================== */
+let mlb={};
+function buildBeban(){
+  freshScene(0x9fb8d0,0x121e2c);
+  cam={theta:.05,phi:1.18,r:8.5,target:new THREE.Vector3(0,1.8,-.8)};
+  const floor=boxT(18,.1,11,TEX.concrete());floor.position.y=-.05;scene.add(floor);
+  const wall=boxT(16,4.4,.2,TEX.plaster());wall.position.set(0,2.2,-3.4);scene.add(wall);
+  /* dashboard besar kurva beban */
+  const frame=boxT(4.4,2.5,.18,TEX.metal(),{metalness:.4});frame.position.set(-3.2,2.4,-3.28);scene.add(frame);
+  frame.add(label('SCADA — KURVA BEBAN HARIAN',.9).translateY(1.55));
+  mlb.D=makeDisplay(4.0,2.1,640,340);
+  mlb.D.mesh.position.set(-3.2,2.4,-3.18);scene.add(mlb.D.mesh);
+  actMesh(mlb.D.mesh,'DASH');
+  function drawCurves(hl){
+    const g=mlb.D.g,W=640,H=340;
+    g.fillStyle='#0c141d';g.fillRect(0,0,W,H);
+    g.strokeStyle='#2a3a4c';g.lineWidth=2;
+    g.beginPath();g.moveTo(50,20);g.lineTo(50,H-40);g.lineTo(W-20,H-40);g.stroke();
+    g.strokeStyle='#7a2a2a';g.setLineDash([8,6]);
+    g.beginPath();g.moveTo(50,70);g.lineTo(W-20,70);g.stroke();g.setLineDash([]);
+    g.fillStyle='#ff5a5a';g.font='600 16px Consolas';g.textAlign='left';g.fillText('100% kapasitas',54,62);
+    const cfg=[['T1',0x5fd4ff,'#5fd4ff',.52],['T2',0xffd23f,'#ffd23f',.95],['T3',0x46ff8e,'#46ff8e',.38]];
+    cfg.forEach((c,ci)=>{
+      g.strokeStyle=c[2];g.lineWidth=(hl===ci)?5:3;g.globalAlpha=(hl===undefined||hl===ci)?1:.35;
+      g.beginPath();
+      for(let h=0;h<=24;h++){
+        const base=.3+ .12*Math.sin(h/24*Math.PI*2-1.2);
+        const evening=Math.exp(-Math.pow(h-19,2)/6)*c[3];
+        const v=Math.min(1.15,base+evening);
+        const x=50+h/24*(W-80), y=H-40-v*(H-110)/1.15*1.0;
+        h===0?g.moveTo(x,y):g.lineTo(x,y);}
+      g.stroke();g.globalAlpha=1;
+      g.fillStyle=c[2];g.font='700 18px Consolas';g.fillText(c[0],W-90+ci*0,40+ci*24);});
+    g.fillStyle='#8aa3bd';g.font='600 15px Consolas';g.textAlign='center';
+    [0,6,12,18,24].forEach(h=>g.fillText(h+':00',50+h/24*(W-80),H-16));
+    mlb.D.tex.needsUpdate=true;}
+  drawCurves();
+  /* tiga trafo */
+  mlb.trafos=[];
+  [[-1.5,'T1 · 200 kVA'],[1.5,'T2 · 160 kVA'],[4.5,'T3 · 200 kVA']].forEach((o,i)=>{
+    const t=boxT(1.1,1.2,.9,TEX.metal(),{metalness:.3});t.position.set(o[0]+1.5,.65,-1.2);scene.add(t);
+    [-.3,0,.3].forEach(dx=>{const fin=box(.05,1.0,.95,0x5a6a7a);fin.position.set(o[0]+1.5+dx,.65,-1.2);scene.add(fin);});
+    actMesh(t,'T'+(i+1));mlb.trafos.push(t);
+    scene.add(label(o[1],.62).translateX(o[0]+1.5).translateY(1.6).translateZ(-1.2));});
+  /* layar detail + papan rekomendasi */
+  mlb.det=makeDisplay(1.4,.8,320,190);
+  mlb.det.mesh.position.set(6.6,2.2,-3.18);scene.add(mlb.det.mesh);
+  dispText(mlb.det,['DETAIL TRAFO','pilih trafo…'],['#5fd4ff','#7d8f84']);
+  actMesh(mlb.det.mesh,'DETAIL');
+  scene.add(label('LAYAR DETAIL',.6,'#5fd4ff').translateX(6.6).translateY(2.85).translateZ(-3.1));
+  mlb.rek=box(.95,.7,.05,0xe8e4d8);mlb.rek.position.set(6.6,1.0,-3.2);scene.add(mlb.rek);
+  actMesh(mlb.rek,'REKOM');
+  scene.add(label('PAPAN REKOMENDASI',.55,'#5fd4ff').translateX(6.6).translateY(.5).translateZ(-3.1));
+
+  startSeq([
+   {type:'act',aid:'DASH',done:false,targets:()=>[mlb.D.mesh],
+    desc:'Baca DASHBOARD: bandingkan kurva beban harian tiga trafo.',
+    why:'Tiga kurva, tiga cerita. Perhatikan jam 18–21: satu kurva menembus garis merah 100%. Itulah jam keluhan tegangan drop pelanggan masuk — bukan kebetulan.',
+    fx(){drawCurves(1);toast('📈 T2 menembus 100% tiap malam. T1 & T3 masih longgar.','info',3000);}},
+   {type:'act',aid:'T2',done:false,targets:()=>[mlb.trafos[1]],
+    desc:'Identifikasi: klik TRAFO yang overload.',
+    why:'T2 160 kVA memikul perumahan yang terus tumbuh — beban puncaknya kini melampaui kapasitas pelat namanya. T1 (52%) dan T3 (38%) justru santai.',
+    fx(){toast('🎯 T2 terkonfirmasi: pelanggan bertambah 30% dalam 2 tahun.','ok',2800);}},
+   {type:'act',aid:'DETAIL',done:false,targets:()=>[mlb.det.mesh],
+    desc:'Verifikasi angka: buka LAYAR DETAIL pengukuran T2.',
+    why:'Dashboard memberi pola; detail memberi bukti: pembebanan 108% pada 19:30, tegangan ujung jaringan jatuh ke 198 V (batas bawah 198 V — persis di tepi jurang).',
+    fx(){dispText(mlb.det,['T2: 108% ⚠','19:30 · ujung 198V'],['#ff5a5a','#ffd23f']);
+      toast('📟 T2: 173 kVA dari 160 kVA — overload 108%.','bad',2800);}},
+   {type:'act',aid:'REKOM',done:false,targets:()=>[mlb.rek],
+    desc:'Susun REKOMENDASI teknis (klik papan).',
+    why:'Analis menutup dengan solusi bertingkat: jangka pendek pecah beban — alihkan 2 jurusan ke T3 yang baru 38%; jangka menengah uprating T2 ke 250 kVA dengan justifikasi tren pertumbuhan.',
+    fx(){toast('📋 Rekomendasi: pecah beban ke T3 (cepat) + uprating 250 kVA (2027).','ok',3200);sfx.big();}},
+  ],()=>{say('🎉 <b>Analisis tajam!</b> Dari keluhan pelanggan → kurva → angka → rekomendasi bertingkat. Beginilah data menjaga trafo (dan tidur nyenyak manajer area).');
+    setTimeout(()=>showWin('beban'),2200);});
+
+  say('VOLTA di sini 📈 Keluhan tegangan drop tiap malam — dan jawabannya tersembunyi di <b>kurva beban harian</b>. Tiga trafo, satu yang menjerit. Mulai dari dashboard SCADA.');
+  $('#modTitle').textContent='J05·M2 — Analisis Profil Beban Trafo';
+  $('#taskHead').textContent='KURVA → TRAFO → REKOMENDASI';}
+
+/* =====================================================================
+   MISI 24 — POWER LOGGER (Jalur 06 · Misi 2)
+   ===================================================================== */
+let mlg={};
+function buildLogger(){
+  freshScene(0xb8c6d4,0x141d28);
+  cam={theta:-.05,phi:1.18,r:6.5,target:new THREE.Vector3(0,1.7,-1)};
+  const Z=room(0x55606a,0xb9c4bd);
+  /* panel utama terbuka */
+  const panel=boxT(2.4,2.6,.3,TEX.metal(),{metalness:.35});panel.position.set(-1.6,1.7,Z-.05);scene.add(panel);
+  panel.add(label('PANEL UTAMA PRODUKSI',.85).translateY(1.6));
+  /* busbar 3 fasa */
+  mlg.bars=[];
+  [['R',0xd83a3a,-2.2],['S',0xd8b020,-1.6],['T',0x2d2d2d,-1.0]].forEach(o=>{
+    const b=box(.12,1.6,.06,o[1]);b.position.set(o[2],1.7,Z+.14);scene.add(b);mlg.bars.push(b);
+    scene.add(label(o[0],.42).translateX(o[2]).translateY(2.7).translateZ(Z+.1));});
+  /* sarung tangan */
+  mlg.glove=box(.2,.3,.06,0xcc6b2c);mlg.glove.position.set(-3.6,1.5,Z+.1);scene.add(mlg.glove);
+  actMesh(mlg.glove,'APD');
+  scene.add(label('SARUNG TANGAN',.55,'#5fd4ff').translateX(-3.6).translateY(1.95).translateZ(Z+.1));
+  /* meja + logger + CT clamp + probe + laptop */
+  const tbl=boxT(2.6,.08,.9,TEX.wood());tbl.position.set(2.4,.95,-.6);scene.add(tbl);
+  const tleg=boxT(.08,.95,.08,TEX.wood());tleg.position.set(2.4,.47,-.6);scene.add(tleg);
+  mlg.ct=new THREE.Mesh(new THREE.TorusGeometry(.13,.035,10,22),
+    new THREE.MeshStandardMaterial({color:0x2a72c8,roughness:.5}));
+  mlg.ct.position.set(1.5,1.12,-.6);scene.add(mlg.ct);
+  actMesh(mlg.ct,'CT');
+  scene.add(label('CT CLAMP ×3',.55,'#5fd4ff').translateX(1.5).translateY(1.45).translateZ(-.6));
+  mlg.probe=box(.1,.3,.08,0xd83a3a);mlg.probe.position.set(2.2,1.1,-.6);scene.add(mlg.probe);
+  actMesh(mlg.probe,'VPROBE');
+  scene.add(label('PROBE TEGANGAN',.55,'#5fd4ff').translateX(2.3).translateY(1.45).translateZ(-.6));
+  mlg.log=box(.46,.3,.3,0x33404e);mlg.log.position.set(3.1,1.12,-.6);scene.add(mlg.log);
+  mlg.L=makeDisplay(.4,.22,200,110);
+  mlg.L.mesh.position.set(3.1,1.16,-.44);scene.add(mlg.L.mesh);
+  dispText(mlg.L,['LOGGER','OFF'],['#5fd4ff','#7d8f84']);
+  actMesh(mlg.L.mesh,'CFG');
+  mlg.btn=cyl(.05,.05,.06,0xd83a3a);mlg.btn.rotation.x=Math.PI/2;
+  mlg.btn.position.set(3.32,1.3,-.5);scene.add(mlg.btn);
+  actMesh(mlg.btn,'REC');
+  scene.add(label('POWER LOGGER',.55,'#5fd4ff').translateX(3.1).translateY(1.5).translateZ(-.6));
+  /* laptop analisis */
+  const lap=box(.7,.05,.5,0x2b3a4a);lap.position.set(4.6,1.1,-1.4);scene.add(lap);
+  mlg.S=makeDisplay(.66,.42,330,210);
+  mlg.S.mesh.position.set(4.6,1.4,-1.62);mlg.S.mesh.rotation.x=-.15;scene.add(mlg.S.mesh);
+  dispText(mlg.S,['ANALISIS','menunggu data…'],['#5fd4ff','#7d8f84']);
+  actMesh(mlg.S.mesh,'READ');
+  scene.add(label('LAPTOP AUDITOR',.6,'#5fd4ff').translateX(4.6).translateY(1.85).translateZ(-1.6));
+
+  startSeq([
+   {type:'act',aid:'APD',done:false,targets:()=>[mlg.glove],
+    desc:'Panel hidup! Kenakan SARUNG TANGAN isolasi dulu.',
+    why:'Logger dipasang pada panel BERTEGANGAN (justru itu tujuannya — merekam operasi nyata). Bekerja dekat busbar hidup tanpa APD = mempertaruhkan nyawa demi data.',
+    fx(){toast('🧤 APD terpasang — boleh mendekati panel.','ok',2200);}},
+   {type:'act',aid:'CT',done:false,targets:()=>[mlg.ct],
+    desc:'Pasang CT CLAMP ke busbar R, S, T (klik clamp).',
+    why:'Clamp membuka & memeluk busbar tanpa memutus rangkaian. Perhatikan PANAH arah arus menghadap beban — terbalik berarti daya terbaca negatif dan analisis kacau.',
+    fx(){const c2=mlg.ct.clone();c2.position.set(-1.6,1.9,Z+.2);scene.add(c2);
+      const c3=mlg.ct.clone();c3.position.set(-1.0,1.9,Z+.2);scene.add(c3);
+      mlg.ct.position.set(-2.2,1.9,Z+.2);
+      toast('🔗 3 CT terpasang, panah ke arah beban ✓','ok',2600);}},
+   {type:'act',aid:'VPROBE',done:false,targets:()=>[mlg.probe],
+    desc:'Pasang PROBE TEGANGAN ke tiap fasa + netral.',
+    why:'Daya = V × I × cosφ: tanpa referensi tegangan, logger hanya tahu arus. Probe dijepit pada terminal berfuse — perlindungan bila ada gangguan saat pengukuran berhari-hari.',
+    fx(){mlg.probe.position.set(-1.3,2.3,Z+.2);
+      toast('🔌 Probe tegangan 4 titik terpasang ✓','ok',2400);}},
+   {type:'act',aid:'CFG',done:false,targets:()=>[mlg.L.mesh],
+    desc:'KONFIGURASI logger: interval & durasi (klik layar logger).',
+    why:'Interval 15 menit × 7 hari = 672 titik data per kanal — cukup melihat pola shift, beban dasar malam, dan akhir pekan. Interval terlalu panjang menyembunyikan lonjakan.',
+    fx(){dispText(mlg.L,['15 MENIT','7 hari · 3P4W ✓'],['#5fd4ff','#46ff8e']);
+      toast('⚙️ Set: 3 fasa 4 kawat · 15 menit · 7 hari.','ok',2600);}},
+   {type:'act',aid:'REC',done:false,targets:()=>[mlg.btn],
+    desc:'Mulai REKAM (klik tombol merah logger), tutup panel, tinggalkan.',
+    why:'Logger kini bekerja sendirian merekam kejujuran pabrik — termasuk saat tak ada yang menonton. Panel ditutup & diberi label "ALAT UKUR TERPASANG — JANGAN DIMATIKAN".',
+    fx(){dispText(mlg.L,['● REC','672 titik / kanal'],['#ff5a5a','#7d8f84']);
+      toast('⏺ Logging berjalan… (simulasi: 7 hari berlalu)','info',2800);}},
+   {type:'act',aid:'READ',done:false,targets:()=>[mlg.S.mesh],
+    desc:'Seminggu kemudian: DOWNLOAD & baca profil di laptop.',
+    why:'Profil bicara: beban dasar malam 86 kW (kompresor bocor + lampu!), puncak shift 1 = 412 kW, dan Sabtu sore ada beban misterius 120 kW. Tiga temuan baru dari satu grafik.',
+    fx(){const g=mlg.S.g;g.fillStyle='#0c141d';g.fillRect(0,0,330,210);
+      g.strokeStyle='#46ff8e';g.lineWidth=3;g.beginPath();
+      for(let i=0;i<=66;i++){const d=i/66*7;
+        const v=.25+.55*Math.max(0,Math.sin((d%1)*Math.PI*1.1))*(d%7<5?1:.45);
+        g.lineTo(20+i*4.4,180-v*150);}
+      g.stroke();g.fillStyle='#ffd23f';g.font='700 18px Consolas';g.textAlign='left';
+      g.fillText('BASE 86kW · PEAK 412kW',20,30);mlg.S.tex.needsUpdate=true;
+      toast('💻 Profil 7 hari terbaca — baseline audit SAH!','ok',3000);sfx.big();}},
+  ],()=>{say('🎉 <b>Baseline terukur, bukan terkira!</b> 672 titik data menggantikan seribu asumsi. Rekomendasi auditmu kini berdiri di atas bukti.');
+    setTimeout(()=>showWin('logger'),2200);});
+
+  say('VOLTA di sini 🔌 Auditor sejati tidak berdebat dengan opini — ia memasang <b>power logger</b> dan membiarkan data bicara. Panel ini hidup, jadi: APD dulu, alat kemudian.');
+  $('#modTitle').textContent='J06·M2 — Pemasangan Power Logger';
+  $('#taskHead').textContent='PASANG · REKAM · BACA';}
+
+/* =====================================================================
+   MISI 25 — KONTROL FREKUENSI (Jalur 07 · Misi 2)
+   ===================================================================== */
+let mgv={};
+function buildGov(){
+  freshScene(0x32404e,0x0c1218); /* malam */
+  cam={theta:0,phi:1.2,r:7.5,target:new THREE.Vector3(0,1.8,-1)};
+  const floor=boxT(16,.1,10,TEX.concrete());floor.position.y=-.05;scene.add(floor);
+  const wall=boxT(14,4.2,.2,TEX.metal(),{metalness:.25});wall.position.set(0,2.1,-3.2);scene.add(wall);
+  /* layar frekuensi besar */
+  const frame=boxT(2.8,1.8,.16,TEX.metal(),{metalness:.4});frame.position.set(-2.4,2.5,-3.1);scene.add(frame);
+  frame.add(label('FREKUENSI SISTEM',.8).translateY(1.15));
+  mgv.F=makeDisplay(2.5,1.5,420,260);
+  mgv.F.mesh.position.set(-2.4,2.5,-3.0);scene.add(mgv.F.mesh);
+  actMesh(mgv.F.mesh,'FREQ');
+  /* panel governor & AVR */
+  mgv.gv=box(.5,.34,.2,0xcc8830);mgv.gv.position.set(.6,2.2,-3.05);scene.add(mgv.gv);
+  actMesh(mgv.gv,'GOV');
+  scene.add(label('GOVERNOR ▲',.6,'#5fd4ff').translateX(.6).translateY(2.6).translateZ(-3.0));
+  mgv.avr=box(.5,.34,.2,0x2b3a4a);mgv.avr.position.set(1.6,2.2,-3.05);scene.add(mgv.avr);
+  actMesh(mgv.avr,'AVR');
+  scene.add(label('AVR',.6,'#5fd4ff').translateX(1.6).translateY(2.6).translateZ(-3.0));
+  /* layar MW & tegangan */
+  mgv.M=makeDisplay(1.6,.6,360,140);
+  mgv.M.mesh.position.set(1.1,1.45,-3.0);scene.add(mgv.M.mesh);
+  /* logsheet */
+  mgv.logb=box(.5,.66,.05,0xe8e4d8);mgv.logb.position.set(3.4,1.8,-3.08);scene.add(mgv.logb);
+  actMesh(mgv.logb,'LOG');
+  scene.add(label('LOGSHEET',.55,'#5fd4ff').translateX(3.4).translateY(2.35).translateZ(-3.0));
+  /* turbin di latar */
+  const turb=cyl(.55,.7,2.2,0x9aa7b4);turb.rotation.z=Math.PI/2;turb.position.set(-4.8,1.0,-.6);scene.add(turb);
+  scene.add(label('UNIT 2 · ONLINE',.7).translateX(-4.8).translateY(1.9).translateZ(-.6));
+
+  mgv.f=49.80;mgv.mw=56;mgv.kv=11.0;mgv.raise=false;mgv.avrOk=false;
+  function drawF(){
+    dispText(mgv.F,[mgv.f.toFixed(2)+' Hz',mgv.f>=49.99?'NORMAL ✓':'⚠ DI BAWAH NOMINAL'],
+      [mgv.f>=49.99?'#46ff8e':'#ff5a5a',mgv.f>=49.99?'#46ff8e':'#ffd23f']);
+    dispText(mgv.M,[mgv.mw.toFixed(1)+' MW · '+mgv.kv.toFixed(1)+' kV'],
+      [mgv.avrOk?'#46ff8e':'#eaf2fb']);}
+  drawF();
+  moduleTick=(dt)=>{
+    if(mgv.raise&&mgv.f<50.0){mgv.f=Math.min(50.0,mgv.f+dt*.022);
+      mgv.mw=Math.min(62,mgv.mw+dt*.7);
+      if(!mgv.avrOk)mgv.kv=Math.max(10.7,mgv.kv-dt*.03);
+      drawF();}};
+
+  startSeq([
+   {type:'act',aid:'FREQ',done:false,targets:()=>[mgv.F.mesh],
+    desc:'Amati LAYAR FREKUENSI: konfirmasi kondisi & perintah dispatcher.',
+    why:'49,80 Hz: seluruh sistem kekurangan pembangkitan. Dispatcher: "Unit 2, naikkan pembebanan 6 MW." Operator tak menebak — ia mengonfirmasi angka & perintah sebelum menyentuh apapun.',
+    fx(){toast('📻 "Unit 2, naikkan 6 MW — frekuensi sistem 49,80." SIAP LAKSANAKAN.','info',3000);
+      mgv.F.mesh.userData.aid='STAB';}},
+   {type:'act',aid:'GOV',done:false,targets:()=>[mgv.gv],
+    desc:'Naikkan setpoint GOVERNOR bertahap (klik panel governor).',
+    why:'Governor membuka katup uap → turbin menyumbang MW lebih → frekuensi sistem merangkak naik. Bertahap sesuai ramp rate: logam turbin butuh waktu memuai merata.',
+    fx(){mgv.raise=true;beep(140,.5,'sine',.07);
+      toast('🎚️ Setpoint +6 MW — uap bertambah, perhatikan frekuensi naik…','ok',2800);}},
+   {type:'act',aid:'AVR',done:false,targets:()=>[mgv.avr],
+    desc:'Beban naik menyeret tegangan — jaga 11 kV via AVR.',
+    why:'Saat MW naik, kebutuhan eksitasi ikut berubah. AVR menambah arus medan agar tegangan terminal tetap 11 kV. MW dan MVAr dijaga dua kenop berbeda — keduanya tanggung jawabmu.',
+    fx(){mgv.avrOk=true;mgv.kv=11.0;drawF();
+      toast('⚡ Eksitasi disesuaikan — tegangan kembali 11,0 kV.','ok',2600);}},
+   {type:'act',aid:'STAB',done:false,targets:()=>[mgv.F.mesh],
+    check:()=>mgv.f>=49.99,
+    checkFail:'Frekuensi belum pulih! Tunggu jarum mencapai 50,00 Hz sebelum melapor stabil.',
+    desc:'Saat layar menunjukkan 50,00 Hz: klik layar untuk verifikasi STABIL.',
+    why:'Verifikasi bukan formalitas: melapor "normal" saat masih 49,9 = data palsu bagi dispatcher yang sedang menyeimbangkan se-pulau Jawa.',
+    fx(){toast('🎯 50,00 Hz — sistem kembali setimbang. Unit 2: 62 MW.','ok',2800);sfx.big();}},
+   {type:'act',aid:'LOG',done:false,targets:()=>[mgv.logb],
+    desc:'Tutup dengan LOGSHEET: catat kronologi & lapor dispatcher.',
+    why:'Jam, perintah, respon, parameter akhir — logsheet adalah memori pembangkit. Saat audit atau gangguan berikutnya, catatan inilah yang bicara.',
+    fx(){toast('📓 Logsheet terisi — "Unit 2 stabil 62 MW, frekuensi 50,00."','ok',2800);}},
+  ],()=>{say('🎉 <b>Respon sempurna!</b> Frekuensi adalah detak jantung sistem — dan malam ini kamu yang menjaganya tetap 50,00. Dispatcher mencatat namamu dengan senyum.');
+    setTimeout(()=>showWin('gov'),2200);});
+
+  say('VOLTA di sini 🎚️ Malam-malam frekuensi merosot ke <b>49,80 Hz</b> — sistem kekurangan daya dan dispatcher memanggil unitmu. Ingat: governor = MW, AVR = tegangan. Mulai dari layar frekuensi.');
+  $('#modTitle').textContent='J07·M2 — Kontrol Frekuensi & Pembebanan';
+  $('#taskHead').textContent='JAGA DETAK 50 Hz';}
+
+/* =====================================================================
+   MISI 26 — PERTOLONGAN KORBAN (Jalur 08 · Misi 2)
+   ===================================================================== */
+let mrc={};
+function buildRescue(){
+  freshScene(0xb8c6d4,0x141d28);
+  cam={theta:.1,phi:1.22,r:7,target:new THREE.Vector3(.5,1.2,-.5)};
+  const Z=room(0x5a5f66,0xccd4cf);
+  /* korban tergeletak */
+  mrc.body=box(1.5,.28,.5,0x4a6a8a);mrc.body.position.set(1.6,.2,.4);scene.add(mrc.body);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.17,16,12),
+    new THREE.MeshStandardMaterial({color:0xd8b090,roughness:.6}));
+  head.position.set(2.5,.22,.4);scene.add(head);
+  actMesh(mrc.body,'KORBAN');
+  scene.add(label('KORBAN ⚠',.8,'#ff8d8d').translateX(1.8).translateY(.95).translateZ(.4));
+  /* kabel ekstension menyala */
+  mrc.cable=cyl(.03,.03,1.6,0xd83a3a);mrc.cable.rotation.z=1.2;
+  mrc.cable.position.set(.6,.3,.5);scene.add(mrc.cable);
+  mrc.sparkT=0;
+  /* panel MCB di dinding */
+  const pnl=boxT(.8,1.0,.2,TEX.metal(),{metalness:.35});pnl.position.set(-3.4,2.0,Z);scene.add(pnl);
+  pnl.add(label('PANEL MCB',.7,'#5fd4ff').translateY(.75));
+  mrc.mcb=box(.16,.24,.1,0x2255aa);mrc.mcb.position.set(-3.4,2.0,Z+.16);scene.add(mrc.mcb);
+  actMesh(mrc.mcb,'MCB'); actMesh(pnl,'MCB');
+  /* tongkat kayu di rak */
+  mrc.stick=cyl(.035,.035,1.5,0x8a6a3a);mrc.stick.rotation.z=.4;
+  mrc.stick.position.set(-1.2,1.4,-3.0);scene.add(mrc.stick);
+  actMesh(mrc.stick,'STICK');
+  scene.add(label('TONGKAT KAYU KERING',.6,'#5fd4ff').translateX(-1.2).translateY(2.1).translateZ(-2.9));
+  /* telepon dinding */
+  mrc.tel=box(.26,.4,.12,0xd83a3a);mrc.tel.position.set(3.6,1.9,Z+.08);scene.add(mrc.tel);
+  actMesh(mrc.tel,'TELP');
+  scene.add(label('TELEPON DARURAT',.6,'#5fd4ff').translateX(3.6).translateY(2.4).translateZ(Z+.1));
+  /* papan laporan */
+  mrc.rep=box(.7,.5,.05,0xe8e4d8);mrc.rep.position.set(5.0,1.5,Z+.06);scene.add(mrc.rep);
+  actMesh(mrc.rep,'LAPOR');
+  scene.add(label('FORM INSIDEN',.55,'#5fd4ff').translateX(5.0).translateY(1.95).translateZ(Z+.1));
+
+  mrc.live=true;
+  moduleTick=(dt,T)=>{if(mrc.live){mrc.sparkT+=dt;
+    if(mrc.sparkT>.55){mrc.sparkT=0;spark(new THREE.Vector3(1.0,.32,.5),0xffd23f);}}};
+
+  startSeq([
+   {type:'act',aid:'MCB',done:false,targets:()=>[mrc.mcb],
+    desc:'STOP! Jangan sentuh korban — PUTUS SUMBER dulu (klik panel MCB).',
+    why:'Korban masih kontak dengan konduktor hidup: tubuhnya bertegangan. Menyentuhnya = arus mengalir lewat DUA tubuh. Penolong mati tidak menolong siapa-siapa.',
+    fx(){mrc.live=false;mrc.mcb.rotation.x=.5;mrc.cable.material.color.setHex(0x666666);
+      toast('🔌 MCB OFF — sumber listrik terputus.','ok',2600);}},
+   {type:'act',aid:'STICK',done:false,targets:()=>[mrc.stick],
+    desc:'Singkirkan kabel dari korban memakai TONGKAT KAYU kering.',
+    why:'Lapis kedua pertahanan: walau MCB sudah OFF, perlakukan konduktor sebagai hidup sampai terbukti tidak. Kayu/plastik KERING — bahan basah menghantarkan.',
+    fx(){mrc.cable.position.set(-.4,.25,1.4);mrc.cable.rotation.z=.2;
+      toast('🪵 Kabel tersingkir — korban bebas dari kontak.','ok',2400);}},
+   {type:'act',aid:'TELP',done:false,targets:()=>[mrc.tel],
+    desc:'Panggil bantuan: telepon 119 & tim ER pabrik.',
+    why:'Aktivasi bantuan SEBELUM sibuk sendirian: sebut lokasi persis, jenis insiden (sengatan listrik), kondisi korban. Ambulans yang berangkat sekarang tiba 10 menit lebih cepat.',
+    fx(){toast('📞 "Insiden listrik workshop B, korban 1, tidak sadar — kirim medis!"','ok',3000);}},
+   {type:'act',aid:'KORBAN',done:false,targets:()=>[mrc.body],
+    desc:'Kini aman menyentuh: cek RESPONS & NAPAS korban, mulai pertolongan.',
+    why:'Cek respons (panggil, tepuk), cek napas 10 detik. Tidak bernapas = mulai CPR: 30 kompresi : 2 napas, 100–120×/menit. Henti jantung listrik sering bisa kembali — jika CPR datang cepat.',
+    fx(){toast('❤️ Korban bernapas lemah → posisi pemulihan, selimuti, dampingi.','ok',3200);}},
+   {type:'act',aid:'LAPOR',done:false,targets:()=>[mrc.rep],
+    desc:'Setelah korban tertangani: amankan area & isi FORM INSIDEN.',
+    why:'Kabel terkelupas itu masih ada — korban berikutnya menunggu bila tak dilaporkan. Investigasi mencari akar: kabel tua? penyalahgunaan? tak ada inspeksi? Sistem yang diperbaiki, bukan orang yang disalahkan.',
+    fx(){toast('📋 Insiden terlapor — area di-barikade, investigasi dijadwalkan.','ok',3000);sfx.big();}},
+  ],()=>{say('🎉 <b>Penyelamatan tanpa korban kedua.</b> Kamu menahan naluri demi urutan yang benar: putus → pisahkan → panggil → tolong → laporkan. Hafalkan — semoga tak pernah terpakai.');
+    setTimeout(()=>showWin('rescue'),2200);});
+
+  say('VOLTA di sini, dan ini serius 🚨 Ada korban tersengat — dan ujian sesungguhnya adalah <b>menahan diri untuk TIDAK langsung menyentuhnya</b>. Putus sumber dulu. Selalu. Mulai!');
+  $('#modTitle').textContent='J08·M2 — Pertolongan Korban Sengatan';
+  $('#taskHead').textContent='PUTUS → PISAH → PANGGIL → TOLONG';}
+
+/* =====================================================================
+   MISI 27 — SITE SURVEY PLTS (Jalur 09 · Misi 2)
+   ===================================================================== */
+let msv={};
+function buildSurvey(){
+  freshScene(0xcfe2f0,0x16242f);
+  cam={theta:-.1,phi:1.12,r:9,target:new THREE.Vector3(0,2.2,-1)};
+  const ground=boxT(20,.1,13,TEX.concrete());ground.position.y=-.05;scene.add(ground);
+  /* pabrik + atap luas */
+  const fab=boxT(8,2.6,5,TEX.plaster());fab.position.set(-2.2,1.3,-2.6);scene.add(fab);
+  fab.add(label('PT RASA ABADI',.95).translateY(1.75));
+  msv.roof=box(8.4,.12,5.4,0x8a93a0,{roughness:.6});msv.roof.position.set(-2.2,2.72,-2.6);scene.add(msv.roof);
+  actMesh(msv.roof,'ROOF');
+  scene.add(label('ATAP — KLIK UNTUK MENGUKUR',.75,'#ffd23f').translateX(-2.2).translateY(3.4).translateZ(-2.6));
+  /* AC & exhaust di atap (pengurang area) */
+  const acu=box(.8,.5,.6,0xe8edf2);acu.position.set(-4.2,3.0,-3.4);scene.add(acu);
+  const exh=cyl(.25,.3,.7,0x8a8a8a);exh.position.set(-.4,3.1,-1.6);scene.add(exh);
+  /* meja: tagihan */
+  const tbl=boxT(1.4,.07,.8,TEX.wood());tbl.position.set(3.4,.95,.8);scene.add(tbl);
+  const tleg=boxT(.08,.95,.08,TEX.wood());tleg.position.set(3.4,.47,.8);scene.add(tleg);
+  msv.bill=box(.5,.02,.7,0xf0ead8);msv.bill.position.set(3.4,1.0,.8);scene.add(msv.bill);
+  actMesh(msv.bill,'BILL');
+  scene.add(label('TAGIHAN 12 BULAN',.6,'#5fd4ff').translateX(3.4).translateY(1.35).translateZ(.8));
+  /* panel meter */
+  const pm=box(.8,.9,.2,0x2d3a4a);pm.position.set(2.6,1.6,-2.0);scene.add(pm);
+  msv.D=makeDisplay(.7,.42,260,150);msv.D.mesh.position.set(2.6,1.65,-1.88);scene.add(msv.D.mesh);
+  dispText(msv.D,['SIANG 14:00','beban 196 kW'],['#5fd4ff','#eaf2fb']);
+  actMesh(msv.D.mesh,'METER'); actMesh(pm,'METER');
+  scene.add(label('PANEL METER',.6,'#5fd4ff').translateX(2.6).translateY(2.25).translateZ(-2.0));
+  /* kalkulator & proposal */
+  msv.calc=box(.3,.05,.4,0x33404e);msv.calc.position.set(4.6,1.0,-.4);scene.add(msv.calc);
+  actMesh(msv.calc,'CALC');
+  scene.add(label('SIZING TOOL',.55,'#5fd4ff').translateX(4.6).translateY(1.3).translateZ(-.4));
+  msv.prop=box(.8,.6,.05,0xe8e4d8);msv.prop.position.set(6.0,1.6,-1.6);scene.add(msv.prop);
+  actMesh(msv.prop,'PROP');
+  scene.add(label('PROPOSAL',.6,'#5fd4ff').translateX(6.0).translateY(2.1).translateZ(-1.6));
+
+  startSeq([
+   {type:'act',aid:'BILL',done:false,targets:()=>[msv.bill],
+    desc:'Mulai dari data: bedah TAGIHAN 12 bulan (klik dokumen).',
+    why:'Rp 38 jt/bln · 33.000 kWh · operasi 6 hari, shift siang dominan. Profil seperti ini sahabat PLTS: produksi panel & konsumsi pabrik sama-sama memuncak siang hari.',
+    fx(){toast('🧾 Rata-rata 33.000 kWh/bln — beban siang dominan ✓','info',2800);}},
+   {type:'act',aid:'ROOF',done:false,targets:()=>[msv.roof],
+    desc:'Naik & ukur ATAP: hitung area efektif (klik atap).',
+    why:'Atap bruto 900 m². Kurangi: AC & exhaust (60 m²), jalur perawatan (90 m²), tepi berbayang (150 m²) → efektif ±600 m². Survey jujur hari ini = tidak ada drama saat instalasi.',
+    fx(){toast('📐 Area efektif: ±600 m² · azimuth bagus · struktur kuat ✓','ok',3000);}},
+   {type:'act',aid:'METER',done:false,targets:()=>[msv.D.mesh],
+    desc:'Verifikasi BEBAN SIANG aktual di panel meter.',
+    why:'196 kW pada pukul 14:00 — jauh di atas calon produksi PLTS. Artinya seluruh produksi terserap sendiri (self-consumption 100%), skenario ekonomi terbaik PLTS atap.',
+    fx(){toast('📟 Beban siang 180–210 kW — produksi PLTS pasti terserap.','ok',2800);}},
+   {type:'act',aid:'CALC',done:false,targets:()=>[msv.calc],
+    desc:'SIZING: hitung kapasitas optimal (klik sizing tool).',
+    why:'600 m² ÷ 7 m²/kWp ≈ 85 kWp → ambil 84 kWp (modul bulat). Produksi ±110 MWh/tahun ≈ Rp 12,4 jt/bln penghematan — semua terserap karena beban siang 2× produksi.',
+    fx(){toast('🧮 Sizing: 84 kWp · ±110 MWh/thn · hemat ±Rp 12,4 jt/bln.','ok',3200);}},
+   {type:'act',aid:'PROP',done:false,targets:()=>[msv.prop],
+    desc:'Tutup dengan PROPOSAL ber-ROI (klik proposal).',
+    why:'Investasi ±Rp 840 jt vs hemat Rp 149 jt/tahun → payback ±5,6 tahun, lalu 20 tahun listrik nyaris gratis + cerita keberlanjutan untuk buyer mereka. Angka yang menjual dirinya sendiri.',
+    fx(){toast('🤝 Payback 5,6 tahun — direktur minta jadwal instalasi!','ok',3200);sfx.big();}},
+  ],()=>{say('🎉 <b>Deal dari data!</b> Tagihan → atap → beban → sizing → ROI. Survey teliti membuat proposalmu tak terbantahkan. Begitulah sales engineer bekerja.');
+    setTimeout(()=>showWin('survey'),2200);});
+
+  say('VOLTA di sini 📐 Lead PLTS baru! Aturan mainnya: <b>ukur dulu, janji belakangan</b>. Tagihan, atap, beban siang — tiga data itu menentukan apakah proposalmu ilmiah atau dongeng. Mulai dari tagihan.');
+  $('#modTitle').textContent='J09·M2 — Site Survey & Proposal PLTS';
+  $('#taskHead').textContent='UKUR DULU, JANJI BELAKANGAN';}
+
+/* =====================================================================
+   MISI 28 — ROADMAP REDUKSI (Jalur 11 · Misi 2)
+   ===================================================================== */
+let mrd={};
+function buildReduksi(){
+  freshScene(0xb8d0c0,0x121d18);
+  cam={theta:0,phi:1.18,r:7,target:new THREE.Vector3(0,1.9,-1)};
+  const Z=room(0x6b5a45,0xd8d2c4);
+  /* papan baseline */
+  const base=box(1.4,.9,.06,0x2b3a4a);base.position.set(-4.3,2.4,Z);scene.add(base);
+  base.add(label('BASELINE 1.240 tCO₂e',.7,'#ffd23f').translateY(.65));
+  /* 4 kartu strategi di dinding */
+  function card(x,txt,color,aid){
+    const c=box(1.15,1.0,.08,color);c.position.set(x,2.2,Z+.05);scene.add(c);
+    actMesh(c,aid);
+    c.add(label(txt,.62).translateY(.7));
+    return c;}
+  mrd.eff=card(-2.4,'EFISIENSI',0x2e6a4a,'EFF');
+  scene.add(label('VFD+LED · −180 t · hemat Rp',.5,'#8df0b8').translateX(-2.4).translateY(1.5).translateZ(Z+.1));
+  mrd.pv=card(-1.0,'PLTS ATAP',0x2a5a8a,'PV');
+  scene.add(label('500 kWp · −540 t',.5,'#9cc4ff').translateX(-1.0).translateY(1.5).translateZ(Z+.1));
+  mrd.rec=card(.4,'REC',0x8a7a2a,'REC');
+  scene.add(label('sisa listrik · −280 t',.5,'#ffe28d').translateX(.4).translateY(1.5).translateZ(Z+.1));
+  mrd.off=card(1.8,'OFFSET',0x6a4a2a,'OFF');
+  scene.add(label('residual · −240 t',.5,'#e8b88d').translateX(1.8).translateY(1.5).translateZ(Z+.1));
+  /* roadmap display */
+  mrd.D=makeDisplay(2.2,1.2,440,240);
+  mrd.D.mesh.position.set(4.2,2.3,Z+.06);scene.add(mrd.D.mesh);
+  dispText(mrd.D,['ROADMAP NET ZERO','susun strategi…'],['#5fd4ff','#7d8f84']);
+  actMesh(mrd.D.mesh,'ROAD');
+  scene.add(label('PAPAN ROADMAP',.7,'#5fd4ff').translateX(4.2).translateY(3.05).translateZ(Z+.1));
+  mrd.step=0;
+  function mark(c){c.material.emissive=new THREE.Color(0x1a4a2a);c.material.emissiveIntensity=.8;}
+
+  startSeq([
+   {type:'act',aid:'EFF',done:false,targets:()=>[mrd.eff],
+    desc:'Langkah 1 hierarki: pilih EFISIENSI lebih dulu.',
+    why:'Efisiensi (VFD, LED, setpoint) biaya per ton-nya NEGATIF — perusahaan justru hemat sambil menurunkan 180 t. Strategi lain dibeli; yang ini membayar dirinya sendiri. Selalu pertama.',
+    fx(){mark(mrd.eff);toast('1️⃣ Efisiensi: −180 tCO₂e + hemat Rp 420 jt/thn.','ok',2800);}},
+   {type:'act',aid:'PV',done:false,targets:()=>[mrd.pv],
+    desc:'Langkah 2: ganti sumber — PLTS ATAP 500 kWp.',
+    why:'Setelah konsumsi diperkecil, baru ganti sumbernya: PLTS memangkas pembelian listrik grid (Scope 2 = 81% baseline!). Mengurangi emisi NYATA di lokasi sendiri.',
+    fx(){mark(mrd.pv);toast('2️⃣ PLTS 500 kWp: −540 tCO₂e — potongan terbesar.','ok',2800);}},
+   {type:'act',aid:'REC',done:false,targets:()=>[mrd.rec],
+    desc:'Langkah 3: listrik grid tersisa → beli REC.',
+    why:'Listrik malam tetap dari PLN — atributnya dihijaukan dengan REC (Renewable Energy Certificate). Sah untuk klaim Scope 2 market-based, tapi perhatikan: ini klaim, bukan reduksi fisik.',
+    fx(){mark(mrd.rec);toast('3️⃣ REC menutup sisa listrik grid: −280 tCO₂e (market-based).','ok',2800);}},
+   {type:'act',aid:'OFF',done:false,targets:()=>[mrd.off],
+    desc:'Langkah TERAKHIR: offset untuk residual yang tak terhindarkan.',
+    why:'Genset darurat & logistik belum bisa nol — residual inilah yang di-offset (kredit karbon terverifikasi). Offset di awal = greenwashing; offset di akhir = penutup yang jujur.',
+    fx(){mark(mrd.off);toast('4️⃣ Offset residual 240 tCO₂e — kredit terverifikasi.','ok',2800);}},
+   {type:'act',aid:'ROAD',done:false,targets:()=>[mrd.D.mesh],
+    desc:'Kunci ROADMAP: target tahunan di papan (klik papan).',
+    why:'1.240 → 1.060 (2027, efisiensi) → 520 (2028, PLTS) → 240 (2029, REC) → net zero operasional 2030. Tiap angka punya proyek, anggaran & penanggung jawab — itulah bedanya roadmap dan slogan.',
+    fx(){dispText(mrd.D,['NET ZERO 2030 ✓','1.240→1.060→520→240→0'],['#46ff8e','#eaf2fb']);
+      toast('🗺️ Roadmap terkunci — siap dipresentasikan ke direksi & buyer!','ok',3200);sfx.big();}},
+  ],()=>{say('🎉 <b>Roadmap kredibel berdiri!</b> Kurangi → ganti sumber → klaim → offset terakhir. Buyer Eropa tak hanya dapat angka — mereka dapat rencana yang bisa diaudit.');
+    setTimeout(()=>showWin('reduksi'),2200);});
+
+  say('VOLTA di sini 📉 Baseline sudah, kini strateginya. Ujian hari ini soal <b>URUTAN</b>: empat kartu di dinding hanya benar dalam satu susunan — hierarki mitigasi. Yang termurah per ton selalu duluan.');
+  $('#modTitle').textContent='J11·M2 — Roadmap Reduksi Net Zero';
+  $('#taskHead').textContent='HIERARKI MITIGASI';}
+
+/* =====================================================================
+   MISI 29 — TROUBLESHOOTING SPKLU (Jalur 12 · Misi 2)
+   ===================================================================== */
+let mev={};
+function buildEvfix(){
+  freshScene(0x9fb6cc,0x101a26);
+  cam={theta:.2,phi:1.18,r:7,target:new THREE.Vector3(.3,1.4,-.5)};
+  const ground=boxT(18,.1,12,TEX.concrete());ground.position.y=-.05;scene.add(ground);
+  /* unit SPKLU error */
+  const evse=boxT(.9,2.1,.6,TEX.metal(),{metalness:.3});evse.position.set(0,1.05,-1.6);scene.add(evse);
+  const stripe=box(.92,.3,.62,0xb02020);stripe.position.set(0,1.75,-1.6);scene.add(stripe);
+  evse.add(label('SPKLU 25 kW',.8).translateY(1.35));
+  mev.S=makeDisplay(.55,.36,260,170);
+  mev.S.mesh.position.set(0,1.35,-1.29);scene.add(mev.S.mesh);
+  dispText(mev.S,['ERROR E-07','GROUND FAULT'],['#ff5a5a','#ff5a5a']);
+  actMesh(mev.S.mesh,'SCREEN');
+  mev.gun=box(.12,.3,.12,0x18242f);mev.gun.position.set(.55,1.0,-1.28);scene.add(mev.gun);
+  actMesh(mev.gun,'GUN');
+  scene.add(label('GUN CCS2',.5,'#5fd4ff').translateX(.62).translateY(1.32).translateZ(-1.2));
+  /* panel MCCB */
+  const wallc=boxT(2.2,2.4,.2,TEX.metal(),{metalness:.3});wallc.position.set(-3.2,1.2,-2.4);scene.add(wallc);
+  wallc.add(label('PANEL SUPLAI',.75).translateY(1.45));
+  mev.mccb=box(.42,.6,.16,0x223a55);mev.mccb.position.set(-3.2,1.4,-2.28);scene.add(mev.mccb);
+  actMesh(mev.mccb,'MCCB');
+  scene.add(label('MCCB',.55,'#5fd4ff').translateX(-3.2).translateY(1.95).translateZ(-2.2));
+  /* earth tester + batang pembumian */
+  const tbl=boxT(.8,.06,.5,TEX.wood());tbl.position.set(2.4,.8,.4);scene.add(tbl);
+  const tleg=boxT(.07,.8,.07,TEX.wood());tleg.position.set(2.4,.4,.4);scene.add(tleg);
+  mev.et=box(.32,.2,.24,0xd8b020);mev.et.position.set(2.4,.93,.4);scene.add(mev.et);
+  actMesh(mev.et,'ETEST');
+  scene.add(label('EARTH TESTER',.55,'#5fd4ff').translateX(2.4).translateY(1.25).translateZ(.4));
+  mev.rod=cyl(.04,.04,.8,0x6a8a5a);mev.rod.position.set(1.3,.35,-2.3);scene.add(mev.rod);
+  mev.klem=box(.16,.12,.14,0x8a5a2a);mev.klem.position.set(1.3,.72,-2.3);scene.add(mev.klem);
+  actMesh(mev.klem,'KLEM');
+  scene.add(label('KLEM PEMBUMIAN',.55,'#5fd4ff').translateX(1.3).translateY(1.05).translateZ(-2.2));
+  /* mobil menunggu */
+  const body=box(2.2,.55,1.1,0xc83a3a,{roughness:.35});body.position.set(3.6,.62,1.4);scene.add(body);
+  const cab=box(1.2,.4,1.0,0xc83a3a,{roughness:.3});cab.position.set(3.5,1.1,1.4);scene.add(cab);
+  [[-1,-.45],[1,-.45],[-1,.45],[1,.45]].forEach(w=>{
+    const wh=cyl(.25,.25,.18,0x14181d);wh.rotation.x=Math.PI/2;
+    wh.position.set(3.6+w[0]*.8,.27,1.4+w[1]);scene.add(wh);});
+  scene.add(label('PELANGGAN MENUNGGU…',.65,'#ffd23f').translateX(3.6).translateY(1.6).translateZ(1.4));
+
+  startSeq([
+   {type:'act',aid:'SCREEN',done:false,targets:()=>[mev.S.mesh],
+    desc:'Baca KODE ERROR di layar unit (klik layar).',
+    why:'E-07 = ground fault: unit mendeteksi pembumian di luar batas dan MENGUNCI diri — by design, karena tanpa bumi yang baik proteksi arus bocor DC tak bisa diandalkan. Mesin sudah memberi tahu; tinggal didengar.',
+    fx(){toast('📟 E-07: resistansi pembumian di luar batas — unit lockout.','info',3000);}},
+   {type:'act',aid:'MCCB',done:false,targets:()=>[mev.mccb],
+    desc:'Sebelum membuka apapun: ISOLASI unit — MCCB OFF.',
+    why:'Troubleshooting pada unit hidup = mengundang E-07 versi manusia. MCCB OFF + tunggu kapasitor internal discharge (lampu indikator padam) — baru kompartemen boleh dibuka.',
+    fx(){mev.mccb.rotation.x=.4;dispText(mev.S,['OFFLINE','—'],['#7d8f84','#7d8f84']);
+      mev.mccb.userData.aid='MCCB2'; /* klik berikutnya = energize ulang */
+      toast('🔌 MCCB OFF — unit terisolasi, aman dikerjakan.','ok',2400);}},
+   {type:'act',aid:'ETEST',done:false,targets:()=>[mev.et],
+    desc:'UKUR pembumian dengan EARTH TESTER (klik alat).',
+    why:'Jangan menebak — ukur. Hasil: 8,4 Ω, padahal komisioning dulu 1,2 Ω dan standar <5 Ω. Sesuatu memburuk di jalur pembumian dalam 6 bulan terakhir.',
+    fx(){toast('📏 Pembumian: 8,4 Ω (dulu 1,2 Ω) — ada yang memburuk!','bad',2800);}},
+   {type:'act',aid:'KLEM',done:false,targets:()=>[mev.klem],
+    desc:'Telusuri jalurnya: periksa KLEM di batang pembumian.',
+    why:'Tersangka utama koneksi luar ruangan: korosi. Benar — klem berkarat & kendor dimakan cuaca rest area. Bersihkan, beri vaselin konduktif, kencangkan. Ukur ulang: 1,3 Ω ✓',
+    fx(){mev.klem.material.color.setHex(0xd8a020);
+      toast('🔧 Klem dibersihkan & dikencangkan → ukur ulang: 1,3 Ω ✓','ok',3000);}},
+   {type:'act',aid:'MCCB2',done:false,targets:()=>[mev.mccb],
+    desc:'Energize ulang: MCCB ON — perhatikan layar unit.',
+    why:'Unit boot & mengulang self-test pembumiannya. Kali ini 1,3 Ω lolos — lockout terangkat otomatis. Error yang dipahami akarnya tidak akan kembali besok pagi.',
+    fx(){mev.mccb.rotation.x=0;dispText(mev.S,['SIAP','TAP KARTU'],['#46ff8e','#5fd4ff']);
+      toast('⚡ Self-test LOLOS — E-07 hilang, unit SIAP.','ok',2600);}},
+   {type:'act',aid:'GUN',done:false,targets:()=>[mev.gun],
+    desc:'Uji akhir: colok GUN ke mobil pelanggan.',
+    why:'Perbaikan belum selesai sebelum transaksi nyata berhasil. Handshake pilot → charging 24,1 kW. Catat di laporan: akar masalah, perbaikan, hasil ukur — bekal preventive maintenance berikutnya.',
+    fx(){dispText(mev.S,['CHARGING','24,1 kW'],['#2ee87a','#2ee87a']);
+      toast('🔋 CHARGING 24,1 kW — pelanggan tersenyum!','ok',3000);sfx.big();}},
+  ],()=>{say('🎉 <b>Gangguan tuntas lewat pengukuran!</b> Kode error → isolasi → ukur → akar (klem korosi) → bukti. Tanpa satu pun suku cadang diganti sia-sia.');
+    setTimeout(()=>showWin('evfix'),2200);});
+
+  say('VOLTA di sini 🛠️ SPKLU-mu mogok dengan <b>ERROR E-07</b> dan antrean memanjang. Teknisi panik mengganti parts; kita membaca kode & MENGUKUR. Mulai dari layar unit.');
+  $('#modTitle').textContent='J12·M2 — Troubleshooting SPKLU';
+  $('#taskHead').textContent='BACA KODE · UKUR · PERBAIKI';}
+
+/* =====================================================================
+   MISI 30 — PENGELOLAAN ABU PLTSa (Jalur 13 · Misi 2)
+   ===================================================================== */
+let mab={};
+function buildAbu(){
+  freshScene(0xa8b8a8,0x101a14);
+  cam={theta:.1,phi:1.2,r:9,target:new THREE.Vector3(0,1.5,-.8)};
+  const ground=boxT(22,.1,13,TEX.gravel());ground.position.y=-.05;scene.add(ground);
+  /* timbangan + tumpukan bottom ash */
+  mab.scale=boxT(2.2,.12,1.4,TEX.metal(),{metalness:.4});mab.scale.position.set(-6.0,.08,.6);scene.add(mab.scale);
+  actMesh(mab.scale,'BOTTOM');
+  const pile=new THREE.Mesh(new THREE.ConeGeometry(.8,.7,18),
+    new THREE.MeshStandardMaterial({color:0x6a655c,roughness:.95}));
+  pile.position.set(-6.0,.5,.6);scene.add(pile);
+  actMesh(pile,'BOTTOM');
+  scene.add(label('BOTTOM ASH + TIMBANGAN',.7,'#5fd4ff').translateX(-6.0).translateY(1.4).translateZ(.6));
+  /* drum B3 fly ash */
+  mab.drum=cyl(.45,.45,1.0,0xd8b020);mab.drum.position.set(-2.6,.55,-.8);scene.add(mab.drum);
+  const dlid=cyl(.46,.46,.06,0x2d2d2d);dlid.position.set(-2.6,1.08,-.8);scene.add(dlid);
+  actMesh(mab.drum,'FLY');
+  scene.add(label('DRUM B3 — FLY ASH ☣',.7,'#ffd23f').translateX(-2.6).translateY(1.55).translateZ(-.8));
+  /* filter housing latar */
+  const filt=boxT(1.6,2.4,1.2,TEX.metal(),{metalness:.3});filt.position.set(-2.6,1.2,-3.4);scene.add(filt);
+  scene.add(label('BAG FILTER',.7).translateX(-2.6).translateY(2.75).translateZ(-3.4));
+  /* lab kit */
+  const tbl=boxT(1.6,.07,.8,TEX.wood());tbl.position.set(1.0,.95,.4);scene.add(tbl);
+  const tleg=boxT(.08,.95,.08,TEX.wood());tleg.position.set(1.0,.47,.4);scene.add(tleg);
+  mab.lab=box(.4,.3,.3,0xe8edf2);mab.lab.position.set(1.0,1.14,.4);scene.add(mab.lab);
+  actMesh(mab.lab,'UJI');
+  scene.add(label('LAB KIT — TCLP',.6,'#5fd4ff').translateX(1.0).translateY(1.5).translateZ(.4));
+  /* tablet manifest */
+  mab.tab=box(.34,.5,.04,0x18242f);mab.tab.position.set(3.0,1.5,-1.0);scene.add(mab.tab);
+  actMesh(mab.tab,'MANIFEST');
+  scene.add(label('FESTRONIK',.6,'#5fd4ff').translateX(3.0).translateY(1.95).translateZ(-1.0));
+  /* display mass balance */
+  mab.D=makeDisplay(1.8,1.0,400,220);
+  mab.D.mesh.position.set(5.6,1.8,-1.6);mab.D.mesh.rotation.y=-.3;scene.add(mab.D.mesh);
+  dispText(mab.D,['MASS BALANCE','input 8,2 t · output ?'],['#5fd4ff','#7d8f84']);
+  actMesh(mab.D.mesh,'CALC');
+  const pole=cyl(.04,.04,1.3,0x666666);pole.position.set(5.6,.65,-1.6);scene.add(pole);
+
+  startSeq([
+   {type:'act',aid:'BOTTOM',done:false,targets:()=>[mab.scale],
+    desc:'Timbang BOTTOM ASH dari ruang bakar (klik timbangan).',
+    why:'8,2 ton sampah menyisakan ±20% bottom ash. Hasil timbang 1,64 t — angka pertama neraca massa. Bottom ash relatif inert; setelah uji bisa jadi agregat jalan.',
+    fx(){toast('⚖️ Bottom ash: 1,64 t tercatat.','ok',2400);}},
+   {type:'act',aid:'FLY',done:false,targets:()=>[mab.drum],
+    desc:'Kemas FLY ASH dari bag filter ke DRUM B3 (klik drum).',
+    why:'Fly ash hanya ±3% massa tapi paling berbahaya: logam berat & sisa dioksin terkonsentrasi di partikel halusnya. Wajib kemasan tertutup berlabel B3 + simbol & nomor — tak ada pengecualian.',
+    fx(){toast('☣ Fly ash 0,25 t terkemas — label B3 + simbol terpasang.','ok',2800);}},
+   {type:'act',aid:'UJI',done:false,targets:()=>[mab.lab],
+    desc:'Ambil sampel & jalankan UJI karakteristik (klik lab kit).',
+    why:'Uji TCLP menjawab: apakah abu MELEPASKAN kontaminan saat terkena air? Bottom ash lolos = boleh dimanfaatkan; fly ash melebihi baku = tetap jalur B3 ke pengolah berizin.',
+    fx(){toast('🧪 TCLP: bottom ash LOLOS (pemanfaatan) · fly ash = B3.','ok',3000);}},
+   {type:'act',aid:'MANIFEST',done:false,targets:()=>[mab.tab],
+    desc:'Isi MANIFEST elektronik (festronik) untuk fly ash.',
+    why:'Festronik melacak B3 dari penghasil → transporter → pengolah berizin, real-time ke KLHK. Drum tanpa manifest = limbah "hantu" — dan pidana bagi penghasilnya.',
+    fx(){toast('📲 Manifest terbit: drum F-2206 → PT pengolah berizin, besok 09:00.','ok',3000);}},
+   {type:'act',aid:'CALC',done:false,targets:()=>[mab.D.mesh],
+    desc:'Tutup shift: hitung MASS BALANCE harian (klik papan).',
+    why:'8,2 t masuk = 1,2 MW×jam listrik + 1,64 t bottom + 0,25 t fly + uap air & gas bersih. Neraca seimbang = operasi jujur; selisih besar = ada yang lolos tak tercatat — alarm bagi auditor.',
+    fx(){dispText(mab.D,['BALANCE ✓','8,2t → 6,3MWh + 1,89t abu'],['#46ff8e','#eaf2fb']);
+      toast('🧮 Mass balance seimbang — shift resmi ditutup.','ok',3000);sfx.big();}},
+  ],()=>{say('🎉 <b>Shift tuntas sampai gram terakhir!</b> Listrik mengalir, abu tercatat, B3 termanifest. PLTSa yang baik dinilai bukan saat sampah masuk — tapi saat abunya keluar.');
+    setTimeout(()=>showWin('abu'),2200);});
+
+  say('VOLTA di sini 🧪 Listrik sudah dijual, tapi PLTSa belum selesai: <b>abu punya hukumnya sendiri</b>. Bottom ash ditimbang, fly ash diperlakukan sebagai B3 — dan semuanya harus seimbang di neraca. Mulai dari timbangan.');
+  $('#modTitle').textContent='J13·M2 — Mass Balance & Pengelolaan Abu';
+  $('#taskHead').textContent='TIMBANG · KEMAS · MANIFEST';}
+
+/* =====================================================================
+   MISI 31 — REFUELING H2 & FUEL CELL (Jalur 14 · Misi 2)
+   ===================================================================== */
+let mfc={};
+function buildFcell(){
+  freshScene(0xa8c4d8,0x0e1a22);
+  cam={theta:-.15,phi:1.18,r:9,target:new THREE.Vector3(0,1.6,-.6)};
+  const ground=boxT(20,.1,12,TEX.concrete());ground.position.y=-.05;scene.add(ground);
+  /* dispenser */
+  const disp=boxT(.8,1.9,.6,TEX.metal(),{metalness:.35});disp.position.set(-3.0,.95,-1.8);scene.add(disp);
+  disp.add(label('DISPENSER H₂ 350 bar',.75).translateY(1.25));
+  mfc.D=makeDisplay(.6,.4,260,170);
+  mfc.D.mesh.position.set(-3.0,1.35,-1.49);scene.add(mfc.D.mesh);
+  dispText(mfc.D,['0,0 kg','0 bar · STANDBY'],['#5fd4ff','#7d8f84']);
+  actMesh(mfc.D.mesh,'FILL');
+  /* nozzle di holster */
+  mfc.noz=box(.13,.32,.13,0x18242f);mfc.noz.position.set(-2.55,1.0,-1.5);scene.add(mfc.noz);
+  actMesh(mfc.noz,'NOZZLE');
+  scene.add(label('NOZZLE',.5,'#5fd4ff').translateX(-2.45).translateY(1.35).translateZ(-1.45));
+  /* kabel bonding */
+  mfc.bond=box(.3,.1,.12,0xd8b020);mfc.bond.position.set(-3.5,.4,-1.2);scene.add(mfc.bond);
+  actMesh(mfc.bond,'BOND');
+  scene.add(label('KABEL BONDING',.55,'#5fd4ff').translateX(-3.6).translateY(.75).translateZ(-1.1));
+  /* leak detector */
+  mfc.leak=box(.2,.3,.1,0xffd23f);mfc.leak.position.set(-1.7,1.0,-.4);scene.add(mfc.leak);
+  actMesh(mfc.leak,'LEAK');
+  scene.add(label('LEAK DETECTOR',.55,'#5fd4ff').translateX(-1.7).translateY(1.35).translateZ(-.4));
+  /* bus fuel cell */
+  const bbody=box(4.6,1.5,1.4,0x2a8a6a,{roughness:.4});bbody.position.set(2.2,1.15,-.4);scene.add(bbody);
+  const bwin=box(4.0,.45,1.42,0x9fd8ff,{roughness:.2});bwin.position.set(2.2,1.62,-.4);scene.add(bwin);
+  [[-1.6,-.7],[1.6,-.7],[-1.6,.7],[1.6,.7]].forEach(w=>{
+    const wh=cyl(.32,.32,.2,0x14181d);wh.rotation.x=Math.PI/2;
+    wh.position.set(2.2+w[0],.34,-.4+w[1]);scene.add(wh);});
+  scene.add(label('BUS FUEL CELL KOTA',.8).translateX(2.2).translateY(2.25).translateZ(-.4));
+  mfc.recp=cyl(.07,.07,.1,0x444444);mfc.recp.rotation.z=Math.PI/2;
+  mfc.recp.position.set(.1,1.2,.32);scene.add(mfc.recp);
+  scene.add(label('RECEPTACLE',.45).translateX(.1).translateY(.9).translateZ(.6));
+  actMesh(bbody,'FC');
+  mfc.fcLamp=new THREE.Mesh(new THREE.SphereGeometry(.07,12,10),
+    new THREE.MeshStandardMaterial({color:0x224433,emissive:0x000000}));
+  mfc.fcLamp.position.set(4.0,1.95,-.4);scene.add(mfc.fcLamp);
+
+  mfc.kg=0;mfc.bar=0;mfc.filling=false;
+  moduleTick=(dt)=>{if(mfc.filling&&mfc.bar<350){
+    mfc.bar=Math.min(350,mfc.bar+dt*70);mfc.kg=Math.min(24,mfc.kg+dt*4.8);
+    dispText(mfc.D,[mfc.kg.toFixed(1)+' kg',Math.round(mfc.bar)+' bar · '+(mfc.bar>=350?'PENUH ✓':'MENGISI')],
+      [mfc.bar>=350?'#46ff8e':'#5fd4ff',mfc.bar>=350?'#46ff8e':'#ffd23f']);}};
+
+  startSeq([
+   {type:'act',aid:'BOND',done:false,targets:()=>[mfc.bond],
+    desc:'Pasang KABEL BONDING ke rangka bus SEBELUM apapun.',
+    why:'Bus yang berjalan mengumpulkan muatan statis — dan percikan statis sekecil apapun cukup menyulut H₂. Bonding menyamakan potensial dispenser–kendaraan: percikan tak pernah lahir.',
+    fx(){mfc.bond.position.set(.0,.5,.5);
+      toast('🔗 Bonding terpasang — potensial tersamakan.','ok',2400);}},
+   {type:'act',aid:'LEAK',done:false,targets:()=>[mfc.leak],
+    desc:'LEAK CHECK: periksa nozzle & receptacle dengan detector.',
+    why:'Sambungan bertekanan adalah titik bocor favorit. Detector menyapu konektor: 0 ppm. Di stasiun H₂, leak check bukan sebelum shift — tapi sebelum SETIAP pengisian.',
+    fx(){toast('🟢 Konektor bersih: 0 ppm — aman menyambung.','ok',2400);}},
+   {type:'act',aid:'NOZZLE',done:false,targets:()=>[mfc.noz],
+    desc:'Sambungkan NOZZLE ke receptacle bus (klik nozzle).',
+    why:'Nozzle H₂ mengunci mekanis & menjalin komunikasi data (IR) dengan kendaraan: suhu & tekanan tangki dipantau real-time selama pengisian. Tanpa handshake, dispenser menolak mengalirkan.',
+    fx(){mfc.noz.position.set(.1,1.2,.5);
+      toast('🔌 Nozzle terkunci — handshake data OK.','ok',2400);}},
+   {type:'act',aid:'FILL',done:false,targets:()=>[mfc.D.mesh],
+    desc:'Mulai DISPENSING (klik layar dispenser) — pantau kg & bar.',
+    why:'Protokol SAE J2601 mengatur laju kenaikan tekanan: gas yang dikompresi memanas, dan tangki komposit punya batas suhu. Pengisian benar = cepat TAPI tetap di bawah 85°C.',
+    fx(){mfc.filling=true;beep(220,.5,'sine',.07);
+      toast('⛽ Dispensing dimulai — target 24 kg @ 350 bar…','ok',2600);}},
+   {type:'act',aid:'FC',done:false,targets:()=>[bbody],
+    check:()=>mfc.bar>=350,
+    checkFail:'Tangki belum penuh! Tunggu display menunjukkan 350 bar sebelum melepas & start.',
+    desc:'Setelah 350 bar: lepas nozzle & START fuel cell bus (klik bus).',
+    why:'Di dalam stack, elektrolisis berjalan mundur: H₂ + O₂ → listrik + air murni. Motor berdengung halus, dan dari knalpot hanya menetes air. Masa depan transportasi berat baru saja menyala.',
+    fx(){mfc.filling=false;mfc.noz.position.set(-2.55,1.0,-1.5);
+      mfc.fcLamp.material.emissive.setHex(0x2ee87a);mfc.fcLamp.material.emissiveIntensity=1;
+      toast('🚌 FUEL CELL ON — 24 kg H₂, jangkauan ±350 km. Knalpot: air!','ok',3200);sfx.big();}},
+  ],()=>{say('🎉 <b>Pengisian perdana sukses!</b> Bonding → leak check → handshake → protokol → fuel cell hidup. Hidrogenmu kini mengangkut penumpang — dengan knalpot meneteskan air murni.');
+    setTimeout(()=>showWin('fcell'),2200);});
+
+  say('VOLTA di sini 🚌 Hidrogen produksimu dijemput pelanggan pertama: bus fuel cell! Ritual 350 bar dimulai dengan benda paling sederhana: <b>kabel bonding</b> — karena statis + H₂ = tidak ada kesempatan kedua.');
+  $('#modTitle').textContent='J14·M2 — Refueling H₂ & Fuel Cell';
+  $('#taskHead').textContent='BOND · CHECK · FILL · DRIVE';}
+
+/* =====================================================================
+   MISI 32 — ALARM TERMAL BESS (Jalur 15 · Misi 2)
+   ===================================================================== */
+let mth={};
+function buildThermal(){
+  freshScene(0x9fb0c4,0x101822);
+  cam={theta:.1,phi:1.18,r:8,target:new THREE.Vector3(0,1.6,-1)};
+  const ground=boxT(18,.1,11,TEX.concrete());ground.position.y=-.05;scene.add(ground);
+  /* container & rack 2 menyala */
+  const cont=boxT(3.6,2.4,1.6,TEX.metal(),{metalness:.3});cont.position.set(-2.6,1.2,-2.0);scene.add(cont);
+  cont.add(label('BESS 1 MWh',.95).translateY(1.5));
+  mth.rack=box(.9,1.8,.1,0x2b3a4a);mth.rack.position.set(-2.2,1.2,-1.14);scene.add(mth.rack);
+  mth.hot=new THREE.Mesh(new THREE.SphereGeometry(.08,14,12),
+    new THREE.MeshStandardMaterial({color:0xff8030,emissive:0xff8030,emissiveIntensity:1}));
+  mth.hot.position.set(-2.2,1.5,-1.05);scene.add(mth.hot);
+  scene.add(label('RACK 2 · MODUL 7',.6,'#ff8d8d').translateX(-2.2).translateY(2.3).translateZ(-1.05));
+  /* breaker rack */
+  mth.brk=box(.2,.3,.12,0xffd23f);mth.brk.position.set(-3.3,1.0,-1.12);scene.add(mth.brk);
+  actMesh(mth.brk,'RACK');
+  scene.add(label('DC BREAKER RACK 2',.5,'#5fd4ff').translateX(-3.4).translateY(.65).translateZ(-1.05));
+  /* layar BMS alarm */
+  mth.B=makeDisplay(1.5,.9,340,210);
+  mth.B.mesh.position.set(.4,2.0,-2.0);scene.add(mth.B.mesh);
+  dispText(mth.B,['⚠ ALARM','R2-M7: 41,2°C ↑'],['#ff5a5a','#ffd23f']);
+  actMesh(mth.B.mesh,'BMS');
+  scene.add(label('LAYAR BMS / EMS',.65,'#5fd4ff').translateX(.4).translateY(2.65).translateZ(-2.0));
+  /* HVAC unit */
+  mth.hvac=box(.9,.6,.5,0xe8edf2);mth.hvac.position.set(-2.6,2.75,-2.0);scene.add(mth.hvac);
+  actMesh(mth.hvac,'HVAC');
+  scene.add(label('HVAC',.55,'#5fd4ff').translateX(-2.6).translateY(3.25).translateZ(-2.0));
+  /* PCS */
+  mth.pcs=boxT(1.2,1.7,.8,TEX.metal(),{metalness:.3});mth.pcs.position.set(2.6,.9,-2.0);scene.add(mth.pcs);
+  mth.pcs.add(label('PCS 500 kW',.7).translateY(1.15));
+  actMesh(mth.pcs,'DERATE');
+  mth.P=makeDisplay(.9,.4,260,120);
+  mth.P.mesh.position.set(2.6,1.45,-1.58);scene.add(mth.P.mesh);
+  dispText(mth.P,['DISCHARGE','500 kW'],['#ffd23f','#eaf2fb']);
+  /* logsheet */
+  mth.logb=box(.5,.66,.05,0xe8e4d8);mth.logb.position.set(4.6,1.5,-2.04);scene.add(mth.logb);
+  actMesh(mth.logb,'LOG');
+  scene.add(label('LOG & LAPORAN',.55,'#5fd4ff').translateX(4.6).translateY(2.05).translateZ(-2.0));
+
+  mth.t=41.2;mth.cool=false;mth.derated=false;mth.iso=false;
+  moduleTick=(dt)=>{
+    if(!mth.cool)mth.t+=dt*.12;
+    else mth.t=Math.max(29,mth.t-dt*(mth.derated?(mth.iso?1.4:0.9):0.35));
+    if(mth.t<35){mth.hot.material.color.setHex(0x36e07a);mth.hot.material.emissive.setHex(0x36e07a);}
+    dispText(mth.B,[mth.t<35?'NORMAL ✓':'⚠ ALARM','R2-M7: '+mth.t.toFixed(1)+'°C'+(mth.cool?' ↓':' ↑')],
+      [mth.t<35?'#46ff8e':'#ff5a5a',mth.t<35?'#46ff8e':'#ffd23f']);};
+
+  startSeq([
+   {type:'act',aid:'BMS',done:false,targets:()=>[mth.B.mesh],
+    desc:'Analisis ALARM di layar BMS: modul mana, tren bagaimana.',
+    why:'R2-M7: 41,2°C dan menanjak +0,4°C/menit saat discharge penuh. Tetangganya (M6, M8) ikut hangat. Ini bukan sensor error — pola penjalaran panas nyata. Bertindak SEKARANG, sebelum 55°C.',
+    fx(){toast('🌡️ R2-M7 41,2°C ↑ · tetangga ikut hangat — tren nyata.','bad',3000);}},
+   {type:'act',aid:'HVAC',done:false,targets:()=>[mth.hvac],
+    desc:'Langkah tercepat tanpa risiko: BOOST HVAC (klik unit pendingin).',
+    why:'Menambah aliran udara dingin = menahan laju kenaikan tanpa menyentuh operasi. Tapi HVAC hanya membantu — sumber panasnya (arus tinggi) masih bekerja. Lanjut.',
+    fx(){mth.cool=true;beep(160,.6,'sine',.07);
+      toast('❄️ HVAC mode boost — laju panas tertahan.','ok',2600);}},
+   {type:'act',aid:'DERATE',done:false,targets:()=>[mth.pcs],
+    desc:'Turunkan sumber panasnya: DERATE daya PCS ke 50%.',
+    why:'Panas ∝ I²R: memangkas arus setengah = memangkas panas jadi seperempat. Pelanggan kehilangan sebagian peak shaving sore ini — harga kecil dibanding satu rack terbakar.',
+    fx(){mth.derated=true;dispText(mth.P,['DISCHARGE','250 kW (derate)'],['#5fd4ff','#5fd4ff']);
+      toast('📉 PCS derate 50% — sumber panas dipangkas.','ok',2600);}},
+   {type:'act',aid:'RACK',done:false,targets:()=>[mth.brk],
+    desc:'Kini arus sudah rendah: ISOLASI rack 2 (buka DC breaker).',
+    why:'Urutan ini disengaja: membuka pemutus DC pada arus penuh = busur api — justru memantik bahaya yang ingin dihindari. Setelah derate, rack dilepas dengan tenang untuk inspeksi.',
+    fx(){mth.iso=true;mth.brk.rotation.z=.5;
+      toast('🔌 Rack 2 terisolasi — 4 rack lain tetap melayani.','ok',2600);}},
+   {type:'act',aid:'LOG',done:false,targets:()=>[mth.logb],
+    check:()=>mth.t<35,
+    checkFail:'Suhu belum aman! Tunggu BMS menunjukkan <35°C sebelum menutup laporan.',
+    desc:'Setelah suhu <35°C: catat kronologi & jadwalkan inspeksi modul.',
+    why:'Data BMS sebelum-selama-sesudah adalah bahan post-mortem: balancing buruk? koneksi modul kendor? sel menua? Alarm yang dipahami akarnya tak akan kembali dengan kejutan lebih besar.',
+    fx(){toast('📓 Kronologi tercatat — inspeksi R2-M7 besok 08:00.','ok',3000);sfx.big();}},
+  ],()=>{say('🎉 <b>Krisis yang tidak pernah jadi berita!</b> Dengar alarmnya, dinginkan, pangkas arusnya, isolasi dengan urutan benar. Begitulah thermal runaway dikalahkan: jauh sebelum ia mulai.');
+    setTimeout(()=>showWin('thermal'),2200);});
+
+  say('VOLTA di sini 🌡️ Alarm dari container: <b>modul 7 rack 2 memanas</b> saat discharge penuh. Ingat urutan emasnya: <b>dinginkan → pangkas arus → baru isolasi</b>. Memutus DC berbeban penuh justru memantik busur. Mulai dari layar BMS.');
+  $('#modTitle').textContent='J15·M2 — Respon Alarm Termal BESS';
+  $('#taskHead').textContent='DINGINKAN · DERATE · ISOLASI';}
+
+/* registrasi builder misi-2 tahap 4 */
+MISSIONS.trip.build=buildTrip;
+MISSIONS.beban.build=buildBeban;
+MISSIONS.logger.build=buildLogger;
+MISSIONS.gov.build=buildGov;
+MISSIONS.rescue.build=buildRescue;
+MISSIONS.survey.build=buildSurvey;
+MISSIONS.reduksi.build=buildReduksi;
+MISSIONS.evfix.build=buildEvfix;
+MISSIONS.abu.build=buildAbu;
+MISSIONS.fcell.build=buildFcell;
+MISSIONS.thermal.build=buildThermal;
+
 /* registrasi builder misi-2 */
 MISSIONS.phb.build=buildPHB;
 MISSIONS.normal.build=buildNormal;
@@ -2826,6 +3793,61 @@ const REAL={
   'Alamat I/O didokumentasikan dalam I/O list — tanpa itu, troubleshooting = menebak',
   'Emergency stop TIDAK boleh hanya lewat PLC — wajib jalur hardwired terpisah (kategori safety)',
   'Simulasi/forcing I/O hanya saat komisioning dengan izin — forcing yang tertinggal adalah bom waktu'],
+ trip:[
+  'Sebelum membuka terminal box: isolasi sumber + LOTO + verifikasi tegangan nol',
+  'Gunakan thermal camera saat motor beroperasi untuk menemukan titik panas tanpa membongkar',
+  'Kencangkan terminal dengan torsi sesuai tabel pabrikan, lalu jadwalkan re-torque berkala',
+  'Catat trip di CMMS: tanggal, akar masalah, perbaikan — trip berulang pola = masalah sistemik'],
+ beban:[
+  'Validasi data SCADA dengan pengukuran lapangan — sensor juga bisa berbohong (kalibrasi!)',
+  'Ukur beban trafo pada jam puncak aktual, lengkap dengan suhu minyak & tegangan ujung',
+  'Pecah beban perlu studi aliran daya jaringan, bukan sekadar pindah jurusan',
+  'Dokumentasikan tren pertumbuhan beban per gardu sebagai dasar perencanaan investasi'],
+ logger:[
+  'Pemasangan logger di panel hidup hanya oleh teknisi kompeten dengan APD sesuai kategori arc flash',
+  'Pastikan rasio CT clamp & range tegangan sesuai — salah rasio = data sampah seminggu',
+  'Foto posisi pemasangan & beri label "alat ukur terpasang" agar tidak dimatikan operator',
+  'Sinkronkan jam logger sebelum mulai — analisis multi-titik butuh timestamp yang seragam'],
+ gov:[
+  'Operasi unit nyata mengikuti SOP pabrikan & instruksi dispatcher (komunikasi terekam, read-back)',
+  'Perhatikan ramp rate MW sesuai batas thermal stress turbin — bukan kecepatan tanganmu',
+  'Pahami mode kontrol unit: droop, isochronous, atau AGC remote dari pusat pengatur',
+  'Latih skenario gangguan frekuensi di simulator unit sebelum menghadapi yang sungguhan'],
+ rescue:[
+  'Ikuti pelatihan P3K & CPR bersertifikat — keterampilan tangan tak bisa dipelajari dari layar',
+  'Hafalkan lokasi panel isolasi & nomor darurat di fasilitasmu SEBELUM insiden terjadi',
+  'Korban sengatan wajib evaluasi medis walau tampak pulih — gangguan irama jantung bisa muncul terlambat',
+  'Laporkan ke sistem manajemen K3; investigasi mencari akar sistemik, bukan kambing hitam'],
+ survey:[
+  'Cek struktur atap dengan ahli sipil untuk beban tambahan panel (±15 kg/m²)',
+  'Analisis bayangan sepanjang tahun (sun path), bukan hanya saat survey siang cerah',
+  'Minta data interval konsumsi (AMR/AMI) bila ada — profil 15 menit jauh lebih akurat dari tagihan bulanan',
+  'Sertakan asumsi degradasi panel (±0,5%/tahun) & biaya O&M dalam perhitungan ROI'],
+ reduksi:[
+  'Gunakan kriteria mutu offset: terverifikasi (VCS/Gold Standard), additionality jelas, tidak double-counting',
+  'REC harus sesuai pasar & periode vintage yang diklaim — konsultasikan standar pelaporan buyer',
+  'Susun MACC (marginal abatement cost curve) agar urutan proyek berbasis Rp/tCO₂e nyata',
+  'Tinjau roadmap tiap tahun: faktor emisi grid berubah, teknologi turun harga, target bisa dipercepat'],
+ evfix:[
+  'Selalu mulai dari error log unit & backend OCPP — banyak gangguan terdiagnosa tanpa ke lokasi',
+  'Tunggu waktu discharge kapasitor sesuai manual sebelum membuka kompartemen daya',
+  'Ukur pembumian dengan earth tester terkalibrasi metode 3-titik, catat tren tiap inspeksi',
+  'Tutup perbaikan dengan uji transaksi end-to-end & laporan akar masalah ke pemilik aset'],
+ abu:[
+  'Pengelolaan fly ash mengikuti regulasi B3 (PP 22/2021): kemasan, simbol, TPS berizin, manifest',
+  'Uji karakteristik dilakukan laboratorium terakreditasi — bukan uji kira-kira di lapangan',
+  'Pekerja penanganan abu wajib APD pernapasan (respirator) — partikel halus adalah bahayanya',
+  'Rekonsiliasi neraca massa bulanan dengan log timbangan & faktur pengangkutan B3'],
+ fcell:[
+  'Hanya operator terlatih protokol pengisian H₂ (SAE J2601) yang boleh melayani dispensing',
+  'Periksa masa sertifikasi tangki & nozzle — komponen bertekanan punya umur layanan',
+  'Area dispensing = zona ATEX: dilarang HP/sumber api, kendaraan mati total selama pengisian',
+  'Pelajari prosedur emergency shutdown (ESD) stasiun & titik kumpulnya sebelum shift pertama'],
+ thermal:[
+  'Ikuti emergency response plan BESS site: ambang suhu, urutan derate/isolasi, kontak damkar',
+  'Jangan pernah membuka pintu container saat alarm off-gas aktif — gas sel = mudah terbakar & toksik',
+  'Pasang trending otomatis suhu modul di EMS dengan alarm bertingkat (warning/critical)',
+  'Post-mortem tiap alarm termal: data BMS dianalisis untuk akar penyebab, bukan sekadar di-reset'],
 };
 
 /* =====================================================================
