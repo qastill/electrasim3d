@@ -742,12 +742,13 @@ Konteks misi: ${m.title||'-'} — ${m.goal||'-'}.
 Langkah aktif pemain: ${s?s.desc:'misi selesai'}.
 Pertanyaan pemain: ${q}`;
   try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+       const r=await fetch('https://osjdzroehpquegtvktvt.supabase.co/functions/v1/sim-assistant',{method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,
-        messages:[{role:'user',content:ctx}]})});
+      body:JSON.stringify({sim:'ElectraSim VR 3D',
+        context:'Game misi 3D ketenagalistrikan Electra. Jawab sebagai VOLTA, AI instructor yang santai-profesional. Misi: '+(m.title||'-')+' — '+(m.goal||'-')+'. Langkah aktif pemain: '+(s?s.desc:'misi selesai'),
+        question:q,history:[]})});
     const d=await r.json();
-    const txt=(d.content||[]).filter(c=>c.type==='text').map(c=>c.text).join(' ').trim();
+    const txt=(d&&d.answer)||'';
     say(txt?('💬 '+txt.replace(/</g,'&lt;')):'Hmm, aku tidak mendapat jawaban. Coba tanya lagi ya.');
   }catch(err){
     say('⚠️ Koneksi ke otak AI-ku terganggu. Sementara, gunakan tombol <b>❓ KENAPA</b> untuk penjelasan langkah ini.');}});
