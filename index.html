@@ -118,6 +118,29 @@
   .mBtn .mTitle{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .mBtn .st{font-size:12px;color:var(--yellow);font-family:var(--mono);flex:none;letter-spacing:1.5px}
   .mBtn .st .e{color:#3a4a5c}
+  /* tombol khusus: simulator bebas-jelajah (halaman tersendiri) */
+  .xBtn{display:flex;align-items:center;width:100%;cursor:pointer;gap:10px;text-align:left;
+    background:linear-gradient(90deg,#2a2008,#0d1a29);border:1px solid var(--yellow);color:var(--ink);
+    padding:10px 11px;font-size:12.5px;border-radius:3px;transition:box-shadow .15s}
+  .xBtn:hover{box-shadow:0 0 14px #f5c84266}
+  .xBtn .xTag{flex:none;font-family:var(--mono);font-size:10px;font-weight:700;color:#0b1420;
+    background:var(--yellow);padding:3px 6px;border-radius:2px;letter-spacing:.04em}
+  .xBtn .mTitle{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* mode jelajah (?demo=1): banner & kartu kunci akses */
+  #demoBar{margin:0 0 16px;padding:11px 14px;border:1px solid var(--yellow);border-radius:8px;
+    background:#2a200833;font-size:13px;color:var(--ink);line-height:1.55}
+  #demoBar a{color:var(--yellow);font-weight:700}
+  #lockOver{position:fixed;inset:0;z-index:75;display:none;align-items:center;justify-content:center;
+    background:#0b1420ee;padding:18px}
+  .lockCard{background:var(--panel);border:1px solid var(--yellow);max-width:480px;width:100%;
+    padding:28px;border-radius:12px;backdrop-filter:blur(12px);text-align:left}
+  .lockCard .lockIc{font-size:38px;margin-bottom:10px}
+  .lockCard h2{font-size:19px;margin-bottom:10px}
+  .lockCard p{font-size:13.5px;line-height:1.6;color:var(--ink);margin-bottom:12px}
+  .lockPerks{list-style:none;margin:0 0 16px;padding:12px 14px;background:#0d1a29;
+    border:1px solid var(--line);border-radius:8px}
+  .lockPerks li{font-size:12.5px;line-height:2;color:var(--ink)}
+  #bStart.isLock{background:#2a2008;color:var(--yellow);border:1px solid var(--yellow)}
   .tcard.locked{opacity:.45;filter:saturate(.4)}
   .tcard.locked .lockTag{font-family:var(--mono);font-size:10px;color:var(--dim);border:1px dashed var(--line);
     padding:9px 10px;margin:0 12px 13px;text-align:center;letter-spacing:.15em;border-radius:3px}
@@ -271,6 +294,7 @@
   </div>
   <p class="sub">Simulator 3D berbasis misi untuk <b>16 jalur spesialisasi</b> ketenagalistrikan, dipandu <b>VOLTA</b> — AI instructor yang menjelaskan langkah & alasannya, dan bisa ditanya kapan saja. Selesaikan misi, kumpulkan bintang, kuasai kompetensi.</p>
   <div class="statsRow" id="statsRow"></div>
+  <div id="demoBar" style="display:none">👀 <b>Mode Jelajah</b> — lihat-lihat semua isi simulator sepuasnya. Misi <b>M1 di tiap jalur gratis</b> dimainkan; misi lain terbuka penuh untuk member. <a href="https://electraacademy.com/" target="_top">Buka Akses Penuh →</a></div>
   <div id="cariWrap"><input id="cariBox" placeholder="Cari jalur atau misi… (mis. PLC, trafo, solar)"></div>
   <div class="grid16" id="trackGrid"></div>
   <div class="hintTxt">🖱️ drag = lihat sekeliling · scroll/pinch = zoom · klik kanan/shift-drag = geser · ikuti penanda kuning ▼</div>
@@ -291,6 +315,26 @@
     <div class="briefBtns">
       <button class="btnY" id="bStart">▶ MULAI MISI</button>
       <button class="btnG" id="bCancel">KEMBALI</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= KUNCI AKSES (mode jelajah) ================= -->
+<div id="lockOver">
+  <div class="lockCard">
+    <div class="lockIc">🔒</div>
+    <h2>Misi Ini Bagian dari Akses Penuh</h2>
+    <p>Kamu sedang dalam <b>mode jelajah</b> — semua jalur dan briefing misi bebas dilihat,
+      dan <b>misi M1 di tiap jalur gratis dimainkan</b>.
+      Untuk memainkan seluruh misi beserta panduan suara VOLTA, buka akses penuh di Electra Academy.</p>
+    <ul class="lockPerks">
+      <li>⚡ Semua misi di 16 jalur spesialisasi</li>
+      <li>🗣️ Panduan suara VOLTA langkah demi langkah</li>
+      <li>⭐ Progres & bintang tersimpan</li>
+    </ul>
+    <div class="briefBtns">
+      <a class="btnY" href="https://electraacademy.com/" target="_top" style="text-decoration:none;text-align:center">BUKA AKSES PENUH →</a>
+      <button class="btnG" id="lockClose">NANTI DULU</button>
     </div>
   </div>
 </div>
@@ -379,6 +423,16 @@ let cam={theta:0, phi:1.25, r:7, target:null}; /* target dibuat saat GL siap */
 const COL={fasa:0xd83a3a, netral:0x2f6fd8, ground:0x3ddc84, dark:0x222e3d,
            metal:0x8d9aa8, yellow:0xffd23f, cream:0xdfe6ee};
 
+/* =====================================================================
+   MODE AKSES — default: akses penuh (embed member electraacademy.com).
+   ?demo=1 → mode jelajah: seluruh menu & briefing tetap bisa dibuka
+   (orang bisa lihat semua isi simulator), M1 tiap jalur gratis dimainkan,
+   misi lain terkunci dengan ajakan upgrade. Tidak mengubah embed member.
+   ===================================================================== */
+const DEMO=/[?&](demo|preview|trial)=1/.test(location.search);
+const FREE_KEYS={}; /* diisi setelah TRACKS terdefinisi */
+function isLocked(k){return DEMO&&!FREE_KEYS[k];}
+
 /* penyimpanan bintang aman-sandbox */
 let bestStars={};
 try{ bestStars=JSON.parse(window.localStorage.getItem('esim_stars')||'{}'); }catch(e){ bestStars={}; }
@@ -391,7 +445,7 @@ const TRACKS=[
  {code:'S1 · JALUR 01',icon:'🏗️',name:'Instalasi Bangunan',desc:'MEP design gedung & rumah: wiring dasar sampai smart building.',missions:[{k:'rumah',t:'Instalasi Listrik Rumah'},{k:'phb',t:'Panel Hubung Bagi & Proteksi RCD'},{k:'tiga',t:'Instalasi 3 Fasa & Keseimbangan Beban'},{k:'tukar',t:'Saklar Tukar & Sensor Gerak'},{k:'petir',t:'Penangkal Petir & Pembumian Gedung'},{k:'smart',t:'Smart Home: Otomasi Rumah Pintar'},{k:'slo',t:'Audit Instalasi Lama & Kelayakan'},{k:'desain',t:'Desain Digital: Gambar Dulu, Pasang Sekali'}],file:'missions/jalur01.js'},
  {code:'S2 · JALUR 02',icon:'🏭',name:'Industri & Manufaktur',desc:'Motor, drive, reliability & maintenance pabrik.',missions:[{k:'star',t:'Komisioning Star-Delta Starter'},{k:'trip',t:'Troubleshooting Motor Trip'},{k:'vfd',t:'Komisioning VFD'},{k:'konveyor',t:'Interlock Konveyor Berurutan'},{k:'vibra',t:'Predictive Maintenance: Analisis Vibrasi'},{k:'harmonisa',t:'Power Quality: Memburu Harmonisa'},{k:'genset',t:'Genset Standby & ATS'},{k:'iot',t:'IIoT & OEE: Pabrik yang Berbicara Data'}],file:'missions/jalur02.js'},
  {code:'S3 · JALUR 03',icon:'⚡',name:'Distribusi',desc:'Jantung PLN: jaringan 20kV, gardu, APP, SCADA.',missions:[{k:'app',t:'Pemasangan APP / kWh Meter'},{k:'gardu',t:'Manuver Pembebasan Gardu 20 kV'},{k:'sutm',t:'Pelacakan Gangguan Penyulang 20 kV'},{k:'scada',t:'SCADA: Manuver Jarak Jauh & FDIR'},{k:'trafo',t:'Pemasangan Trafo Distribusi Baru'},{k:'kabel',t:'Kabel Tanah 20 kV: Fault Location'},{k:'loadflow',t:'Studi Aliran Daya & Rekonfigurasi'},{k:'der',t:'PLTS Tersebar & Hosting Capacity'}],file:'missions/jalur03.js'},
- {code:'S4 · JALUR 04',icon:'🗼',name:'Transmisi',desc:'Saluran 150/500 kV, GI/GITET, switching & proteksi.',missions:[{k:'transmisi',t:'Switching Bay Penghantar GI 150 kV'},{k:'normal',t:'Penormalan Bay GI 150 kV'},{k:'busbar',t:'Transfer Bus Tanpa Padam'},{k:'distance',t:'Proteksi Distance Relay'},{k:'thermo',t:'Inspeksi Jalur & Thermovision'},{k:'dga',t:'DGA: Membaca Darah Trafo IBT'},{k:'pdkb',t:'PDKB: Menyentuh 150 kV yang Hidup'},{k:'pmu',t:'PMU & WAMS: Detak Sistem Se-Pulau'}],file:'missions/jalur04.js'},
+ {code:'S4 · JALUR 04',icon:'🗼',name:'Transmisi',desc:'Saluran 150/500 kV, GI/GITET, switching & proteksi.',missions:[{k:'transmisi',t:'Switching Bay Penghantar GI 150 kV'},{k:'normal',t:'Penormalan Bay GI 150 kV'},{k:'busbar',t:'Transfer Bus Tanpa Padam'},{k:'distance',t:'Proteksi Distance Relay'},{k:'thermo',t:'Inspeksi Jalur & Thermovision'},{k:'dga',t:'DGA: Membaca Darah Trafo IBT'},{k:'pdkb',t:'PDKB: Menyentuh 150 kV yang Hidup'},{k:'pmu',t:'PMU & WAMS: Detak Sistem Se-Pulau'}],file:'missions/jalur04.js',extra:{href:'gardu150.html',tag:'⚡ 3D',t:'Gardu Induk 150/20 kV — Jelajah Bebas & Energize'}},
  {code:'S5 · JALUR 05',icon:'📊',name:'Energy Analyst & Data Science',desc:'Python, SQL, ML untuk utility & NTL detection.',missions:[{k:'ntl',t:'Investigasi NTL (Susut Non-Teknis)'},{k:'beban',t:'Analisis Profil Beban Trafo'},{k:'forecast',t:'Forecasting Beban dengan Regresi'},{k:'ami',t:'Deteksi Anomali AMI Real-Time'},{k:'losses',t:'Energy Balance: Membedah Susut'},{k:'dash',t:'Dashboard Eksekutif & Storytelling'},{k:'cluster',t:'Clustering: Segmentasi Pelanggan'},{k:'genai',t:'GenAI Utility: AI yang Bisa Dipercaya'}],file:'missions/jalur05.js'},
  {code:'S6 · JALUR 06',icon:'📋',name:'Energy Auditor',desc:'Audit energi industri, ISO 50001.',missions:[{k:'audit',t:'Walkthrough Audit Energi Pabrik'},{k:'logger',t:'Pemasangan Power Logger'},{k:'tarif',t:'Analisis Tarif & Load Shifting'},{k:'boiler',t:'Audit Efisiensi Boiler'},{k:'chiller',t:'Audit Sistem Chiller & Pendingin'},{k:'mnv',t:'M&V: Membuktikan Penghematan'},{k:'iso',t:'ISO 50001: Sistem Manajemen Energi'},{k:'pue',t:'Audit Data Center: Memburu PUE'}],file:'missions/jalur06.js'},
  {code:'S7 · JALUR 07',icon:'🌱',name:'Pembangkitan & Renewable',desc:'PLTU, PLTG, PLTA, hybrid system.',missions:[{k:'pltu',t:'Start-Up & Sinkronisasi Generator'},{k:'gov',t:'Kontrol Frekuensi & Pembebanan'},{k:'shutdown',t:'Shutdown Terencana & Turning Gear'},{k:'blackstart',t:'Black Start: Sistem dari Nol'},{k:'unittrip',t:'Unit Trip: Respon & Investigasi'},{k:'kimia',t:'Kimia Air Boiler'},{k:'kondensor',t:'Kondensor & Vakum'},{k:'cofiring',t:'Co-Firing Biomassa'}],file:'missions/jalur07.js'},
@@ -411,6 +465,8 @@ const NEXTCHAIN=['rumah','phb','tiga','tukar','petir','smart','slo','desain','ap
    LAZY LOADER — modul misi per jalur (missions/jalurNN.js)
    ===================================================================== */
 const FILE_OF={}; TRACKS.forEach(t=>t.missions.forEach(m=>FILE_OF[m.k]=t.file));
+/* mode jelajah: M1 tiap jalur gratis dimainkan */
+TRACKS.forEach(t=>{if(t.missions[0])FREE_KEYS[t.missions[0].k]=1;});
 const _loadedFiles={};
 function loadFile(f){
   if(_loadedFiles[f])return _loadedFiles[f];
@@ -439,6 +495,7 @@ function starsOf(k){const s=bestStars[k]||0;
   return '<span class="st">'+'★'.repeat(s)+'<span class="e">'+'★'.repeat(3-s)+'</span></span>';}
 function renderMenu(){
   const g=$('#trackGrid'); g.innerHTML='';
+  const db=$('#demoBar'); if(db)db.style.display=DEMO?'block':'none';
   /* statistik global */
   let totMis=0,doneMis=0,totStars=0;
   TRACKS.forEach(t=>t.missions.forEach(m=>{totMis++;const s=bestStars[m.k]||0;
@@ -456,7 +513,7 @@ function renderMenu(){
     const allDone=t.missions.length&&done===t.missions.length;
     d.className='tcard '+(t.missions.length?'active':'locked')+(allDone?' complete':'');
     /* indeks pencarian: nama jalur + semua judul misi */
-    d.dataset.cari=(t.name+' '+t.desc+' '+t.missions.map(m=>m.t).join(' ')).toLowerCase();
+    d.dataset.cari=(t.name+' '+t.desc+' '+t.missions.map(m=>m.t).join(' ')+(t.extra?' '+t.extra.t:'')).toLowerCase();
     let inner=`<div class="tcPhoto"><img src="foto/${idx+1}.webp" loading="lazy" alt="${t.name}">`+
       `<span class="lvl">${t.code}</span><h2>${t.name}</h2></div>`+
       `<div class="tcBody"><div class="tcDesc">${t.desc}</div>`;
@@ -469,8 +526,10 @@ function renderMenu(){
         return `<button class="mBtn${isDone?' done':''}" data-m="${m.k}">`+
           `<span class="mNum">M${i+1}</span>`+
           `<span class="mTitle">${m.t}</span>`+
-          `${starsOf(m.k)}</button>`;};
+          `${isLocked(m.k)?'<span class="st" title="Akses Penuh">🔒</span>':starsOf(m.k)}</button>`;};
       inner+=`<div class="tcMissions">`;
+      if(t.extra)inner+=`<button class="xBtn" data-href="${t.extra.href}">`+
+        `<span class="xTag">${t.extra.tag}</span><span class="mTitle">${t.extra.t}</span></button>`;
       t.missions.slice(0,TAMPIL).forEach((m,i)=>{inner+=btn(m,i);});
       if(t.missions.length>TAMPIL){
         inner+=`<div class="tcMore">`;
@@ -484,6 +543,7 @@ function renderMenu(){
     d.innerHTML=inner; g.appendChild(d);
   });
   g.querySelectorAll('.mBtn').forEach(b=>b.onclick=()=>openBrief(b.dataset.m));
+  g.querySelectorAll('.xBtn').forEach(b=>b.onclick=()=>{location.href=b.dataset.href+(DEMO?'?demo=1':'');});
   g.querySelectorAll('.lihatBtn').forEach(b=>b.onclick=()=>{
     const box=b.parentElement; box.classList.toggle('open');
     b.textContent=box.classList.contains('open')?'▴ sembunyikan':b.textContent.replace('▴ sembunyikan','▾ lihat semua');
@@ -518,11 +578,19 @@ function openBrief(k){
     $('#bStory').textContent=m.story;
     $('#bGoal').textContent=m.goal;
     $('#bObj').innerHTML=m.obj.map(o=>`<li>${o}</li>`).join('');
+    const bs=$('#bStart');
+    if(isLocked(k)){bs.textContent='🔒 BUKA AKSES PENUH';bs.classList.add('isLock');}
+    else{bs.textContent='▶ MULAI MISI';bs.classList.remove('isLock');}
     $('#brief').style.display='flex';
   }).catch(()=>loadFail(FILE_OF[k]||'?'));
 }
 $('#bCancel').onclick=()=>$('#brief').style.display='none';
-$('#bStart').onclick=()=>{$('#brief').style.display='none';startModule(briefKey);};
+$('#bStart').onclick=()=>{
+  if(isLocked(briefKey)){$('#lockOver').style.display='flex';return;}
+  $('#brief').style.display='none';startModule(briefKey);};
+const lo=$('#lockOver');
+if(lo){$('#lockClose').onclick=()=>lo.style.display='none';
+  lo.addEventListener('click',e=>{if(e.target===lo)lo.style.display='none';});}
 
 /* =====================================================================
    AUDIO
@@ -1066,6 +1134,7 @@ function animate(){
 let glReady=false;
 function startModule(k){
   if(!MISSIONS[k]||!MISSIONS[k].build)return;
+  if(isLocked(k)){const o=$('#lockOver');if(o)o.style.display='flex';return;}
   /* WebGL dibuat hanya saat dibutuhkan — menu tetap ringan & cepat */
   if(!glReady){
     if(typeof THREE==='undefined'){
