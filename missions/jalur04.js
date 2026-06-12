@@ -805,3 +805,54 @@ Object.assign(REAL,{
   'Jaringan komunikasi PMU butuh latensi & jitter terjaga — pisahkan dari trafik kantor',
   'Kalibrasi & uji kelas P/M PMU sesuai standar sinkrofasor sebelum dinyatakan andal'],
 });
+
+/* =====================================================================
+   MISI BONUS — TRANSMISI: ENERGIZE GARDU 150/20 kV (Simulasi imersif 3D)
+   Pengalaman mandiri penuh (karakter, APD, suara, switchyard 3D) yang
+   dimuat sebagai overlay layar-penuh — bukan mesin mini per-klik.
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ energize:{lvl:'JALUR 04 · TRANSMISI · SIMULASI IMERSIF',icon:'⚡',title:'Energize Gardu 150/20 kV',strict:true,
+  loc:'📍 Gardu Induk 150/20 kV · switchyard penuh — jelajahi sebagai petugas (orang ke-1/ke-3)',
+  story:'Setelah memahami switching bay 150 kV, kini kamu turun ke lapangan sebagai petugas gardu. Pilih karakter, kenakan APD lengkap, lalu energize gardu 150/20 kV dengan urutan manuver yang benar: pasang jumper saat padam, lepas pentanahan, baru beri tegangan. Salah urutan = busur api atau hubung singkat. Dipandu instruktur bersuara, lengkap dengan diagram satu garis & telemetri langsung.',
+  goal:'Gardu bertegangan & beban tersalur: jumper terpasang saat padam, PMS tanah dibuka sebelum diberi tegangan, PMT ditutup pada urutan yang benar (tanpa pelanggaran K3).',
+  obj:['Pakai APD lengkap sebelum masuk switchyard','Pasang jumper Trafo→Busbar saat masih padam, lalu buka PMS Tanah','Tutup PMS-1, lalu energize: PMT-1 (trafo) kemudian PMT-2 (penyulang)'],
+  learn:['Jumper & pekerjaan penghantar hanya boleh saat rangkaian PADAM — bertegangan = busur api','PMS Tanah wajib dibuka sebelum memberi tegangan; lupa = hubung singkat ke tanah','PMS hanya pemisah tanpa beban; PMT-lah yang memutus/menyambung arus berbeban','Manuver energize mengalir berurutan sumber → trafo → busbar → penyulang','APD & K3 adalah gerbang mutlak sebelum menyentuh peralatan gardu'],
+  next:['Bandingkan energize gardu dengan penormalan bay 150 kV (Misi 2)','Dalami interlock PMT–PMS pada panel kontrol GI','Lanjut Jalur 03: manuver & pembebasan gardu 20 kV sisi distribusi']},
+});
+function buildEnergizeGardu(){
+  /* simulasi mengurus skenarionya sendiri — matikan timer mesin mini & sembunyikan HUD 3D */
+  timerOn=false; seq=null;
+  const hud=$('#hud'); if(hud)hud.style.display='none';
+  const old=document.getElementById('energizeOverlay'); if(old)old.remove();
+  const ov=document.createElement('div');
+  ov.id='energizeOverlay';
+  ov.style.cssText='position:fixed;inset:0;z-index:60;background:#0b0e12';
+  ov.innerHTML=
+    '<iframe src="simulasi/energize-gi.html" title="Energize Gardu 150/20 kV" '+
+      'style="border:0;width:100%;height:100%;display:block" allow="autoplay; fullscreen"></iframe>'+
+    '<button id="energizeBack" style="position:fixed;top:14px;left:14px;z-index:61;'+
+      'background:rgba(11,15,20,.85);border:1px solid #2c3848;color:#eaf0f6;'+
+      'font:700 13px system-ui;padding:9px 14px;border-radius:10px;cursor:pointer;backdrop-filter:blur(8px)">← Kembali ke menu</button>'+
+    '<button id="energizeWin" style="position:fixed;top:14px;left:188px;z-index:61;'+
+      'background:rgba(60,224,122,.14);border:1px solid #3ce07a;color:#3ce07a;'+
+      'font:700 13px system-ui;padding:9px 14px;border-radius:10px;cursor:pointer;backdrop-filter:blur(8px)">✓ Selesai &amp; klaim ★</button>';
+  document.body.appendChild(ov);
+  function closeOverlay(){const o=document.getElementById('energizeOverlay');if(o)o.remove();}
+  function finish(){if(!document.getElementById('energizeOverlay'))return;closeOverlay();showWin('energize');}
+  document.getElementById('energizeBack').onclick=()=>{closeOverlay();backToMenu();};
+  document.getElementById('energizeWin').onclick=finish;
+  /* sim mengirim sinyal saat gardu berhasil di-energize → klaim bintang otomatis */
+  if(window.__energizeMsg)removeEventListener('message',window.__energizeMsg);
+  window.__energizeMsg=function(ev){
+    if(ev&&ev.data&&ev.data.type==='esim-mission-done'&&ev.data.mission==='energize')finish();};
+  addEventListener('message',window.__energizeMsg);
+}
+MISSIONS.energize.build=buildEnergizeGardu;
+Object.assign(REAL,{
+ energize:[
+  'Pekerjaan jumper/penghantar hanya dengan rangkaian padam, di-LOTO, & dibumikan lokal — diuji bebas tegangan dulu',
+  'Buka PMS pembumian sebelum penormalan; interlock GI mencegah PMS dioperasikan berbeban',
+  'Urutan switching ditetapkan dispatcher (manuver) & dicatat dalam logsheet — bukan inisiatif sendiri',
+  'APD lengkap (helm, sarung tangan isolasi sesuai kelas tegangan, sepatu, wearpack) wajib sebelum masuk switchyard'],
+});
