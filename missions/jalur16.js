@@ -937,3 +937,202 @@ Object.assign(REAL,{
   'Monitoring pasif (network TAP) lebih aman dari scanning aktif — perangkat OT tua bisa crash di-scan',
   'Latih drill respons bersama produksi minimal tahunan — keputusan "matikan atau jalan terus" jangan lahir saat panik'],
 });
+
+/* =====================================================================
+   MISI 9 — SORTING STATION: VISION SENSOR + 3 JALUR (gaya Factory IO)
+   Konveyor utama → vision sensor membaca WARNA → 3 diverter mendorong
+   tiap warna ke jalur/ramp-nya sendiri. Inspirasi: Factory I/O Sorting Station.
+   ===================================================================== */
+Object.assign(MISSIONS,{
+ vissort:{lvl:'JALUR 16 · KONTROL & OTOMASI · MISI 9',icon:'🎥',title:'Sorting Station: Vision Sensor 3 Jalur',strict:false,
+  loc:'📍 Distribution center · Sorting station baru (gaya Factory I/O)',
+  story:'Sekardus campur-aduk meluncur di belt: kotak MERAH harus ke jalur ekspor, HIJAU ke retail, BIRU ke gudang. Selama ini sortir manual — dan satu kotak salah jalur berarti komplain pelanggan. Manajer memasang sebuah stasiun sortir mirip simulator Factory I/O: satu vision sensor membaca warna, tiga diverter mendorong tiap warna ke ramp-nya sendiri. Tinggal satu yang kurang: PLC belum tahu warna mana ke jalur mana. Itu tugasmu.',
+  goal:'Stasiun sortir 3-jalur bekerja penuh otomatis: vision sensor membaca warna tiap kotak, lalu diverter yang tepat mendorongnya ke ramp yang benar — terbukti minimal 2 kotak tiap warna tersortir tanpa salah jalur.',
+  obj:['Kalibrasi vision sensor agar mengenali 3 warna','Susun 3 rung: tiap warna → diverter jalurnya sendiri','Download, jalankan line, saksikan sortir 3 jalur hidup'],
+  learn:['Vision sensor mengubah “warna” jadi data digital (mis. 3 bit) — PLC tak melihat warna, ia membaca register','Tiap diverter butuh delay sendiri: jarak vision→diverter berbeda untuk tiap jalur, jadi tundanya pun berbeda','Sortir multi-jalur = banyak rung paralel dengan kondisi berbeda; kerapian ladder menentukan kemudahan maintenance','Satu kotak salah jalur lebih mahal dari sepuluh kotak telat — verifikasi sortir sebelum serah terima'],
+  next:['Tambah reject lane untuk kotak warna tak dikenal','Gabung vision + barcode untuk sortir berbasis SKU','Naik ke palletizing: robot menyusun hasil sortir tiap jalur']},
+});
+let mvs={};
+function buildVissort(){
+  freshScene(0xb8c4cc,0x10181e);
+  cam={theta:.32,phi:1.06,r:11,target:new THREE.Vector3(.6,1.2,-.4)};
+  const floor=boxT(28,.1,16,TEX.concrete());floor.position.y=-.05;scene.add(floor);
+  /* pagar pengaman belakang */
+  for(let x=-8;x<=8;x+=2.8){
+    const post=cyl(.05,.05,1.6,0x2a5a9a);post.position.set(x,.8,-4.4);scene.add(post);}
+  const mesh1=box(16.2,1.3,.04,0x9fb6c8,{transparent:true,opacity:.25});
+  mesh1.position.set(0,.85,-4.4);scene.add(mesh1);
+  /* belt utama */
+  const belt=box(14,.22,1.2,0x222a31,{roughness:.85});belt.position.set(0,.85,-1.6);scene.add(belt);
+  [-6,-3,0,3,6].forEach(x=>{
+    const leg=boxT(.12,.78,1.0,TEX.metal(),{metalness:.4});leg.position.set(x,.39,-1.6);scene.add(leg);});
+  const rail=box(14,.08,.06,0x4a6a8a);rail.position.set(0,1.02,-2.22);scene.add(rail);
+  const rail2=rail.clone();rail2.position.z=-.98;scene.add(rail2);
+  scene.add(label('SORTING STATION · VISION 3 JALUR',.85).translateY(2.05).translateZ(-1.6));
+  /* ====== VISION SENSOR (gantry + kamera + layar) ====== */
+  const VX=-4.4;
+  [-.7,.7].forEach(dz=>{const gp=cyl(.05,.05,1.7,0x556070);
+    gp.position.set(VX,.9,-1.6+dz);scene.add(gp);});
+  const gtop=boxT(.2,.12,1.7,TEX.metal(),{metalness:.5});gtop.position.set(VX,1.78,-1.6);scene.add(gtop);
+  mvs.cam=box(.34,.26,.3,0x15202c,{metalness:.4});mvs.cam.position.set(VX,1.55,-1.6);scene.add(mvs.cam);
+  const lens=cyl(.08,.1,.06,0x0a3a55,16,{emissive:0x0aa0ff,emissiveIntensity:.5});
+  lens.rotation.x=Math.PI/2;lens.position.set(VX,1.42,-1.6);scene.add(lens);
+  actMesh(mvs.cam,'VISION');
+  scene.add(label('VISION SENSOR',.55,'#5fd4ff').translateX(VX).translateY(1.98).translateZ(-1.6));
+  /* layar hasil scan vision */
+  mvs.V=makeDisplay(1.1,.62,260,148);mvs.V.mesh.position.set(VX+1.1,1.7,-2.7);scene.add(mvs.V.mesh);
+  function visText(t,c){dispText(mvs.V,['VISION',t],['#5fd4ff',c||'#7d8f84']);}
+  visText('—');
+  /* ====== 3 DIVERTER + 3 RAMP + 3 COUNTER ====== */
+  const laneX=[0,2.4,4.8];
+  const laneCol=[0xd83a3a,0x2ec06a,0x3a7ad8];
+  const laneCss=['#ff6a6a','#46ff8e','#6ab0ff'];
+  const laneName=['MERAH→EKSPOR','HIJAU→RETAIL','BIRU→GUDANG'];
+  mvs.arm=[];mvs.armT=[0,0,0];mvs.cnt=[0,0,0];mvs.C=[];
+  laneX.forEach((x,i)=>{
+    /* diverter arm */
+    const a=box(.9,.3,.14,laneCol[i],{metalness:.3});a.position.set(x,1.1,-2.15);scene.add(a);
+    mvs.arm.push(a);
+    /* ramp ke depan */
+    const ramp=boxT(1.1,.08,2.2,TEX.metal(),{metalness:.5});
+    ramp.position.set(x,.55,-.2);ramp.rotation.x=.3;scene.add(ramp);
+    [-.45,.45].forEach(dx=>{const rr=box(.05,.12,2.2,laneCol[i]);
+      rr.position.set(x+dx,.66,-.2);rr.rotation.x=.3;scene.add(rr);});
+    scene.add(label(laneName[i],.5,laneCss[i]).translateX(x).translateY(1.15).translateZ(.55));
+    /* counter per jalur */
+    const D=makeDisplay(.9,.5,220,120);D.mesh.position.set(x,1.62,-2.6);scene.add(D.mesh);
+    mvs.C.push(D);
+  });
+  function updC(){mvs.C.forEach((D,i)=>{
+    dispText(D,[laneName[i].split('→')[0],String(mvs.cnt[i])],
+      [laneCss[i],mvs.cnt[i]>=2?'#46ff8e':'#ffd23f']);});}
+  updC();
+  /* stack light */
+  const lpost=cyl(.035,.035,1.7,0x666666);lpost.position.set(6.2,.85,-2.7);scene.add(lpost);
+  mvs.lr=cyl(.09,.09,.14,0x552222,12);mvs.lr.position.set(6.2,1.95,-2.7);scene.add(mvs.lr);
+  mvs.ly=cyl(.09,.09,.14,0x554d22,12,{emissive:0xd8b020,emissiveIntensity:.8});mvs.ly.position.set(6.2,1.78,-2.7);scene.add(mvs.ly);
+  mvs.lg=cyl(.09,.09,.14,0x225522,12);mvs.lg.position.set(6.2,1.61,-2.7);scene.add(mvs.lg);
+  /* ====== PLC + slot ladder ====== */
+  const frame=boxT(3.0,2.0,.16,TEX.metal(),{metalness:.4});frame.position.set(-6.6,2.25,-4.15);scene.add(frame);
+  frame.add(label('PLC — SORTING STATION',.78).translateY(1.25));
+  mvs.L=makeDisplay(2.7,1.6,470,300);mvs.L.mesh.position.set(-6.6,2.25,-4.05);scene.add(mvs.L.mesh);
+  mvs.st={vis:false,r0:false,r1:false,r2:false,dl:false};
+  function ladder(){
+    dispText(mvs.L,[
+      mvs.st.vis?'VISION→reg warna (3 bit)':'kalibrasi vision…',
+      mvs.st.r0?'W=MERAH → TON → (Q0.1)':'rung merah kosong…',
+      mvs.st.r1?'W=HIJAU → TON → (Q0.2)':'rung hijau kosong…',
+      mvs.st.r2?'W=BIRU  → TON → (Q0.3)':'rung biru kosong…',
+      mvs.st.dl?'● RUN':'○ EDIT'],
+      [mvs.st.vis?'#5fd4ff':'#7d8f84',
+       mvs.st.r0?'#ff6a6a':'#7d8f84',
+       mvs.st.r1?'#46ff8e':'#7d8f84',
+       mvs.st.r2?'#6ab0ff':'#7d8f84',
+       mvs.st.dl?'#46ff8e':'#7d8f84']);}
+  ladder();
+  mvs.slots=[];
+  [['RUNG MERAH','R0',-7.8],['RUNG HIJAU','R1',-6.6],['RUNG BIRU','R2',-5.4],['⬇ DOWNLOAD','DL',-4.2]].forEach(o=>{
+    const b=box(.95,.34,.14,0x2b3a4a);b.position.set(o[2],1.05,-4.0);scene.add(b);
+    actMesh(b,o[1]);mvs.slots.push(b);
+    scene.add(label(o[0],.46,'#5fd4ff').translateX(o[2]).translateY(1.36).translateZ(-3.92));});
+  /* tombol start */
+  mvs.btn=cyl(.11,.11,.09,0x2ec06a);mvs.btn.rotation.x=Math.PI/2;
+  mvs.btn.position.set(-7.2,1.1,-1.6);scene.add(mvs.btn);
+  actMesh(mvs.btn,'START');
+  scene.add(label('START LINE',.55,'#7af0a8').translateX(-7.2).translateY(1.45).translateZ(-1.6));
+  /* display verifikasi total */
+  mvs.VR=makeDisplay(1.3,.62,300,148);mvs.VR.mesh.position.set(6.6,1.72,-2.4);scene.add(mvs.VR.mesh);
+  actMesh(mvs.VR.mesh,'VERIF');
+  function updVR(){const tot=mvs.cnt[0]+mvs.cnt[1]+mvs.cnt[2];
+    const ok=mvs.cnt[0]>=2&&mvs.cnt[1]>=2&&mvs.cnt[2]>=2;
+    dispText(mvs.VR,['TOTAL: '+tot,ok?'SIAP VERIFIKASI':'sortir berjalan…'],
+      ['#5fd4ff',ok?'#46ff8e':'#8aa3bd']);}
+  updVR();
+  scene.add(label('VERIFIKASI SORTIR',.5,'#5fd4ff').translateX(6.6).translateY(2.18).translateZ(-2.4));
+  /* ====== sistem kotak berjalan ====== */
+  mvs.items=[];mvs.run=false;mvs.spawnT=1.0;mvs.n=0;
+  function spawnBox(){
+    const type=mvs.n%3; mvs.n++;
+    const b=box(.5,.5,.5,laneCol[type],{roughness:.7});
+    b.position.set(-6.6,0.96+.25,-1.6);scene.add(b);
+    mvs.items.push({mesh:b,type,scanned:false,divert:false,done:false,tDelay:0});}
+  moduleTick=(dt)=>{
+    if(mvs.run){
+      mvs.spawnT-=dt;
+      if(mvs.spawnT<=0){mvs.spawnT=1.6;spawnBox();}
+      mvs.lg.material.emissive.setHex(0x2ee87a);mvs.lg.material.emissiveIntensity=1;
+      mvs.ly.material.emissiveIntensity=0;}
+    /* animasi lengan diverter */
+    for(let i=0;i<3;i++){if(mvs.armT[i]>0){mvs.armT[i]-=dt;
+      mvs.arm[i].position.z=-2.15+Math.sin(Math.min(1,(0.5-mvs.armT[i])/.5)*Math.PI)*.5;}}
+    for(let k=mvs.items.length-1;k>=0;k--){
+      const it=mvs.items[k],p=it.mesh.position;
+      if(!it.divert)p.x+=dt*1.2;
+      /* vision membaca warna saat melewati gantry */
+      if(!it.scanned&&mvs.st.vis&&p.x>=VX){it.scanned=true;
+        dispText(mvs.V,['VISION',laneName[it.type].split('→')[0]],['#5fd4ff',laneCss[it.type]]);
+        spark(new THREE.Vector3(VX,1.4,-1.6),0x0aa0ff);}
+      /* sampai di diverter jalurnya → tunda lalu dorong */
+      const tx=laneX[it.type];
+      if(it.scanned&&mvs.st.dl&&mvs.st['r'+it.type]&&!it.divert&&!it.flag&&p.x>=tx){
+        it.flag=true;it.tDelay=.18;}
+      if(it.flag&&!it.divert){it.tDelay-=dt;
+        if(it.tDelay<=0){it.divert=true;mvs.armT[it.type]=.5;sfx.click();}}
+      if(it.divert){p.z+=dt*1.8;p.x+=dt*.12;
+        if(p.z>-1.0)p.y=Math.max(.35,p.y-dt*1.1);
+        if(p.z>.55&&!it.done){it.done=true;mvs.cnt[it.type]++;updC();updVR();
+          spark(p.clone(),laneCol[it.type]);}}
+      /* keluar belt tanpa tersortir = lolos */
+      if(p.x>7.0){scene.remove(it.mesh);mvs.items.splice(k,1);}
+      if(p.z>1.7){scene.remove(it.mesh);mvs.items.splice(k,1);}}};
+  startSeq([
+   {type:'act',aid:'VISION',done:false,targets:()=>[mvs.cam],
+    desc:'Kalibrasi VISION SENSOR agar mengenali 3 warna (klik kamera).',
+    why:'Vision sensor tak “melihat” seperti mata: ia memetakan rentang warna jadi data digital — misal 3 bit, satu untuk tiap warna referensi. Kalibrasi = mengajari kamera batas tiap warna di pencahayaan line ini, supaya merah tak tertukar oranye. Sortir cerdas lahir dari kalibrasi yang jujur, bukan dari banyaknya rung.',
+    fx(){mvs.st.vis=true;ladder();
+      dispText(mvs.V,['VISION','SIAP'],['#5fd4ff','#46ff8e']);
+      toast('🎥 Vision terkalibrasi — 3 warna referensi tersimpan.','ok',2600);}},
+   {type:'act',aid:'R0',done:false,targets:()=>[mvs.slots[0]],
+    desc:'Susun RUNG MERAH: warna=MERAH → TON → diverter Q0.1 (klik slot).',
+    why:'Rung pertama: bila register warna = MERAH, aktifkan diverter jalur ekspor. TON menahan dorongan sesuai jarak vision→diverter merah. Satu warna, satu jalur, satu coil — sesederhana itu logikanya; kerumitan datang dari kerapian, bukan dari jumlah.',
+    fx(){mvs.st.r0=true;ladder();
+      toast('✓ Rung MERAH → diverter ekspor.','ok',2200);}},
+   {type:'act',aid:'R1',done:false,targets:()=>[mvs.slots[1]],
+    desc:'Susun RUNG HIJAU: warna=HIJAU → TON → diverter Q0.2 (klik slot).',
+    why:'Jalur hijau lebih jauh dari vision dibanding merah → tundanya lebih panjang. Tiap diverter punya delay-nya sendiri; menyamakan semua delay adalah kesalahan klasik yang membuat kotak terdorong di tempat yang salah.',
+    fx(){mvs.st.r1=true;ladder();
+      toast('✓ Rung HIJAU → diverter retail.','ok',2200);}},
+   {type:'act',aid:'R2',done:false,targets:()=>[mvs.slots[2]],
+    desc:'Susun RUNG BIRU: warna=BIRU → TON → diverter Q0.3 (klik slot).',
+    why:'Jalur ketiga melengkapi sortir. Tiga rung paralel kini menangani tiga warna — dan kotak warna asing? Tak satu rung pun aktif, ia lolos lurus ke ujung belt (kelak: reject lane). Logika yang baik juga merancang apa yang terjadi saat tak ada yang cocok.',
+    fx(){mvs.st.r2=true;ladder();
+      toast('✓ Rung BIRU → diverter gudang.','ok',2200);}},
+   {type:'act',aid:'DL',done:false,targets:()=>[mvs.slots[3]],
+    desc:'DOWNLOAD program ke PLC (klik ⬇).',
+    why:'Compile → transfer → RUN. Tiga rung kini di-scan ribuan kali per detik. Vision membaca, register terisi, rung yang cocok menyala, diverter mendorong — semua dalam milidetik, jauh lebih konsisten dari mata yang lelah di jam ketujuh.',
+    fx(){mvs.st.dl=true;ladder();
+      toast('⬇ Program ONLINE — line siap dijalankan.','ok',2400);}},
+   {type:'act',aid:'START',done:false,targets:()=>[mvs.btn],
+    desc:'START LINE — saksikan sortir 3 jalur bekerja sendiri!',
+    why:'Kotak mengalir bercampur warna. Vision membaca tiap satu, register terisi, dan diverter yang tepat mendorong tepat waktu: merah ke ekspor, hijau ke retail, biru ke gudang. Inilah Factory I/O versimu sendiri — bedanya, logikanya kamu yang menulis.',
+    fx(){mvs.run=true;beep(110,.5,'sawtooth',.07);
+      toast('▶ LINE BERJALAN — amati vision & 3 diverter!','ok',2800);sfx.big();}},
+   {type:'act',aid:'VERIF',done:false,targets:()=>[mvs.VR.mesh],
+    check:()=>mvs.cnt[0]>=2&&mvs.cnt[1]>=2&&mvs.cnt[2]>=2,
+    checkFail:'Belum cukup bukti! Biarkan line bekerja sampai TIAP warna (merah, hijau, biru) tersortir minimal 2 kotak.',
+    desc:'Setelah tiap warna ≥2 tersortir: VERIFIKASI (klik display total).',
+    why:'Dua merah di ekspor, dua hijau di retail, dua biru di gudang — nol salah jalur. Commissioning lulus dengan bukti per-jalur, bukan sekadar “kelihatannya jalan”. Stasiun sortir mahal justru karena satu kesalahan jalur lebih merugikan dari seratus kotak telat.',
+    fx(){toast('🏆 SORTING STATION TERVERIFIKASI — 3 jalur diserahterimakan!','ok',3200);sfx.big();}},
+  ],()=>{say('🎉 <b>Sorting station 3 jalur hidup!</b> Vision membaca warna, register mengisi, tiga diverter mendorong tepat jalur — kamu baru saja membangun sebuah stasiun sortir gaya Factory I/O dan menulis sendiri otaknya. Selamat datang di otomasi berbasis penglihatan mesin.');
+    setTimeout(()=>showWin('vissort'),2200);});
+  say('VOLTA di sini 🎥 Misi paling “Factory I/O” sejauh ini: <b>sorting station vision 3 jalur</b>. Kotak campur warna akan mengalir — tugasmu mengajari PLC: warna mana ke jalur mana. Mulai dari mata sang mesin: kalibrasi vision dulu.');
+  $('#modTitle').textContent='J16·M9 — Sorting Station Vision 3 Jalur';
+  $('#taskHead').textContent='LIHAT · BACA · PILAH · DORONG';}
+MISSIONS.vissort.build=buildVissort;
+Object.assign(REAL,{
+ vissort:[
+  'Pencahayaan line dijaga konstan (LED bar) — vision sensor sangat sensitif pada perubahan cahaya lingkungan',
+  'Tiap diverter dikalibrasi delay-nya terpisah dari jarak vision→pendorong dibagi kecepatan belt aktual',
+  'Sediakan reject/overflow lane untuk objek warna tak dikenal — jangan biarkan kotak asing menyumbat line',
+  'Vision sensor industrial sebaiknya pakai trigger sensor terpisah (encoder/photo-eye), bukan free-run, agar baca pada posisi presisi'],
+});
